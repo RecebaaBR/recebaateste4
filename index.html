@@ -1279,7 +1279,7 @@ tr:hover td{background:var(--sand-50)}
 </div>
 
 <!-- MODAL PEDIR A CONTA -->
-<div class="modal-overlay" id="modal-bill" onclick="if(event.target===this)closeBillModal()">
+<div class="modal-overlay" id="modal-bill" onclick="if(event.target===this)closeBillModal()" style="z-index:9999">
   <div class="modal-box">
     <div class="modal-head">
       <div class="modal-ttl">🧾 Pedir a conta</div>
@@ -1793,11 +1793,19 @@ function openBillModal(){
   var body = $('bill-modal-body');
   if(!modal){ toast('Erro ao abrir. Recarregue a página.'); return; }
   if(!body){ toast('Erro interno. Tente novamente.'); return; }
-  if(!myOrders.length){ toast('Nenhum pedido encontrado.'); return; }
+  // Mostrar modal mesmo com pedidos entregues
 
   // Agrupar por nome
   var byName = {};
-  myOrders.filter(function(o){ return o.status!=='cancelled'; }).forEach(function(o){
+  // Incluir todos os pedidos exceto cancelados
+  var validOrders = myOrders.filter(function(o){ return o.status!=='cancelled'; });
+  if(!validOrders.length){
+    // Se não tem pedidos válidos, mostrar mesmo assim com total 0
+    body.innerHTML='<div style="text-align:center;padding:20px;color:var(--sl-400)">Nenhum pedido ativo encontrado.<br/>Faça um pedido primeiro.</div>';
+    modal.classList.add('open');
+    return;
+  }
+  validOrders.forEach(function(o){
     var name = o.customer_name || o.customer || 'Cliente';
     if(!byName[name]) byName[name] = 0;
     byName[name] += Number(o.total);
