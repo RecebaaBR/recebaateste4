@@ -1428,15 +1428,16 @@ async function renderUmbrellas(){
   var kioskId = currentKiosk ? currentKiosk.id : '';
   var qrUrl = baseUrl + '?kiosk=' + kioskId;
 
-  var qrSection = '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--ocean-500);padding:20px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
-    +'<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code do Quiosque</div>'
-    +'<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">Fixe este QR Code em cada guarda-sol. O cliente digita o número ao abrir.</div>'
-    +'<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(qrUrl)+'" style="margin:0 auto 12px;display:block;border-radius:8px"/>'
-    +'<div style="font-size:11px;color:var(--ocean-600);word-break:break-all;margin-bottom:12px">'+qrUrl+'</div>'
-    +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'
-    +'<button class="btn btn-ocean btn-sm" onclick="copyQrUrl(''+qrUrl+'')">📋 Copiar URL</button>'
-    +'<button class="btn btn-dark btn-sm" onclick="printQr(''+qrUrl+'',''+( currentKiosk ? currentKiosk.name : 'Quiosque')+'')">🖨️ Imprimir QR</button>'
-    +'</div></div>';
+  var kioskName = currentKiosk ? currentKiosk.name : 'Quiosque';
+  var qrImgUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(qrUrl);
+  var qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:20px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
+    + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code do Quiosque</div>'
+    + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">Fixe este QR Code em cada guarda-sol.</div>'
+    + '<img src="' + qrImgUrl + '" style="margin:0 auto 12px;display:block;border-radius:8px"/>'
+    + '<div style="font-size:11px;color:var(--ocean-600);word-break:break-all;margin-bottom:12px">' + qrUrl + '</div>'
+    + '<button class="btn btn-ocean btn-sm" style="margin:4px" onclick="navigator.clipboard.writeText('' + qrUrl + '').then(function(){window.alert('URL copiada!')})">📋 Copiar URL</button>'
+    + '<button class="btn btn-dark btn-sm" style="margin:4px" onclick="window.open('https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(qrUrl) + '','_blank')">🖨️ Ver QR grande</button>'
+    + '</div>';
 
   // Lista de guarda-sóis
   var umbHtml = umbs.map(function(u){
@@ -1452,7 +1453,8 @@ async function renderUmbrellas(){
 }
 
 
-function copyQrUrl(url){
+function copyQrUrl(elOrUrl){
+  var url = typeof elOrUrl === 'string' ? elOrUrl : elOrUrl.dataset ? elOrUrl.dataset.url : elOrUrl;
   navigator.clipboard.writeText(url).then(function(){
     toast('✅ URL copiada!');
   });
