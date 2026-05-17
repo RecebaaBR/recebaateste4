@@ -1278,6 +1278,18 @@ tr:hover td{background:var(--sand-50)}
   </div><!-- /admin-dashboard -->
 </div>
 
+<!-- MODAL PEDIR A CONTA -->
+<div class="modal-overlay" id="modal-bill" onclick="if(event.target===this)closeBillModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-ttl">🧾 Pedir a conta</div>
+      <button class="modal-close" onclick="closeBillModal()">✕</button>
+    </div>
+    <div class="modal-body" id="bill-modal-body">
+    </div>
+  </div>
+</div>
+
 <!-- MODAL PRODUTO -->
 <div class="modal-overlay" id="modal-product">
   <div class="modal-box">
@@ -1729,6 +1741,119 @@ function clientTab(tab){
   $('tab-orders').classList.toggle('active',!isMenu);
   if(!isMenu) renderMyOrders();
 }
+function openBillModal(){
+  var modal = $('modal-bill');
+  var body = $('bill-modal-body');
+  if(!modal || !body) return;
+
+  // Agrupar por nome
+  var byName = {};
+  myOrders.filter(function(o){ return o.status!=='cancelled'; }).forEach(function(o){
+    var name = o.customer_name || o.customer || 'Cliente';
+    if(!byName[name]) byName[name] = 0;
+    byName[name] += Number(o.total);
+  });
+
+  var names = Object.keys(byName);
+  var total = Object.values(byName).reduce(function(s,v){ return s+v; },0);
+  var perPerson = names.length ? total/names.length : 0;
+
+  var html = '<div style="margin-bottom:16px">'
+    +'<div style="font-size:13px;color:var(--sl-500);margin-bottom:12px">Resumo do consumo:</div>';
+
+  // Por pessoa
+  names.forEach(function(name){
+    html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--sand-100)">'
+      +'<span style="font-size:13px">👤 '+name+'</span>'
+      +'<span style="font-size:13px;font-weight:600">'+fmt(byName[name])+'</span>'
+      +'</div>';
+  });
+
+  html += '<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:15px;font-weight:700">'
+    +'<span>Total geral</span><span>'+fmt(total)+'</span></div></div>';
+
+  // Opções de pagamento
+  html += '<div style="display:flex;flex-direction:column;gap:10px">';
+
+  // Pagar tudo
+  html += '<button class="btn btn-dark" style="width:100%" data-bt="total" onclick="requestBillBtn(this)">'
+    +'💳 Pagar tudo · '+fmt(total)+'</button>';
+
+  // Dividir igualmente (só se mais de 1 pessoa)
+  if(names.length > 1){
+    html += '<button class="btn btn-ocean" style="width:100%" data-bt="split" onclick="requestBillBtn(this)">'
+      +'🤝 Dividir igualmente · '+fmt(perPerson)+' por pessoa ('+names.length+')</button>';
+    
+    // Pagar só o meu
+    html += '<div style="font-size:12px;color:var(--sl-400);text-align:center;margin:4px 0">ou pague apenas o seu:</div>';
+    names.forEach(function(name){
+      html += '<button class="btn btn-ghost btn-sm" style="width:100%" data-bt="person" data-name="'+name+'" data-amt="'+byName[name]+'" onclick="requestBillBtn(this)">'
+        +'👤 '+name+' · '+fmt(byName[name])+'</button>';
+    });
+  }
+
+  html += '</div>';
+  body.innerHTML = html;
+  modal.classList.add('open');
+}
+
+function closeBillModal(){
+  var modal = $('modal-bill');
+  if(modal) modal.classList.remove('open');
+}
+
+function requestBillBtn(btn){
+  var type = btn.dataset.bt;
+  var name = btn.dataset.name||'';
+  var amt = parseFloat(btn.dataset.amt||0);
+  requestBill(type, name, amt);
+}
+
+async function requestBill(type, personName, personTotal){
+  var totalGeral = myOrders.filter(function(o){return o.status!=='cancelled';}).reduce(function(s,o){return s+Number(o.total);},0);
+  var msg = '';
+  var billTotal = 0;
+
+  if(type==='total'){
+    msg = '💳 Pagar tudo';
+    billTotal = totalGeral;
+  } else if(type==='split'){
+    var byName={};
+    myOrders.filter(function(o){return o.status!=='cancelled';}).forEach(function(o){
+      var n=o.customer_name||o.customer||'Cliente';
+      if(!byName[n]) byName[n]=0;
+      byName[n]+=Number(o.total);
+    });
+    var names=Object.keys(byName);
+    billTotal = totalGeral/names.length;
+    msg = '🤝 Dividir entre '+names.length+' pessoas ('+fmt(billTotal)+' cada)';
+  } else if(type==='person'){
+    msg = '👤 Conta de '+personName;
+    billTotal = personTotal;
+  }
+
+  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    await sb.from('orders').insert({
+      kiosk_id: currentKiosk.id,
+      umbrella_num: String(window._umb||'?'),
+      order_number: 0,
+      customer_name: 'PEDIDO DE CONTA',
+      notes: msg + ' · Total: ' + fmt(billTotal) + ' · Guarda-sol ' + (window._umb||'?'),
+      status: 'pending',
+      total: billTotal
+    });
+  } else {
+    // Demo
+    var demoOrder = {id:'bill-'+Date.now(),order_number:'CONTA',umb:String(window._umb||'?'),
+      customer_name:'PEDIDO DE CONTA',notes:msg,status:'pending',total:billTotal,
+      items:[],time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),created_at:new Date().toISOString()};
+    orders.unshift(demoOrder);
+  }
+
+  closeBillModal();
+  toast('🧾 Conta solicitada! O garçom já foi avisado.');
+}
+
 function updateOrdersBadge(){
   const active=myOrders.filter(o=>!['delivered','cancelled'].includes(o.status)).length;
   const dot=$('orders-dot');
@@ -1741,25 +1866,56 @@ var PILL={
   delivered:{l:'Entregue ✅',c:'pill-delivered'},cancelled:{l:'Cancelado',c:'pill-cancelled'}
 };
 function renderMyOrders(){
-  const el=$('my-orders-list');
-  myOrders.forEach(mo=>{const live=orders.find(o=>o.id===mo.id);if(live) mo.status=live.status;});
+  var el=$('my-orders-list');
+  if(!el) return;
+  myOrders.forEach(function(mo){ var live=orders.find(function(o){return o.id===mo.id;}); if(live) mo.status=live.status; });
+
   if(!myOrders.length){
-    el.innerHTML='<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">🛒</div><div style="font-weight:500">Nenhum pedido ainda</div><div style="font-size:12px;margin-top:4px">Adicione itens e faça seu pedido!</div></div>';
+    el.innerHTML='<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">🛒</div><div style="font-weight:500">Nenhum pedido ainda</div></div>';
     return;
   }
-  el.innerHTML=myOrders.map(o=>{
-    const p=PILL[o.status]||{l:o.status,c:''};
-    const items=o.items||[];
-    return '<div class="my-order-card" data-s="'+o.status+'">'
-      +'<div class="my-order-head"><div class="my-order-num">Pedido #'+o.order_number+'</div><span class="pill '+p.c+'">'+p.l+'</span></div>'
-      +'<div class="my-order-items-txt">'+items.map(i=>i.qty+'× '+i.name).join(' · ')+'</div>'
-      +(o.notes?'<div style="font-size:11px;color:var(--sl-400);font-style:italic;margin-bottom:6px">📝 '+o.notes+'</div>':'')
-      +'<div class="my-order-foot"><div style="font-size:13px;font-weight:700">'+fmt(o.total)+'</div>'
-      +'<div style="font-size:11px;color:var(--sl-400)">🕐 '+(o.time||'—')+'</div></div>'
-      +(o.status==='delivered'?'<button class="btn btn-dark btn-sm" style="width:100%;margin-top:10px" onclick="clientTab(\'menu\')">Pedir novamente 🔄</button>':'')
-      +'</div>';
-  }).join('');
+
+  var byName={};
+  myOrders.forEach(function(o){
+    var name=o.customer_name||o.customer||'Cliente';
+    if(!byName[name]) byName[name]=[];
+    byName[name].push(o);
+  });
+
+  var names=Object.keys(byName);
+  var totalGeral=myOrders.filter(function(o){return o.status!=='cancelled';}).reduce(function(s,o){return s+Number(o.total);},0);
+
+  var html='<div style="background:var(--sl-800);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+    +'<div><div style="font-size:12px;opacity:.7;margin-bottom:2px">Total do guarda-sol</div>'
+    +'<div style="font-size:20px;font-weight:700">'+fmt(totalGeral)+'</div>'
+    +(names.length>1?'<div style="font-size:11px;opacity:.6">'+names.length+' pessoas · '+fmt(totalGeral/names.length)+' por pessoa</div>':'')
+    +'</div>'
+    +'<button class="btn btn-ocean btn-sm" onclick="openBillModal()">🧾 Pedir a conta</button>'
+    +'</div>';
+
+  names.forEach(function(name){
+    var personOrders=byName[name];
+    var personTotal=personOrders.filter(function(o){return o.status!=='cancelled';}).reduce(function(s,o){return s+Number(o.total);},0);
+    html+='<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);margin-bottom:12px;overflow:hidden">'
+      +'<div style="background:var(--sand-50);padding:10px 14px;border-bottom:1px solid var(--sand-100);display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="font-size:13px;font-weight:600">👤 '+name+'</div>'
+      +'<div style="font-size:13px;font-weight:700">'+fmt(personTotal)+'</div></div>';
+    personOrders.forEach(function(o){
+      var p=PILL[o.status]||{l:o.status,c:''};
+      html+='<div class="my-order-card" data-s="'+o.status+'" style="border-radius:0;border:none;border-bottom:1px solid var(--sand-50);margin-bottom:0">'
+        +'<div class="my-order-head"><div class="my-order-num">Pedido #'+o.order_number+'</div><span class="pill '+p.c+'">'+p.l+'</span></div>'
+        +'<div class="my-order-items-txt">'+(o.items||[]).map(function(i){return i.qty+'x '+i.name;}).join(' · ')+'</div>'
+        +(o.notes?'<div style="font-size:11px;color:var(--sl-400);font-style:italic;margin-bottom:4px">📝 '+o.notes+'</div>':'')
+        +'<div class="my-order-foot"><div class="my-order-total">'+fmt(o.total)+'</div><div class="my-order-time">🕐 '+(o.time||'')+'</div></div>'
+        +(o.status==='delivered'?'<button class="btn btn-dark btn-sm" style="width:100%;margin-top:8px" data-tab="menu" onclick="clientTab(this.dataset.tab)">Pedir novamente 🔄</button>':'')
+        +'</div>';
+    });
+    html+='</div>';
+  });
+
+  el.innerHTML=html;
 }
+
 
 // ══════════════════════════════════════════════════════
 // QUIOSQUE — AUTH
@@ -1838,6 +1994,39 @@ async function loadKioskData(){
   updateDashMetrics();
   renderLiveOrders();
   populateCatSelect();
+}
+
+async function closeUmbrellaSession(umbNum){
+  if(!confirm('Encerrar guarda-sol '+umbNum+'? Todos os pedidos pendentes serão finalizados e o garçom poderá reiniciá-lo.')) return;
+
+  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    // Marcar todos os pedidos de conta deste guarda-sol como entregues
+    await sb.from('orders')
+      .update({status:'delivered'})
+      .eq('kiosk_id', currentKiosk.id)
+      .eq('umbrella_num', String(umbNum))
+      .eq('customer_name', 'PEDIDO DE CONTA')
+      .eq('status','pending');
+
+    // Criar registro de encerramento
+    await sb.from('orders').insert({
+      kiosk_id: currentKiosk.id,
+      umbrella_num: String(umbNum),
+      order_number: 0,
+      customer_name: 'ENCERRAMENTO',
+      notes: '✅ Guarda-sol '+umbNum+' encerrado. Conta paga.',
+      status: 'delivered',
+      total: 0
+    });
+  } else {
+    orders.forEach(function(o){
+      if((o.umb===String(umbNum)||o.umbrella_num===String(umbNum)) && o.customer_name==='PEDIDO DE CONTA') o.status='delivered';
+    });
+  }
+
+  renderLiveOrders();
+  updateDashMetrics();
+  toast('✅ Guarda-sol '+umbNum+' encerrado! Pronto para novo cliente.');
 }
 
 function doLogout(){
@@ -1945,18 +2134,44 @@ function renderLiveOrders(){
   const grid=$('live-orders-grid'); if(!grid) return;
   const seq=['pending','accepted','preparing','delivering','delivered','cancelled'];
   const sorted=[...orders].sort((a,b)=>seq.indexOf(a.status)-seq.indexOf(b.status));
-  grid.innerHTML=sorted.length?sorted.map(orderCard).join(''):'<div style="padding:40px;text-align:center;color:var(--sl-400)">Nenhum pedido ativo.</div>';
+  // Separar pedidos especiais (conta/atendente) dos normais
+  var billOrders = sorted.filter(function(o){ return o.customer_name==='PEDIDO DE CONTA' && !['delivered','cancelled'].includes(o.status); });
+  var callOrders = sorted.filter(function(o){ return o.customer_name==='CHAMADA DE ATENDENTE' && !['delivered','cancelled'].includes(o.status); });
+  var normalOrders = sorted.filter(function(o){ return o.customer_name!=='PEDIDO DE CONTA' && o.customer_name!=='CHAMADA DE ATENDENTE'; });
+
+  var alertHtml = '';
+  if(billOrders.length){
+    alertHtml += '<div style="background:#f5f3ff;border:2px solid #8b5cf6;border-radius:var(--r);padding:14px 16px;margin-bottom:14px;grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
+      +'<div><div style="font-size:14px;font-weight:700;color:#6d28d9">🧾 '+billOrders.length+' pedido(s) de conta aguardando!</div>'
+      +'<div style="font-size:12px;color:#7c3aed">Leve a máquina até o guarda-sol</div></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +billOrders.map(function(o){
+        return '<button class="btn btn-sm" style="background:#8b5cf6;color:#fff" data-umb="'+o.umbrella_num+'" onclick="closeUmbrellaSession(this.dataset.umb)">'
+          +'☂️ '+o.umbrella_num+' · '+fmt(o.total)+' · Encerrar</button>';
+      }).join('')
+      +'</div></div>';
+  }
+  if(callOrders.length){
+    alertHtml += '<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:var(--r);padding:12px 16px;margin-bottom:14px;grid-column:1/-1">'
+      +'<div style="font-size:14px;font-weight:700;color:#b45309">🙋 '+callOrders.length+' chamada(s) de atendente!</div>'
+      +'<div style="font-size:12px;color:#92400e">'+callOrders.map(function(o){return 'Guarda-sol '+o.umbrella_num;}).join(', ')+'</div>'
+      +'</div>';
+  }
+
+  grid.innerHTML = alertHtml + (sorted.length ? sorted.map(orderCard).join('') : '<div style="padding:40px;text-align:center;color:var(--sl-400)">Nenhum pedido ativo.</div>');
   updateDashMetrics();
 }
 
 function orderCard(o){
-  // Destacar chamadas de atendente
   var isCall = o.customer_name === 'CHAMADA DE ATENDENTE';
-  const p=PILL[o.status]||{l:o.status,c:''};
+  var isBill = o.customer_name === 'PEDIDO DE CONTA';
+  var isSpecial = isCall || isBill;
+  var p=PILL[o.status]||{l:o.status,c:''};
   const acts=(STATUS_NEXT[o.status]||[]).map(a=>
     '<button class="btn btn-sm '+(a.danger?'btn-danger':'btn-dark')+'" onclick="advOrder(\''+o.id+'\',\''+a.s+'\')">'+a.l+'</button>'
   ).join('');
-  return '<div class="order-card" id="oc-'+o.id+'" data-s="'+o.status+'"'+(isCall?' style="border-left-color:#f59e0b;background:#fffbeb"':'')+' >'
+  var specialStyle = isCall ? 'border-left-color:#f59e0b;background:#fffbeb' : isBill ? 'border-left-color:#8b5cf6;background:#f5f3ff' : '';
+  return '<div class="order-card" id="oc-'+o.id+'" data-s="'+o.status+'"'+(specialStyle?' style="'+specialStyle+'"':'')+' >'
     +'<div class="oc-head"><div class="oc-num">#'+(o.order_number||o.num||'?')+'</div>'
     +'<div style="display:flex;gap:6px;align-items:center">'
     +'<span style="font-size:12px;background:var(--sand-100);padding:2px 8px;border-radius:99px">&#x2602;&#xFE0F; '+(o.umb||o.umbrella_num||'?')+'</span>'
@@ -1964,7 +2179,8 @@ function orderCard(o){
     +'<div class="oc-body"><div class="oc-customer">&#x1F464; '+(o.customer_name||o.customer||'?')+' &middot; <span style="font-size:10px;color:var(--sl-400)">&#x1F550; '+(o.time||'')+'</span></div>'
     +(o.items||[]).map(i=>'<div class="oc-item-row"><span>'+i.qty+'\xd7 '+i.name+'</span><span>'+fmt(i.qty*i.price)+'</span></div>').join('')
     +(o.notes?'<div class="oc-note">&#x1F4DD; '+o.notes+'</div>':'')
-    +'<div class="oc-total"><span>Total</span><span>'+fmt(o.total)+'</span></div></div>'
+    +(isBill?'<div style="background:#8b5cf6;color:#fff;border-radius:8px;padding:8px 12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:500">💰 Valor a cobrar</span><span style="font-size:18px;font-weight:700">'+fmt(o.total)+'</span></div>':'<div class="oc-total"><span>Total</span><span>'+fmt(o.total)+'</span></div>')
+    +'</div>'
     +(acts?'<div class="oc-actions">'+acts+'</div>':'')
     +'</div>';
 }
