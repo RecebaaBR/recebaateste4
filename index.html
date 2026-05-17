@@ -2206,17 +2206,19 @@ function delUmbFromBtn(btn){
 }
 
 function openAddUmbModal(){
-  var modal = $('modal-umbrella');
-  if(!modal){ toast('Erro: modal não encontrado'); return; }
-  var fields = ['umb-edit-id','umb-number','umb-label','umb-area','umb-active','modal-umb-title'];
-  fields.forEach(function(id){
-    var el = $(id); if(!el) return;
-    if(id==='modal-umb-title') el.textContent='Novo guarda-sol';
-    else if(id==='umb-area') el.value='Frente mar';
-    else if(id==='umb-active') el.value='true';
-    else el.value='';
-  });
-  modal.classList.add('open');
+  setTimeout(function(){
+    var modal = $('modal-umbrella');
+    if(!modal){ toast('Tente novamente'); return; }
+    var e1=$('umb-edit-id'), e2=$('umb-number'), e3=$('umb-label');
+    var e4=$('umb-area'), e5=$('umb-active'), e6=$('modal-umb-title');
+    if(e1) e1.value='';
+    if(e2) e2.value='';
+    if(e3) e3.value='';
+    if(e4) e4.value='Frente mar';
+    if(e5) e5.value='true';
+    if(e6) e6.textContent='Novo guarda-sol';
+    modal.classList.add('open');
+  }, 100);
 }
 
 function editUmbrella(id, number, area, label, active){
