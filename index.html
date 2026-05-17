@@ -2188,8 +2188,8 @@ async function renderUmbrellas(){
       +'<div style="font-family:var(--font-d);font-size:18px;color:var(--sl-800)">Nº '+String(u.number).padStart(2,'0')+'</div>'
       +'<div style="font-size:11px;color:var(--sl-400);margin-bottom:8px">'+(u.area||'')+'</div>'
       +'<div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap">'
-      +'<button class="btn btn-ghost btn-sm" onclick="editUmbrella(''+u.id+'','+u.number+',''+( u.area||'')+'',''+(u.label||'')+'','+isActive+')">✏️ Editar</button>'
-      +'<button class="btn btn-danger btn-sm" onclick="deleteUmbrella(''+u.id+'','+u.number+')">🗑️</button>'
+      +'<button class="btn btn-ghost btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" data-area="'+(u.area||'')+'" data-label="'+(u.label||'')+'" data-active="'+isActive+'" onclick="editUmbFromBtn(this)">✏️ Editar</button>'
+      +'<button class="btn btn-danger btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" onclick="delUmbFromBtn(this)">🗑️</button>'
       +'</div></div>';
   }).join('');
 
@@ -2205,6 +2205,13 @@ async function renderUmbrellas(){
 
 
 // ── CRUD Guarda-sóis ──────────────────────────────
+function editUmbFromBtn(btn){
+  editUmbrella(btn.dataset.uid, parseInt(btn.dataset.num), btn.dataset.area, btn.dataset.label, btn.dataset.active==='true');
+}
+function delUmbFromBtn(btn){
+  deleteUmbrella(btn.dataset.uid, parseInt(btn.dataset.num));
+}
+
 function openAddUmbModal(){
   $('umb-edit-id').value = '';
   $('umb-number').value = '';
@@ -2488,13 +2495,17 @@ function renderAdminKiosksTable(list){
         +'<td>'+statusBadge+'</td>'
         +'<td>'
         +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
-        +(status!=='active'?'<button class="btn btn-sm" style="background:rgba(16,185,129,.1);color:#047857" onclick="setKioskStatus(''+k.id+'','active')">✅ Ativar</button>':'')
-        +(status!=='inactive'?'<button class="btn btn-sm btn-ghost" onclick="setKioskStatus(''+k.id+'','inactive')">⏸️ Desativar</button>':'')
-        +(status!=='blocked'?'<button class="btn btn-sm btn-danger" onclick="setKioskStatus(''+k.id+'','blocked')">🚫 Bloquear</button>':'')
+        +(status!=='active'?'<button class="btn btn-sm" style="background:rgba(16,185,129,.1);color:#047857" data-kid="'+k.id+'" data-st="active" onclick="setKioskStatusBtn(this)">✅ Ativar</button>':'')
+        +(status!=='inactive'?'<button class="btn btn-sm btn-ghost" data-kid="'+k.id+'" data-st="inactive" onclick="setKioskStatusBtn(this)">⏸️ Desativar</button>':'')
+        +(status!=='blocked'?'<button class="btn btn-sm btn-danger" data-kid="'+k.id+'" data-st="blocked" onclick="setKioskStatusBtn(this)">🚫 Bloquear</button>':'')
         +'</div>'
         +'</td></tr>';
     }).join('')
     +'</tbody></table>';
+}
+
+function setKioskStatusBtn(btn){
+  setKioskStatus(btn.dataset.kid, btn.dataset.st);
 }
 
 async function setKioskStatus(id, newStatus){
