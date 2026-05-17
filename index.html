@@ -715,7 +715,7 @@ function closeSidebar(){
 // ══════════════════════════════════════════════════════
 // CLIENTE — SPLASH
 // ══════════════════════════════════════════════════════
-async // Auto-detectar kiosk e umbrella da URL ao carregar
+// Auto-detectar kiosk e umbrella da URL ao carregar
 window.addEventListener('load', async function(){
   var urlParams = new URLSearchParams(window.location.search);
   var kioskId = urlParams.get('kiosk');
@@ -941,14 +941,14 @@ async function placeOrder(){
 // ══════════════════════════════════════════════════════
 // CLIENTE — STATUS
 // ══════════════════════════════════════════════════════
-const STATUS_STEPS_DEF=[
+var STATUS_STEPS_DEF=[
   {key:'pending',   label:'Pedido recebido',  sub:'Aguardando confirmação',     icon:'📋'},
   {key:'accepted',  label:'Confirmado',        sub:'O quiosque aceitou!',        icon:'✅'},
   {key:'preparing', label:'Em preparo',        sub:'Preparando com carinho',     icon:'👨‍🍳'},
   {key:'delivering',label:'A caminho',         sub:'Indo ao seu guarda-sol',     icon:'🏃'},
   {key:'delivered', label:'Entregue!',         sub:'Bom apetite! 🌊',            icon:'🎉'},
 ];
-const STATUS_SEQ=['pending','accepted','preparing','delivering','delivered'];
+var STATUS_SEQ=['pending','accepted','preparing','delivering','delivered'];
 
 function renderStatusSteps(current){
   const ci=STATUS_SEQ.indexOf(current);
@@ -1019,7 +1019,7 @@ function updateOrdersBadge(){
   dot.textContent=active;
   dot.classList.toggle('hidden',active===0);
 }
-const PILL={
+var PILL={
   pending:{l:'Aguardando',c:'pill-pending'},accepted:{l:'Confirmado',c:'pill-accepted'},
   preparing:{l:'Em preparo',c:'pill-preparing'},delivering:{l:'A caminho',c:'pill-delivering'},
   delivered:{l:'Entregue ✅',c:'pill-delivered'},cancelled:{l:'Cancelado',c:'pill-cancelled'}
@@ -1213,7 +1213,7 @@ function updateDashMetrics(){
   if(ch) ch.innerHTML=top.length?top.map(([name,qty])=>'<div class="bar-row"><div class="bar-lbl" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+name+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(qty/max*100)+'%"></div></div><div class="bar-val">'+qty+'</div></div>').join(''):'<div style="padding:16px;color:var(--sl-400);font-size:13px">Nenhum pedido ainda.</div>';
 }
 
-const STATUS_NEXT={
+var STATUS_NEXT={
   pending:[{l:'&#x2705; Aceitar',s:'accepted'},{l:'&#x274C; Cancelar',s:'cancelled',danger:true}],
   accepted:[{l:'&#x1F468;&#x200D;&#x1F373; Em preparo',s:'preparing'}],
   preparing:[{l:'&#x1F3C3; Saiu p/ entrega',s:'delivering'}],
