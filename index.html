@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- saved from url=(0047)file:///C:/Users/icgio/Downloads/recebaa_8.html -->
-<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Recebaa</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com/">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --sand-50:#fdf8f0;--sand-100:#f5ead8;--sand-200:#e8d5b2;
@@ -287,11 +287,25 @@ tr:hover td{background:var(--sand-50)}
 .plan-enterprise{background:rgba(245,158,11,.1);color:#b45309}
 .active-dot::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:5px}
 
+/* MENU HAMBURGUER */
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--rs);color:var(--sl-800)}
+.hamburger span{display:block;width:20px;height:2px;background:currentColor;margin:4px 0;border-radius:99px;transition:all .3s}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:150}
+.sidebar-overlay.open{display:block}
+
 @media(max-width:700px){
-  .sidebar,.admin-sidebar{display:none}
+  .hamburger{display:block}
+  .sidebar,.admin-sidebar{
+    display:flex;
+    position:fixed;left:-220px;top:0;bottom:0;z-index:200;
+    transition:left .3s cubic-bezier(.4,0,.2,1);
+    padding-top:52px;
+  }
+  .sidebar.open,.admin-sidebar.open{left:0}
   .kiosk-main,.admin-main{padding:14px}
   .orders-grid{grid-template-columns:1fr}
   .grid-2{grid-template-columns:1fr}
+  .metrics-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:480px){
   .nav-btn{padding:4px 9px;font-size:11px}
@@ -302,11 +316,15 @@ tr:hover td{background:var(--sand-50)}
 <body>
 
 <nav class="nav">
+  <button class="hamburger" id="hamburger-btn" onclick="toggleSidebar()" style="display:none" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
   <div class="nav-logo">🌊 Recebaa</div>
-  <button class="nav-btn active" onclick="showScreen(&#39;client&#39;,this)">📱 Cliente</button>
-  <button class="nav-btn" onclick="showScreen(&#39;kiosk&#39;,this)">🏪 Quiosque</button>
-  <button class="nav-btn" onclick="showScreen(&#39;admin&#39;,this)">⚙️ Admin</button>
+  <button class="nav-btn active" onclick="showScreen('client',this)">📱 Cliente</button>
+  <button class="nav-btn" onclick="showScreen('kiosk',this)">🏪 Quiosque</button>
+  <button class="nav-btn" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="toast" id="toast"></div>
 
 <!-- CLIENTE -->
@@ -318,7 +336,7 @@ tr:hover td{background:var(--sand-50)}
       <p>Peça direto do seu guarda-sol</p>
       <div class="splash-field">
         <label class="label">☂️ Número do seu guarda-sol</label>
-        <input class="input" id="umbrella-input" type="number" min="1" max="99" placeholder="Ex: 7">
+        <input class="input" id="umbrella-input" type="number" min="1" max="99" placeholder="Ex: 7"/>
       </div>
       <button class="btn btn-ocean" id="splash-btn" onclick="goToMenu()">Ver Cardápio →</button>
     </div>
@@ -332,8 +350,8 @@ tr:hover td{background:var(--sand-50)}
         <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
       </div>
       <div class="menu-tab-row">
-        <button class="menu-tab active" id="tab-menu" onclick="clientTab(&#39;menu&#39;)">🍔 Cardápio</button>
-        <button class="menu-tab" id="tab-orders" onclick="clientTab(&#39;orders&#39;)">
+        <button class="menu-tab active" id="tab-menu" onclick="clientTab('menu')">🍔 Cardápio</button>
+        <button class="menu-tab" id="tab-orders" onclick="clientTab('orders')">
           📋 Pedidos <span class="order-badge-dot hidden" id="orders-dot">0</span>
         </button>
       </div>
@@ -347,7 +365,7 @@ tr:hover td{background:var(--sand-50)}
     </div>
     <button class="cart-fab hidden" id="cart-fab" onclick="openCart()">
       <span class="cart-fab-count" id="cart-count">0</span>
-      Ver carrinho · <span id="cart-total-fab">R$ 0,00</span>
+      Ver carrinho &middot; <span id="cart-total-fab">R$ 0,00</span>
     </button>
   </div>
 
@@ -360,7 +378,7 @@ tr:hover td{background:var(--sand-50)}
       <div class="cart-total-row"><span>Total</span><span id="cart-total">R$ 0,00</span></div>
       <div class="field" style="margin-top:12px">
         <label class="label">Seu nome *</label>
-        <input class="input" id="customer-name" placeholder="Como você se chama?">
+        <input class="input" id="customer-name" placeholder="Como você se chama?"/>
       </div>
       <div class="field">
         <label class="label">Observações</label>
@@ -393,11 +411,11 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-logo">🌊</div>
       <div class="auth-title">Painel Recebaa</div>
       <div class="auth-sub">Entre com suas credenciais</div>
-      <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"></div>
-      <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"></div>
+      <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
+      <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
       <button class="btn btn-dark" id="login-btn" style="width:100%" onclick="doLogin()">Entrar</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:16px">
-        Não tem conta? <a class="auth-link" href="file:///C:/Users/icgio/Downloads/recebaa_8.html#" onclick="showCard(&#39;register&#39;);return false">Criar conta grátis</a>
+        Não tem conta? <a class="auth-link" href="#" onclick="showCard('register');return false">Criar conta grátis</a>
       </p>
     </div>
     <div class="auth-card wide hidden" id="card-register">
@@ -405,21 +423,21 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-title">Criar conta</div>
       <div class="auth-sub">Preencha os dados do seu quiosque</div>
       <div class="grid-2">
-        <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"></div>
-        <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 caracteres"></div>
-        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 caracteres"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
       </div>
-      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"></div>
+      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"></div>
-        <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"/></div>
       </div>
       <button class="btn btn-ocean" id="register-btn" style="width:100%;margin-top:20px" onclick="doRegister()">Criar conta 🚀</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:14px">
-        Já tem conta? <a class="auth-link" href="file:///C:/Users/icgio/Downloads/recebaa_8.html#" onclick="showCard(&#39;login&#39;);return false">Entrar</a>
+        Já tem conta? <a class="auth-link" href="#" onclick="showCard('login');return false">Entrar</a>
       </p>
     </div>
   </div>
@@ -431,12 +449,12 @@ tr:hover td{background:var(--sand-50)}
         <div><div class="sidebar-kname" id="dash-kname">Quiosque</div><div class="sidebar-ksub">Recebaa</div></div>
       </div>
       <nav class="sidebar-nav">
-        <button class="s-item active" onclick="kPage(&#39;overview&#39;,this)"><span class="s-icon">📊</span>Dashboard</button>
-        <button class="s-item" onclick="kPage(&#39;orders&#39;,this)"><span class="s-icon">📋</span>Ao vivo<span class="s-badge" id="live-badge">0</span></button>
-        <button class="s-item" onclick="kPage(&#39;history&#39;,this)"><span class="s-icon">🗂️</span>Histórico</button>
-        <button class="s-item" onclick="kPage(&#39;menu&#39;,this)"><span class="s-icon">🍔</span>Cardápio</button>
-        <button class="s-item" onclick="kPage(&#39;umbrellas&#39;,this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
-        <button class="s-item" onclick="kPage(&#39;reports&#39;,this)"><span class="s-icon">📈</span>Relatórios</button>
+        <button class="s-item active" onclick="kPage('overview',this)"><span class="s-icon">📊</span>Dashboard</button>
+        <button class="s-item" onclick="kPage('orders',this)"><span class="s-icon">📋</span>Ao vivo<span class="s-badge" id="live-badge">0</span></button>
+        <button class="s-item" onclick="kPage('history',this)"><span class="s-icon">🗂️</span>Histórico</button>
+        <button class="s-item" onclick="kPage('menu',this)"><span class="s-icon">🍔</span>Cardápio</button>
+        <button class="s-item" onclick="kPage('umbrellas',this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
+        <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
       </nav>
       <div class="sidebar-foot"><button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button></div>
     </aside>
@@ -462,11 +480,11 @@ tr:hover td{background:var(--sand-50)}
       <div class="kpage" id="kpage-history">
         <div class="page-header"><div class="page-title">Histórico</div></div>
         <div class="hist-filters">
-          <button class="hf-btn active" onclick="histFilter(&#39;all&#39;,this)">Todos</button>
-          <button class="hf-btn" onclick="histFilter(&#39;pending&#39;,this)">⏳ Pendente</button>
-          <button class="hf-btn" onclick="histFilter(&#39;preparing&#39;,this)">👨‍🍳 Em produção</button>
-          <button class="hf-btn" onclick="histFilter(&#39;delivered&#39;,this)">✅ Entregue</button>
-          <button class="hf-btn" onclick="histFilter(&#39;cancelled&#39;,this)">❌ Cancelado</button>
+          <button class="hf-btn active" onclick="histFilter('all',this)">Todos</button>
+          <button class="hf-btn" onclick="histFilter('pending',this)">⏳ Pendente</button>
+          <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
+          <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
+          <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
         </div>
         <div class="hist-table" id="hist-table"></div>
       </div>
@@ -493,17 +511,40 @@ tr:hover td{background:var(--sand-50)}
 
 <!-- ADMIN -->
 <div id="screen-admin" class="screen">
-  <div class="admin-layout">
+
+  <!-- LOGIN ADMIN -->
+  <div id="admin-login" class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">⚙️</div>
+      <div class="auth-title">Acesso Restrito</div>
+      <div class="auth-sub">Área exclusiva do administrador</div>
+      <div class="field">
+        <label class="label">Usuário</label>
+        <input class="input" id="admin-user" placeholder="usuário"/>
+      </div>
+      <div class="field">
+        <label class="label">Senha</label>
+        <input class="input" id="admin-pass" type="password" placeholder="••••••••"/>
+      </div>
+      <button class="btn btn-dark" style="width:100%" onclick="doAdminLogin()">Entrar</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD ADMIN -->
+  <div id="admin-dashboard" class="admin-layout hidden">
     <aside class="admin-sidebar">
       <div class="sidebar-top">
         <div class="sidebar-icon" style="background:#6d28d9">⚙️</div>
         <div><div class="sidebar-kname">Admin SaaS</div><div class="sidebar-ksub">Plataforma Recebaa</div></div>
       </div>
       <nav class="sidebar-nav">
-        <button class="s-item active" onclick="aPage(&#39;kiosks&#39;,this)"><span class="s-icon">🏪</span>Quiosques</button>
-        <button class="s-item" onclick="aPage(&#39;subs&#39;,this)"><span class="s-icon">💳</span>Assinaturas</button>
-        <button class="s-item" onclick="aPage(&#39;metrics&#39;,this)"><span class="s-icon">📊</span>Métricas</button>
+        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Quiosques</button>
+        <button class="s-item" onclick="aPage('subs',this)"><span class="s-icon">💳</span>Assinaturas</button>
+        <button class="s-item" onclick="aPage('metrics',this)"><span class="s-icon">📊</span>Métricas</button>
       </nav>
+      <div class="sidebar-foot">
+        <button class="s-item" onclick="doAdminLogout()"><span class="s-icon">🚪</span>Sair</button>
+      </div>
     </aside>
     <main class="admin-main">
       <div class="apage active" id="apage-kiosks">
@@ -520,6 +561,7 @@ tr:hover td{background:var(--sand-50)}
       </div>
     </main>
   </div>
+  </div><!-- /admin-dashboard -->
 </div>
 
 <!-- MODAL PRODUTO -->
@@ -528,19 +570,19 @@ tr:hover td{background:var(--sand-50)}
     <div class="modal-head"><div class="modal-ttl" id="modal-prod-title">Novo produto</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
       <div class="photo-area" id="photo-area">
-        <input type="file" accept="image/*" onchange="previewPhoto(event)">
+        <input type="file" accept="image/*" onchange="previewPhoto(event)"/>
         <div id="photo-ph"><div style="font-size:30px;margin-bottom:6px">📷</div><div style="font-size:13px;font-weight:500;color:var(--sl-600)">Clique para adicionar foto</div><div style="font-size:11px;color:var(--sl-400);margin-top:3px">JPG, PNG ou WebP</div></div>
       </div>
-      <img id="photo-preview" class="photo-preview" alt="preview">
+      <img id="photo-preview" class="photo-preview" alt="preview"/>
       <div class="grid-2">
-        <div class="field" style="margin-bottom:0"><label class="label">Nome *</label><input class="input" id="prod-name" placeholder="Ex: Caipirinha"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Nome *</label><input class="input" id="prod-name" placeholder="Ex: Caipirinha"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">Categoria *</label>
           <select class="select" id="prod-cat"><option value="">Selecione...</option></select>
         </div>
       </div>
-      <div class="field" style="margin-top:12px"><label class="label">Descrição</label><input class="input" id="prod-desc" placeholder="Breve descrição"></div>
+      <div class="field" style="margin-top:12px"><label class="label">Descrição</label><input class="input" id="prod-desc" placeholder="Breve descrição"/></div>
       <div class="grid-2">
-        <div class="field" style="margin-bottom:0"><label class="label">Preço (R$) *</label><input class="input" id="prod-price" type="number" min="0" step="0.50" placeholder="0,00"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Preço (R$) *</label><input class="input" id="prod-price" type="number" min="0" step="0.50" placeholder="0,00"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">Status</label>
           <select class="select" id="prod-status"><option value="on">✅ Disponível</option><option value="off">⏸️ Indisponível</option></select>
         </div>
@@ -635,20 +677,70 @@ function showScreen(name, btn){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   $('screen-'+name).classList.add('active');
   btn.classList.add('active');
-  if(name==='admin') loadAdminData();
+  if(name==='admin'){
+    if(!adminLoggedIn){
+      $('admin-login').classList.remove('hidden');
+      $('admin-dashboard').classList.add('hidden');
+    } else {
+      loadAdminData();
+    }
+  }
+  // Mostrar hamburguer apenas no kiosk e admin
+  var hb = $('hamburger-btn');
+  if(hb) hb.style.display = (name==='kiosk'||name==='admin') ? 'block' : 'none';
+  closeSidebar();
+}
+
+function toggleSidebar(){
+  var sidebar = document.querySelector('.sidebar.active-screen, .dash-layout .sidebar, .admin-layout .admin-sidebar');
+  if(!sidebar){
+    // Tentar pegar qualquer sidebar visível
+    var kiosk = $('kiosk-dash');
+    var admin = $('screen-admin');
+    if(kiosk && !kiosk.classList.contains('hidden')) sidebar = kiosk.querySelector('.sidebar');
+    else if(admin && admin.classList.contains('active')) sidebar = admin.querySelector('.admin-sidebar');
+  }
+  if(sidebar){
+    sidebar.classList.toggle('open');
+    $('sidebar-overlay').classList.toggle('open');
+  }
+}
+
+function closeSidebar(){
+  document.querySelectorAll('.sidebar, .admin-sidebar').forEach(s=>s.classList.remove('open'));
+  var ov = $('sidebar-overlay');
+  if(ov) ov.classList.remove('open');
 }
 
 // ══════════════════════════════════════════════════════
 // CLIENTE — SPLASH
 // ══════════════════════════════════════════════════════
+async // Auto-detectar kiosk e umbrella da URL ao carregar
+window.addEventListener('load', async function(){
+  var urlParams = new URLSearchParams(window.location.search);
+  var kioskId = urlParams.get('kiosk');
+  var umbNum = urlParams.get('umbrella');
+  if(kioskId && umbNum && isConfigured){
+    $('umbrella-input').value = umbNum;
+    // Buscar nome do kiosk para mostrar na splash
+    var {data} = await sb.from('kiosks').select('name').eq('id',kioskId).single();
+    if(data) $('splash-kname').textContent = data.name;
+  }
+});
+
 async function goToMenu(){
   const v=$('umbrella-input').value.trim();
   if(!v||isNaN(v)||+v<1){ toast('Informe o número do seu guarda-sol ☂️'); return; }
   window._umb=+v;
   setLoading('splash-btn',true,'Carregando...');
   if(isConfigured){
-    // Carrega o primeiro kiosk ativo do banco (em produção, viria do QR Code)
-    const {data:kiosks}=await sb.from('kiosks').select('*').eq('is_active',true).limit(1);
+    // Busca kiosk pelo ID da URL (?kiosk=ID) ou pelo primeiro ativo
+    var urlParams = new URLSearchParams(window.location.search);
+    var kioskId = urlParams.get('kiosk');
+    var query = sb.from('kiosks').select('*').eq('is_active',true);
+    if(kioskId) query = query.eq('id', kioskId);
+    else query = query.limit(1);
+    const {data:kiosks}=await query;
     currentKiosk=kiosks && kiosks[0];
     if(currentKiosk){
       const {data:prods}=await sb.from('products').select('*').eq('kiosk_id',currentKiosk.id).eq('is_available',true).order('sort_order');
@@ -888,7 +980,27 @@ function goBackToMenu(){
   $('client-menu').classList.remove('hidden');
   clientTab('menu');
 }
-function callWaiter(){ toast('🙋 Atendente chamado! Aguarde.') }
+async function callWaiter(){
+  if(!currentKiosk || !window._umb){
+    toast('🙋 Atendente chamado! Aguarde um momento.');
+    return;
+  }
+  if(isConfigured && currentKiosk.id !== 'demo'){
+    // Inserir chamada como pedido especial com status 'call'
+    await sb.from('orders').insert({
+      kiosk_id: currentKiosk.id,
+      umbrella_num: String(window._umb),
+      order_number: 0,
+      customer_name: 'CHAMADA DE ATENDENTE',
+      notes: '🙋 Cliente do guarda-sol '+window._umb+' está chamando o atendente!',
+      status: 'pending',
+      total: 0
+    });
+    toast('🙋 Atendente chamado! Ele virá em breve.');
+  } else {
+    toast('🙋 Atendente chamado! Aguarde um momento.');
+  }
+}
 
 // ══════════════════════════════════════════════════════
 // CLIENTE — ABAS
@@ -1073,6 +1185,7 @@ function kPage(name,btn){
   if(name==='menu') renderMgmt();
   if(name==='umbrellas') renderUmbrellas();
   if(name==='reports') loadReports();
+  closeSidebar(); // fechar menu no mobile após clicar
 }
 
 // ══════════════════════════════════════════════════════
@@ -1117,11 +1230,13 @@ function renderLiveOrders(){
 }
 
 function orderCard(o){
+  // Destacar chamadas de atendente
+  var isCall = o.customer_name === 'CHAMADA DE ATENDENTE';
   const p=PILL[o.status]||{l:o.status,c:''};
   const acts=(STATUS_NEXT[o.status]||[]).map(a=>
     '<button class="btn btn-sm '+(a.danger?'btn-danger':'btn-dark')+'" onclick="advOrder(\''+o.id+'\',\''+a.s+'\')">'+a.l+'</button>'
   ).join('');
-  return '<div class="order-card" id="oc-'+o.id+'" data-s="'+o.status+'">'
+  return '<div class="order-card" id="oc-'+o.id+'" data-s="'+o.status+'"'+(isCall?' style="border-left-color:#f59e0b;background:#fffbeb"':'')+' >'
     +'<div class="oc-head"><div class="oc-num">#'+(o.order_number||o.num||'?')+'</div>'
     +'<div style="display:flex;gap:6px;align-items:center">'
     +'<span style="font-size:12px;background:var(--sand-100);padding:2px 8px;border-radius:99px">&#x2602;&#xFE0F; '+(o.umb||o.umbrella_num||'?')+'</span>'
@@ -1292,27 +1407,68 @@ async function saveProduct(){
   toast('\u2705 "'+name+'" adicionado!');
 }
 
+function getKioskUrl(){
+  return window.location.origin + window.location.pathname;
+}
+
 async function renderUmbrellas(){
-  const grid=$('umb-grid'); if(!grid) return;
-  let umbs=[];
+  var grid=$('umb-grid'); if(!grid) return;
+  var umbs=[];
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-    const {data}=await sb.from('umbrellas').select('*').eq('kiosk_id',currentKiosk.id).order('number');
+    var {data}=await sb.from('umbrellas').select('*').eq('kiosk_id',currentKiosk.id).order('number');
     umbs=data||[];
   }
   if(!umbs.length){
-    const areas=['Frente mar','Frente mar','VIP','Frente mar','VIP','Standard'];
-    umbs=Array.from({length:20},(_,i)=>({id:'u'+(i+1),number:i+1,label:'Guarda-sol '+String(i+1).padStart(2,'0'),area:areas[i%areas.length],is_active:true}));
+    var areas=['Frente mar','Frente mar','VIP','Frente mar','VIP','Standard'];
+    umbs=Array.from({length:20},function(_,i){return {id:'u'+(i+1),number:i+1,label:'Guarda-sol '+String(i+1).padStart(2,'0'),area:areas[i%areas.length],is_active:true};});
   }
-  grid.innerHTML=umbs.map(u=>'<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:16px;text-align:center;position:relative">'
-    +'<div style="position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:'+(u.is_active?'var(--green)':'var(--sl-300)')+'"></div>'
-    +'<div style="font-size:32px;margin-bottom:8px">\u2602\ufe0f</div>'
-    +'<div style="font-family:var(--font-d);font-size:20px">N\xba '+String(u.number).padStart(2,'0')+'</div>'
-    +'<div style="font-size:11px;color:var(--sl-400);margin-bottom:10px">'+(u.area||'')+'</div>'
-    +'<div style="width:60px;height:60px;margin:0 auto 8px;background:var(--sl-800);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,.5)">QR</div>'
-    +'<div style="font-size:10px;color:var(--ocean-600);word-break:break-all;margin-bottom:8px">recebaa.app/q/'+u.id+'</div>'
-    +'<button class="btn btn-ghost btn-sm" style="width:100%" onclick="toast(\'\ud83d\udda8\ufe0f Imprimindo QR '+u.number+'...\')">&#x1F5A8;&#xFE0F; Imprimir</button>'
-    +'</div>').join('');
+
+  // QR Code do quiosque (único para todo o quiosque)
+  var baseUrl = getKioskUrl();
+  var kioskId = currentKiosk ? currentKiosk.id : '';
+  var qrUrl = baseUrl + '?kiosk=' + kioskId;
+
+  var qrSection = '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--ocean-500);padding:20px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
+    +'<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code do Quiosque</div>'
+    +'<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">Fixe este QR Code em cada guarda-sol. O cliente digita o número ao abrir.</div>'
+    +'<img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(qrUrl)+'" style="margin:0 auto 12px;display:block;border-radius:8px"/>'
+    +'<div style="font-size:11px;color:var(--ocean-600);word-break:break-all;margin-bottom:12px">'+qrUrl+'</div>'
+    +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'
+    +'<button class="btn btn-ocean btn-sm" onclick="copyQrUrl(''+qrUrl+'')">📋 Copiar URL</button>'
+    +'<button class="btn btn-dark btn-sm" onclick="printQr(''+qrUrl+'',''+( currentKiosk ? currentKiosk.name : 'Quiosque')+'')">🖨️ Imprimir QR</button>'
+    +'</div></div>';
+
+  // Lista de guarda-sóis
+  var umbHtml = umbs.map(function(u){
+    return '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:14px;text-align:center;position:relative">'
+      +'<div style="position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:'+(u.is_active?'var(--green)':'var(--sl-300)')+'"></div>'
+      +'<div style="font-size:28px;margin-bottom:6px">☂️</div>'
+      +'<div style="font-family:var(--font-d);font-size:18px;color:var(--sl-800)">Nº '+String(u.number).padStart(2,'0')+'</div>'
+      +'<div style="font-size:11px;color:var(--sl-400)">'+(u.area||'')+'</div>'
+      +'</div>';
+  }).join('');
+
+  grid.innerHTML = qrSection + umbHtml;
 }
+
+
+function copyQrUrl(url){
+  navigator.clipboard.writeText(url).then(function(){
+    toast('✅ URL copiada!');
+  });
+}
+
+function printQr(url,num){
+  var win=window.open('','_blank');
+  win.document.write('<html><body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">'
+    +'<h2>Guarda-sol Nº '+num+'</h2>'
+    +'<img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(url)+'" style="margin:20px"/>'
+    +'<p style="font-size:12px;color:#666;max-width:300px;text-align:center">'+url+'</p>'
+    +'<button onclick="window.print()" style="margin-top:20px;padding:10px 24px;background:#1e293b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">🖨️ Imprimir</button>'
+    +'</body></html>');
+  win.document.close();
+}
+
 
 async function loadReports(){
   const delivered=orders.filter(o=>o.status==='delivered');
@@ -1321,6 +1477,14 @@ async function loadReports(){
   const active=catalog.filter(p=>p.is_available!==false).length;
   const set=(id,v)=>{const el=$(id);if(el)el.textContent=v;};
   set('r-rev7',fmt(rev)); set('r-ord7',orders.length); set('r-ticket7',fmt(ticket)); set('r-prods',active);
+}
+
+function doAdminLogout(){
+  adminLoggedIn = false;
+  $('admin-login').classList.remove('hidden');
+  $('admin-dashboard').classList.add('hidden');
+  $('admin-user').value = '';
+  $('admin-pass').value = '';
 }
 
 async function loadAdminData(){
@@ -1344,7 +1508,28 @@ async function loadAdminData(){
   }
 }
 
+// ── Credenciais admin (altere aqui) ──────────────
+var ADMIN_USER = 'recebaa';
+var ADMIN_PASS = 'Rec@2025#master';
+var adminLoggedIn = false;
+
+function doAdminLogin(){
+  var user = $('admin-user').value.trim();
+  var pass = $('admin-pass').value.trim();
+  if(user === ADMIN_USER && pass === ADMIN_PASS){
+    adminLoggedIn = true;
+    $('admin-login').classList.add('hidden');
+    $('admin-dashboard').classList.remove('hidden');
+    loadAdminData();
+    toast('✅ Bem-vindo ao painel master!');
+  } else {
+    toast('❌ Usuário ou senha incorretos');
+    $('admin-pass').value = '';
+  }
+}
+
 function aPage(name,btn){
+  if(!adminLoggedIn){ toast('Faça login primeiro'); return; }
   document.querySelectorAll('.apage').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.admin-sidebar .s-item').forEach(b=>b.classList.remove('active'));
   $('apage-'+name).classList.add('active');
@@ -1352,5 +1537,5 @@ function aPage(name,btn){
   loadAdminData();
 }
 </script>
-
-</body></html>
+</body>
+</html>
