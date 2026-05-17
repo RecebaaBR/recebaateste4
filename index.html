@@ -1489,6 +1489,28 @@ async function goToMenu(){
   $('client-menu').classList.remove('hidden');
   buildCatTabs();
   buildMenu();
+  // Iniciar escuta realtime para atualizações de pedidos deste guarda-sol
+  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    var chName = 'client-'+currentKiosk.id+'-'+String(window._umb||'0');
+    sb.channel(chName)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',
+        filter:'kiosk_id=eq.'+currentKiosk.id},
+        function(payload){
+          var mo = myOrders.find(function(o){ return o.id===payload.new.id; });
+          if(mo){
+            mo.status = payload.new.status;
+            updateOrdersBadge();
+            var vo = $('view-orders');
+            if(vo && !vo.classList.contains('hidden')) renderMyOrders();
+            var ss = $('client-status');
+            if(ss && !ss.classList.contains('hidden')){
+              var sn = $('status-num');
+              if(sn && sn.textContent==String(payload.new.order_number)) renderStatusSteps(payload.new.status);
+            }
+          }
+        })
+      .subscribe();
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -1657,11 +1679,36 @@ async function placeOrder(){
   renderStatusSteps('pending');
   updateOrdersBadge();
 
-  // Escutar mudanças de status em tempo real
-  if(isConfigured && orderId && !orderId.startsWith('local')){
-    sb.channel('order-'+orderId)
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',filter:'id=eq.'+orderId},
-        payload=>{ renderStatusSteps(payload.new.status); updateOrdersBadge(); })
+  // Escutar mudanças de status em tempo real para todos os pedidos do guarda-sol
+  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    var channelName = 'client-umb-'+currentKiosk.id+'-'+String(window._umb||'0');
+    // Remover canal anterior se existir
+    try{ sb.removeChannel(sb.channel(channelName)); }catch(e){}
+    sb.channel(channelName)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',
+        filter:'kiosk_id=eq.'+currentKiosk.id},
+        function(payload){
+          // Atualizar o pedido correto em myOrders
+          var updated = payload.new;
+          var mo = myOrders.find(function(o){ return o.id===updated.id; });
+          if(mo){
+            mo.status = updated.status;
+            // Se estiver vendo status do pedido atual, atualizar
+            var statusScreen = $('client-status');
+            if(statusScreen && !statusScreen.classList.contains('hidden')){
+              var numEl = $('status-num');
+              if(numEl && numEl.textContent == String(updated.order_number)){
+                renderStatusSteps(updated.status);
+              }
+            }
+            updateOrdersBadge();
+            // Se estiver na aba meus pedidos, atualizar
+            var viewOrders = $('view-orders');
+            if(viewOrders && !viewOrders.classList.contains('hidden')){
+              renderMyOrders();
+            }
+          }
+        })
       .subscribe();
   }
 }
@@ -1744,7 +1791,9 @@ function clientTab(tab){
 function openBillModal(){
   var modal = $('modal-bill');
   var body = $('bill-modal-body');
-  if(!modal || !body) return;
+  if(!modal){ toast('Erro ao abrir. Recarregue a página.'); return; }
+  if(!body){ toast('Erro interno. Tente novamente.'); return; }
+  if(!myOrders.length){ toast('Nenhum pedido encontrado.'); return; }
 
   // Agrupar por nome
   var byName = {};
