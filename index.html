@@ -1137,6 +1137,10 @@ function doLogout(){
 // ══════════════════════════════════════════════════════
 function subscribeRealtime(){
   if(!isConfigured||!currentKiosk||currentKiosk.id==='demo') return;
+  // Atualizar dashboard a cada 30 segundos automaticamente
+  setInterval(function(){
+    updateDashMetrics();
+  }, 30000);
   realtimeChannel=sb.channel('kiosk-'+currentKiosk.id)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',filter:'kiosk_id=eq.'+currentKiosk.id},
       async payload=>{
@@ -1254,7 +1258,15 @@ async function advOrder(id,st){
   if(isConfigured && !String(id).startsWith('local')){
     await sb.from('orders').update({status:st}).eq('id',id);
   }
-  o.status=st; renderLiveOrders(); renderHist(); updateDashMetrics();
+  o.status=st;
+  renderLiveOrders();
+  renderHist();
+  updateDashMetrics();
+  // Se estiver no dashboard, atualizar os gráficos também
+  var overview = $('kpage-overview');
+  if(overview && overview.classList.contains('active')){
+    updateDashMetrics();
+  }
 }
 
 function histFilter(f,btn){
@@ -1290,7 +1302,10 @@ async function changeHistStatus(id,st){
   if(!st) return;
   const o=orders.find(x=>x.id===id); if(!o) return;
   if(isConfigured && !String(id).startsWith('local')) await sb.from('orders').update({status:st}).eq('id',id);
-  o.status=st; renderHist(); renderLiveOrders(); updateDashMetrics();
+  o.status=st;
+  renderHist();
+  renderLiveOrders();
+  updateDashMetrics();
   toast('Status: '+(PILL[st]||{l:st}).l);
 }
 
