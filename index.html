@@ -495,11 +495,48 @@ tr:hover td{background:var(--sand-50)}
       <div class="kpage" id="kpage-umbrellas">
         <div class="page-header">
           <div class="page-title">Guarda-sóis</div>
-          <button class="btn btn-ocean btn-sm" onclick="openAddUmbModal()">+ Guarda-sol</button>
+          <button class="btn btn-ocean btn-sm" onclick="toggleUmbForm()">+ Guarda-sol</button>
         </div>
+
+        <!-- Formulário inline (aparece/some) -->
+        <div id="umb-form-inline" class="hidden" style="background:#fff;border-radius:var(--r);border:1px solid var(--ocean-500);padding:16px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;margin-bottom:12px" id="umb-form-title">Novo guarda-sol</div>
+          <input type="hidden" id="umb-edit-id"/>
+          <div class="grid-2" style="margin-bottom:12px">
+            <div class="field" style="margin-bottom:0">
+              <label class="label">Número *</label>
+              <input class="input" id="umb-number" type="number" min="1" max="999" placeholder="Ex: 7"/>
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label class="label">Área</label>
+              <select class="select" id="umb-area">
+                <option value="Frente mar">Frente mar</option>
+                <option value="VIP">VIP</option>
+                <option value="Standard">Standard</option>
+                <option value="Piscina">Piscina</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Rótulo (opcional)</label>
+            <input class="input" id="umb-label" placeholder="Ex: Guarda-sol 07"/>
+          </div>
+          <div class="field">
+            <label class="label">Status</label>
+            <select class="select" id="umb-active">
+              <option value="true">Ativo</option>
+              <option value="false">Inativo</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ocean btn-sm" id="save-umb-btn" onclick="saveUmbrella()">Salvar</button>
+            <button class="btn btn-ghost btn-sm" onclick="toggleUmbForm()">Cancelar</button>
+          </div>
+        </div>
+
         <div class="umbrellas-grid" id="umb-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px"></div>
       </div>
-      <div class="kpage" id="kpage-reports">
+<div class="kpage" id="kpage-reports">
         <div class="page-header"><div class="page-title">Relatórios</div></div>
 
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:16px;margin-bottom:16px">
@@ -1239,47 +1276,6 @@ tr:hover td{background:var(--sand-50)}
     </main>
   </div>
   </div><!-- /admin-dashboard -->
-</div>
-
-<!-- MODAL GUARDA-SOL -->
-<div class="modal-overlay" id="modal-umbrella" onclick="if(event.target===this)closeUmbModal()">
-  <div class="modal-box">
-    <div class="modal-head">
-      <div class="modal-ttl" id="modal-umb-title">Novo guarda-sol</div>
-      <button class="modal-close" onclick="closeUmbModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="umb-edit-id"/>
-      <div class="grid-2">
-        <div class="field" style="margin-bottom:0">
-          <label class="label">Número *</label>
-          <input class="input" id="umb-number" type="number" min="1" max="999" placeholder="Ex: 7"/>
-        </div>
-        <div class="field" style="margin-bottom:0">
-          <label class="label">Área</label>
-          <select class="select" id="umb-area">
-            <option value="Frente mar">Frente mar</option>
-            <option value="VIP">VIP</option>
-            <option value="Standard">Standard</option>
-            <option value="Piscina">Piscina</option>
-            <option value="Quiosque">Quiosque</option>
-          </select>
-        </div>
-      </div>
-      <div class="field" style="margin-top:12px">
-        <label class="label">Rótulo (opcional)</label>
-        <input class="input" id="umb-label" placeholder="Ex: Guarda-sol 07"/>
-      </div>
-      <div class="field">
-        <label class="label">Status</label>
-        <select class="select" id="umb-active">
-          <option value="true">✅ Ativo</option>
-          <option value="false">⏸️ Inativo</option>
-        </select>
-      </div>
-      <button class="btn btn-ocean" id="save-umb-btn" style="width:100%;margin-top:8px" onclick="saveUmbrella()">Salvar guarda-sol</button>
-    </div>
-  </div>
 </div>
 
 <!-- MODAL PRODUTO -->
@@ -2199,26 +2195,24 @@ async function renderUmbrellas(){
 
 // ── CRUD Guarda-sóis ──────────────────────────────
 function editUmbFromBtn(btn){
-  editUmbrella(btn.dataset.uid, parseInt(btn.dataset.num), btn.dataset.area, btn.dataset.label, btn.dataset.active==='true');
+  var form = $('umb-form-inline');
+  if(!form) return;
+  var e1=$('umb-edit-id'),e2=$('umb-number'),e3=$('umb-label'),e4=$('umb-area'),e5=$('umb-active'),e6=$('umb-form-title');
+  if(e1) e1.value=btn.dataset.uid||'';
+  if(e2) e2.value=btn.dataset.num||'';
+  if(e3) e3.value=btn.dataset.label||'';
+  if(e4) e4.value=btn.dataset.area||'Frente mar';
+  if(e5) e5.value=btn.dataset.active==='true'?'true':'false';
+  if(e6) e6.textContent='Editar guarda-sol';
+  form.classList.remove('hidden');
+  if(e2) e2.focus();
 }
 function delUmbFromBtn(btn){
   deleteUmbrella(btn.dataset.uid, parseInt(btn.dataset.num));
 }
 
 function openAddUmbModal(){
-  setTimeout(function(){
-    var modal = $('modal-umbrella');
-    if(!modal){ toast('Tente novamente'); return; }
-    var e1=$('umb-edit-id'), e2=$('umb-number'), e3=$('umb-label');
-    var e4=$('umb-area'), e5=$('umb-active'), e6=$('modal-umb-title');
-    if(e1) e1.value='';
-    if(e2) e2.value='';
-    if(e3) e3.value='';
-    if(e4) e4.value='Frente mar';
-    if(e5) e5.value='true';
-    if(e6) e6.textContent='Novo guarda-sol';
-    modal.classList.add('open');
-  }, 100);
+  toggleUmbForm(false);
 }
 
 function editUmbrella(id, number, area, label, active){
@@ -2231,8 +2225,25 @@ function editUmbrella(id, number, area, label, active){
   $('modal-umbrella').classList.add('open');
 }
 
-function closeUmbModal(){
-  $('modal-umbrella').classList.remove('open');
+function closeUmbModal(){ toggleUmbForm(true); }
+
+function toggleUmbForm(forceClose){
+  var form = $('umb-form-inline');
+  if(!form) return;
+  if(forceClose===true || !form.classList.contains('hidden')){
+    form.classList.add('hidden');
+    return;
+  }
+  // Limpar e abrir
+  var e1=$('umb-edit-id'),e2=$('umb-number'),e3=$('umb-label'),e4=$('umb-area'),e5=$('umb-active'),e6=$('umb-form-title');
+  if(e1) e1.value='';
+  if(e2) e2.value='';
+  if(e3) e3.value='';
+  if(e4) e4.value='Frente mar';
+  if(e5) e5.value='true';
+  if(e6) e6.textContent='Novo guarda-sol';
+  form.classList.remove('hidden');
+  if(e2) e2.focus();
 }
 
 async function saveUmbrella(){
