@@ -1059,8 +1059,8 @@ async function doLogin(){
   setLoading('login-btn',true,'Entrando...');
 
   if(isConfigured){
-    const {data:kiosks,error}=await sb.from('kiosks').select('*').eq('owner_email',email).eq('is_active',true).limit(1);
-    if(error||!kiosks||!kiosks.length){ toast('E-mail não encontrado ou quiosque inativo'); setLoading('login-btn',false,'Entrar'); return; }
+    const {data:kiosks,error}=await sb.from('kiosks').select('*').eq('owner_email',email).limit(1);
+    if(error||!kiosks||!kiosks.length){ toast('E-mail não encontrado. Verifique suas credenciais.'); setLoading('login-btn',false,'Entrar'); return; }
     currentKiosk=kiosks[0];
   } else {
     currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo'};
