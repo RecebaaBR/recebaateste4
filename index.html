@@ -1435,9 +1435,10 @@ async function renderUmbrellas(){
     + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">Fixe este QR Code em cada guarda-sol.</div>'
     + '<img src="' + qrImgUrl + '" style="margin:0 auto 12px;display:block;border-radius:8px"/>'
     + '<div style="font-size:11px;color:var(--ocean-600);word-break:break-all;margin-bottom:12px">' + qrUrl + '</div>'
-    + '<button class="btn btn-ocean btn-sm" style="margin:4px" onclick="navigator.clipboard.writeText('' + qrUrl + '').then(function(){window.alert('URL copiada!')})">📋 Copiar URL</button>'
-    + '<button class="btn btn-dark btn-sm" style="margin:4px" onclick="window.open('https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(qrUrl) + '','_blank')">🖨️ Ver QR grande</button>'
-    + '</div>';
+    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px">'
+    + '<button class="btn btn-ocean btn-sm" style="margin:4px" id="copy-qr-btn">📋 Copiar URL</button>'
+    + '<button class="btn btn-dark btn-sm" style="margin:4px" id="print-qr-btn">🖨️ Ver QR grande</button>'
+    + '</div></div>';
 
   // Lista de guarda-sóis
   var umbHtml = umbs.map(function(u){
@@ -1450,6 +1451,13 @@ async function renderUmbrellas(){
   }).join('');
 
   grid.innerHTML = qrSection + umbHtml;
+  // Adicionar eventos nos botões do QR
+  setTimeout(function(){
+    var copyBtn = document.getElementById('copy-qr-btn');
+    var printBtn = document.getElementById('print-qr-btn');
+    if(copyBtn) copyBtn.onclick = function(){ navigator.clipboard.writeText(qrUrl).then(function(){ alert('URL copiada!'); }); };
+    if(printBtn) printBtn.onclick = function(){ window.open('https://api.qrserver.com/v1/create-qr-code/?size=400x400&data='+encodeURIComponent(qrUrl),'_blank'); };
+  }, 100);
 }
 
 
