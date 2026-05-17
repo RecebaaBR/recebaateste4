@@ -2668,6 +2668,34 @@ async function loadAdminMetrics(){
   }
 }
 
+// ── Credenciais admin ──────────────
+var ADMIN_USER = 'recebaa';
+var ADMIN_PASS = 'Rec@2025#master';
+var adminLoggedIn = false;
+
+function doAdminLogin(){
+  var user = $('admin-user').value.trim();
+  var pass = $('admin-pass').value.trim();
+  if(user === ADMIN_USER && pass === ADMIN_PASS){
+    adminLoggedIn = true;
+    $('admin-login').classList.add('hidden');
+    $('admin-dashboard').classList.remove('hidden');
+    loadAdminData();
+    toast('Bem-vindo ao painel master!');
+  } else {
+    toast('Usuário ou senha incorretos');
+    $('admin-pass').value = '';
+  }
+}
+
+function doAdminLogout(){
+  adminLoggedIn = false;
+  $('admin-login').classList.remove('hidden');
+  $('admin-dashboard').classList.add('hidden');
+  $('admin-user').value = '';
+  $('admin-pass').value = '';
+}
+
 function aPage(name,btn){
   if(!adminLoggedIn){ toast('Faça login primeiro'); return; }
   document.querySelectorAll('.apage').forEach(p=>p.classList.remove('active'));
