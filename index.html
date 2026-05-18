@@ -2344,11 +2344,38 @@ async function goToMenu(){
     // Busca kiosk pelo ID da URL (?kiosk=ID) ou pelo primeiro ativo
     var urlParams = new URLSearchParams(window.location.search);
     var kioskId = urlParams.get('kiosk');
-    var query = sb.from('kiosks').select('*').eq('is_active',true);
+    var query = sb.from('kiosks').select('*').eq('is_active',true).eq('blocked',false);
     if(kioskId) query = query.eq('id', kioskId);
     else query = query.limit(1);
     const {data:kiosks}=await query;
     currentKiosk=kiosks && kiosks[0];
+
+    // Validar que o quiosque existe e está ativo
+    if(!currentKiosk){
+      setLoading('splash-btn',false,'Ver Cardápio →');
+      toast('❌ Quiosque não encontrado ou inativo. Verifique o QR Code.');
+      return;
+    }
+
+    // Validar que o guarda-sol existe e está ativo neste quiosque
+    const {data:umbCheck} = await sb.from('umbrellas')
+      .select('id,is_active')
+      .eq('kiosk_id', currentKiosk.id)
+      .eq('number', window._umb)
+      .limit(1);
+
+    if(!umbCheck || umbCheck.length === 0){
+      setLoading('splash-btn',false,'Ver Cardápio →');
+      toast('❌ Guarda-sol não encontrado. Verifique o número ou fale com o atendente.');
+      return;
+    }
+
+    if(umbCheck[0].is_active === false){
+      setLoading('splash-btn',false,'Ver Cardápio →');
+      toast('❌ Este guarda-sol está inativo. Fale com o atendente.');
+      return;
+    }
+
     if(currentKiosk){
       const {data:prods}=await sb.from('products').select('*').eq('kiosk_id',currentKiosk.id).eq('is_available',true).order('sort_order');
       catalog=prods||[];
