@@ -78,6 +78,7 @@ body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webk
 .pill-delivering{background:rgba(6,182,212,.12);color:#0e7490}
 .pill-delivered{background:rgba(16,185,129,.12);color:#047857}
 .pill-cancelled{background:rgba(239,68,68,.12);color:#b91c1c}
+.pill-billed{background:rgba(16,185,129,.15);color:#065f46;font-weight:600}
 
 /* ── CLIENTE ── */
 #screen-client{background:#fff}
@@ -870,6 +871,7 @@ tr:hover td{background:var(--sand-50)}
           <button class="hf-btn" onclick="histFilter('pending',this)">⏳ Pendente</button>
           <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
           <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
+          <button class="hf-btn" onclick="histFilter('billed',this)">💰 Faturado</button>
           <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
         </div>
         <div class="hist-table" id="hist-table"></div>
@@ -1145,6 +1147,7 @@ body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webk
 .pill-delivering{background:rgba(6,182,212,.12);color:#0e7490}
 .pill-delivered{background:rgba(16,185,129,.12);color:#047857}
 .pill-cancelled{background:rgba(239,68,68,.12);color:#b91c1c}
+.pill-billed{background:rgba(16,185,129,.15);color:#065f46;font-weight:600}
 
 /* ── CLIENTE ── */
 #screen-client{background:#fff}
@@ -1937,6 +1940,7 @@ tr:hover td{background:var(--sand-50)}
           <button class="hf-btn" onclick="histFilter('pending',this)">⏳ Pendente</button>
           <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
           <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
+          <button class="hf-btn" onclick="histFilter('billed',this)">💰 Faturado</button>
           <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
         </div>
         <div class="hist-table" id="hist-table"></div>
@@ -2589,6 +2593,30 @@ function simulateProgress(oid){
   setTimeout(go,3000);
 }
 
+function encerrarSessaoCliente(){
+  // Limpar todos os dados da sessão
+  myOrders = [];
+  orders = [];
+  cart = {};
+  currentKiosk = null;
+  catalog = [];
+  dbCategories = [];
+  window._umb = null;
+
+  // Mostrar mensagem de encerramento e voltar para splash
+  toast('💰 Conta faturada! Obrigado pela visita. 🌊');
+
+  setTimeout(function(){
+    // Voltar para splash
+    $('client-status').classList.add('hidden');
+    $('client-menu').classList.add('hidden');
+    $('client-splash').classList.remove('hidden');
+    $('umbrella-input').value = '';
+    $('splash-kname').textContent = 'Recebaa';
+    updateOrdersBadge();
+  }, 2000);
+}
+
 function goBackToMenu(){
   $('client-status').classList.add('hidden');
   $('client-menu').classList.remove('hidden');
@@ -2779,7 +2807,8 @@ function updateOrdersBadge(){
 var PILL={
   pending:{l:'Aguardando',c:'pill-pending'},accepted:{l:'Confirmado',c:'pill-accepted'},
   preparing:{l:'Em preparo',c:'pill-preparing'},delivering:{l:'A caminho',c:'pill-delivering'},
-  delivered:{l:'Entregue ✅',c:'pill-delivered'},cancelled:{l:'Cancelado',c:'pill-cancelled'}
+  delivered:{l:'Entregue ✅',c:'pill-delivered'},cancelled:{l:'Cancelado',c:'pill-cancelled'},
+  billed:{l:'Faturado 💰',c:'pill-billed'}
 };
 function renderMyOrders(){
   var el=$('my-orders-list');
@@ -2913,16 +2942,15 @@ async function loadKioskData(){
 }
 
 async function closeUmbrellaSession(umbNum){
-  if(!confirm('Encerrar guarda-sol '+umbNum+'? Todos os pedidos pendentes serão finalizados e o garçom poderá reiniciá-lo.')) return;
+  if(!confirm('Faturar e encerrar guarda-sol '+umbNum+'?\nIsso vai marcar todos os pedidos como faturados e limpar a sessão do cliente.')) return;
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-    // Marcar todos os pedidos de conta deste guarda-sol como entregues
+    // Marcar TODOS os pedidos do guarda-sol como 'billed'
     await sb.from('orders')
-      .update({status:'delivered'})
+      .update({status:'billed'})
       .eq('kiosk_id', currentKiosk.id)
       .eq('umbrella_num', String(umbNum))
-      .eq('customer_name', 'PEDIDO DE CONTA')
-      .eq('status','pending');
+      .in('status', ['pending','accepted','preparing','delivering','delivered']);
 
     // Criar registro de encerramento
     await sb.from('orders').insert({
@@ -2930,20 +2958,23 @@ async function closeUmbrellaSession(umbNum){
       umbrella_num: String(umbNum),
       order_number: 0,
       customer_name: 'ENCERRAMENTO',
-      notes: '✅ Guarda-sol '+umbNum+' encerrado. Conta paga.',
-      status: 'delivered',
+      notes: '✅ Guarda-sol '+umbNum+' faturado e encerrado.',
+      status: 'billed',
       total: 0
     });
   } else {
     orders.forEach(function(o){
-      if((o.umb===String(umbNum)||o.umbrella_num===String(umbNum)) && o.customer_name==='PEDIDO DE CONTA') o.status='delivered';
+      if((o.umb===String(umbNum)||o.umbrella_num===String(umbNum))){
+        o.status = 'billed';
+      }
     });
   }
 
   renderLiveOrders();
   updateDashMetrics();
-  toast('✅ Guarda-sol '+umbNum+' encerrado! Pronto para novo cliente.');
+  toast('💰 Guarda-sol '+umbNum+' faturado! Mesa liberada para novos clientes.');
 }
+
 
 function doLogout(){
   if(realtimeChannel) sb.removeChannel(realtimeChannel);
@@ -3051,7 +3082,7 @@ function renderLiveOrders(){
   const seq=['pending','accepted','preparing','delivering','delivered','cancelled'];
   const sorted=[...orders].sort((a,b)=>seq.indexOf(a.status)-seq.indexOf(b.status));
   // Separar pedidos especiais (conta/atendente) dos normais
-  var billOrders = sorted.filter(function(o){ return o.customer_name==='PEDIDO DE CONTA' && !['delivered','cancelled'].includes(o.status); });
+  var billOrders = sorted.filter(function(o){ return o.customer_name==='PEDIDO DE CONTA' && !['delivered','cancelled','billed'].includes(o.status); });
   var callOrders = sorted.filter(function(o){ return o.customer_name==='CHAMADA DE ATENDENTE' && !['delivered','cancelled'].includes(o.status); });
   var normalOrders = sorted.filter(function(o){ return o.customer_name!=='PEDIDO DE CONTA' && o.customer_name!=='CHAMADA DE ATENDENTE'; });
 
@@ -3062,8 +3093,8 @@ function renderLiveOrders(){
       +'<div style="font-size:12px;color:#7c3aed">Leve a máquina até o guarda-sol</div></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
       +billOrders.map(function(o){
-        return '<button class="btn btn-sm" style="background:#8b5cf6;color:#fff" data-umb="'+o.umbrella_num+'" onclick="closeUmbrellaSession(this.dataset.umb)">'
-          +'☂️ '+o.umbrella_num+' · '+fmt(o.total)+' · Encerrar</button>';
+        return '<button class="btn btn-sm" style="background:#10b981;color:#fff;font-weight:600" data-umb="'+o.umbrella_num+'" onclick="closeUmbrellaSession(this.dataset.umb)">'
+          +'💰 Faturar ☂️'+o.umbrella_num+' · '+fmt(o.total)+'</button>';
       }).join('')
       +'</div></div>';
   }
