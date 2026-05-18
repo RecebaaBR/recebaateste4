@@ -417,6 +417,29 @@ tr:hover td{background:var(--sand-50)}
 /* Footer */
 .lp-footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 24px;text-align:center;color:rgba(255,255,255,.25);font-size:13px}
 
+/* QR Scanner Modal */
+.qr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.qr-overlay.open{display:flex}
+.qr-box{width:100%;max-width:400px;text-align:center}
+.qr-title{color:#fff;font-size:18px;font-weight:600;margin-bottom:8px}
+.qr-sub{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:24px;line-height:1.5}
+.qr-video-wrap{position:relative;width:100%;max-width:320px;margin:0 auto 20px;border-radius:16px;overflow:hidden;box-shadow:0 0 0 3px #0ea5e9}
+.qr-video-wrap video{width:100%;display:block;border-radius:16px}
+.qr-corner{position:absolute;width:24px;height:24px;border-color:#0ea5e9;border-style:solid}
+.qr-corner.tl{top:8px;left:8px;border-width:3px 0 0 3px}
+.qr-corner.tr{top:8px;right:8px;border-width:3px 3px 0 0}
+.qr-corner.bl{bottom:8px;left:8px;border-width:0 0 3px 3px}
+.qr-corner.br{bottom:8px;right:8px;border-width:0 3px 3px 0}
+.qr-scan-line{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,#0ea5e9,transparent);animation:scanline 2s linear infinite}
+@keyframes scanline{0%{top:10%}100%{top:90%}}
+.qr-manual{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:16px;margin-top:4px}
+.qr-manual p{color:rgba(255,255,255,.6);font-size:13px;margin-bottom:10px}
+.qr-manual-input{display:flex;gap:8px}
+.qr-manual-input input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none}
+.qr-manual-input input::placeholder{color:rgba(255,255,255,.35)}
+.qr-manual-input button{padding:10px 16px;background:#0ea5e9;border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.qr-close{margin-top:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:10px 28px;color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif}
+
 /* Divisor */
 .lp-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);margin:0}
 
@@ -531,7 +554,7 @@ tr:hover td{background:var(--sand-50)}
       <h1>Peça na praia,<br/><span>sem sair do lugar</span></h1>
       <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
-        <button class="lp-cta-main" onclick="goToScreen('client')">📱 Fazer um pedido</button>
+        <button class="lp-cta-main" onclick="openQrScanner()">📷 Escanear QR Code</button>
         <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
       </div>
 
@@ -687,7 +710,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
           <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
-          <button class="lp-access-btn blue">Fazer pedido →</button>
+          <button class="lp-access-btn blue" onclick="openQrScanner()">📷 Escanear QR →</button>
         </div>
         <div class="lp-access-card kiosk" onclick="goToScreen('kiosk')">
           <div class="lp-access-icon">🏪</div>
@@ -1484,6 +1507,29 @@ tr:hover td{background:var(--sand-50)}
 /* Footer */
 .lp-footer{border-top:1px solid rgba(255,255,255,.06);padding:40px 24px;text-align:center;color:rgba(255,255,255,.25);font-size:13px}
 
+/* QR Scanner Modal */
+.qr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.qr-overlay.open{display:flex}
+.qr-box{width:100%;max-width:400px;text-align:center}
+.qr-title{color:#fff;font-size:18px;font-weight:600;margin-bottom:8px}
+.qr-sub{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:24px;line-height:1.5}
+.qr-video-wrap{position:relative;width:100%;max-width:320px;margin:0 auto 20px;border-radius:16px;overflow:hidden;box-shadow:0 0 0 3px #0ea5e9}
+.qr-video-wrap video{width:100%;display:block;border-radius:16px}
+.qr-corner{position:absolute;width:24px;height:24px;border-color:#0ea5e9;border-style:solid}
+.qr-corner.tl{top:8px;left:8px;border-width:3px 0 0 3px}
+.qr-corner.tr{top:8px;right:8px;border-width:3px 3px 0 0}
+.qr-corner.bl{bottom:8px;left:8px;border-width:0 0 3px 3px}
+.qr-corner.br{bottom:8px;right:8px;border-width:0 3px 3px 0}
+.qr-scan-line{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,#0ea5e9,transparent);animation:scanline 2s linear infinite}
+@keyframes scanline{0%{top:10%}100%{top:90%}}
+.qr-manual{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:16px;margin-top:4px}
+.qr-manual p{color:rgba(255,255,255,.6);font-size:13px;margin-bottom:10px}
+.qr-manual-input{display:flex;gap:8px}
+.qr-manual-input input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none}
+.qr-manual-input input::placeholder{color:rgba(255,255,255,.35)}
+.qr-manual-input button{padding:10px 16px;background:#0ea5e9;border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.qr-close{margin-top:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:10px 28px;color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif}
+
 /* Divisor */
 .lp-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);margin:0}
 
@@ -1598,7 +1644,7 @@ tr:hover td{background:var(--sand-50)}
       <h1>Peça na praia,<br/><span>sem sair do lugar</span></h1>
       <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
-        <button class="lp-cta-main" onclick="goToScreen('client')">📱 Fazer um pedido</button>
+        <button class="lp-cta-main" onclick="openQrScanner()">📷 Escanear QR Code</button>
         <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
       </div>
 
@@ -1754,7 +1800,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
           <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
-          <button class="lp-access-btn blue">Fazer pedido →</button>
+          <button class="lp-access-btn blue" onclick="openQrScanner()">📷 Escanear QR →</button>
         </div>
         <div class="lp-access-card kiosk" onclick="goToScreen('kiosk')">
           <div class="lp-access-icon">🏪</div>
@@ -2170,6 +2216,110 @@ function toast(msg){
 // ══════════════════════════════════════════════════════
 // NAV
 // ══════════════════════════════════════════════════════
+// ── QR Code Scanner ────────────────────────────────
+var qrStream = null;
+var qrAnimFrame = null;
+
+function openQrScanner(){
+  var overlay = document.getElementById('qr-overlay');
+  if(overlay) overlay.classList.add('open');
+
+  var video = document.getElementById('qr-video');
+  if(!video) return;
+
+  // Verificar se browser suporta câmera
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    // Sem suporte - mostrar só input manual
+    var wrap = document.getElementById('qr-video-wrap');
+    if(wrap) wrap.style.display='none';
+    toast('Câmera não disponível. Use o campo manual.');
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
+  }).then(function(stream){
+    qrStream = stream;
+    video.srcObject = stream;
+    video.play();
+    video.addEventListener('loadedmetadata', function(){
+      scanQrFrame();
+    });
+  }).catch(function(err){
+    console.log('Câmera erro:', err);
+    var wrap = document.getElementById('qr-video-wrap');
+    if(wrap) wrap.innerHTML='<div style="padding:40px;color:rgba(255,255,255,.5);font-size:13px">Câmera não disponível.<br/>Use o campo manual abaixo.</div>';
+  });
+}
+
+function scanQrFrame(){
+  var video = document.getElementById('qr-video');
+  if(!video || !video.videoWidth) {
+    qrAnimFrame = requestAnimationFrame(scanQrFrame);
+    return;
+  }
+
+  var canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  // Usar jsQR se disponível
+  if(typeof jsQR !== 'undefined'){
+    var code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: 'dontInvert'
+    });
+    if(code && code.data){
+      handleQrResult(code.data);
+      return;
+    }
+  }
+
+  qrAnimFrame = requestAnimationFrame(scanQrFrame);
+}
+
+function handleQrResult(url){
+  closeQrScanner();
+  toast('✅ QR Code lido!');
+
+  // Verificar se é URL do Recebaa
+  if(url.includes('?kiosk=') || url.includes('kiosk=')){
+    // Navegar para a URL
+    window.location.href = url;
+  } else if(url.match(/^\d+$/)){
+    // É só um número - usar como guarda-sol
+    goToScreen('client');
+    setTimeout(function(){
+      var input = document.getElementById('umbrella-input');
+      if(input){ input.value = url; goToMenu(); }
+    }, 300);
+  } else {
+    // URL genérica - tentar navegar
+    window.location.href = url;
+  }
+}
+
+function qrManualGo(){
+  var num = document.getElementById('qr-manual-num').value;
+  if(!num || isNaN(num) || +num < 1){ toast('Informe o número do guarda-sol'); return; }
+  closeQrScanner();
+  goToScreen('client');
+  setTimeout(function(){
+    var input = document.getElementById('umbrella-input');
+    if(input){ input.value = num; goToMenu(); }
+  }, 300);
+}
+
+function closeQrScanner(){
+  var overlay = document.getElementById('qr-overlay');
+  if(overlay) overlay.classList.remove('open');
+  if(qrAnimFrame){ cancelAnimationFrame(qrAnimFrame); qrAnimFrame=null; }
+  if(qrStream){ qrStream.getTracks().forEach(function(t){ t.stop(); }); qrStream=null; }
+}
+
 function goToLanding(){
   // Mostrar landing, esconder app nav
   document.querySelectorAll('.screen').forEach(function(s){ s.style.display='none'; s.classList.remove('active'); });
@@ -3819,5 +3969,31 @@ function aPage(name,btn){
   else loadAdminData();
 }
 </script>
+<!-- QR CODE SCANNER MODAL -->
+<div class="qr-overlay" id="qr-overlay">
+  <div class="qr-box">
+    <div class="qr-title">📷 Escanear QR Code</div>
+    <div class="qr-sub">Aponte a câmera para o QR Code<br/>do seu guarda-sol</div>
+    <div class="qr-video-wrap" id="qr-video-wrap">
+      <video id="qr-video" autoplay playsinline muted></video>
+      <div class="qr-corner tl"></div>
+      <div class="qr-corner tr"></div>
+      <div class="qr-corner bl"></div>
+      <div class="qr-corner br"></div>
+      <div class="qr-scan-line"></div>
+    </div>
+    <div class="qr-manual">
+      <p>Ou digite o número do guarda-sol manualmente:</p>
+      <div class="qr-manual-input">
+        <input type="number" id="qr-manual-num" placeholder="Ex: 7" min="1" max="99"/>
+        <button onclick="qrManualGo()">Ir →</button>
+      </div>
+    </div>
+    <button class="qr-close" onclick="closeQrScanner()">✕ Fechar</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
 </body>
 </html>
