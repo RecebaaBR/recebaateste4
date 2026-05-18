@@ -439,10 +439,8 @@ tr:hover td{background:var(--sand-50)}
     Recebaa
   </div>
   <div class="lp-nav-btns">
-    <button onclick="setLandingLang('pt')" id="lp-btn-pt" class="lp-btn-primary" style="padding:6px 12px;font-size:12px">🇧🇷 PT</button>
-    <button onclick="setLandingLang('en')" id="lp-btn-en" class="lp-btn-outline" style="padding:6px 12px;font-size:12px">🇺🇸 EN</button>
-    <button class="lp-btn-outline" id="lp-nav-client" onclick="goToScreen('client')">📱 Sou cliente</button>
-    <button class="lp-btn-outline" id="lp-nav-kiosk" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
+    <button class="lp-btn-outline" onclick="goToScreen('client')">📱 Sou cliente</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
@@ -530,12 +528,12 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- HERO -->
     <div class="lp-hero" style="position:relative;z-index:10;background:rgba(3,60,100,.55);backdrop-filter:blur(2px);margin:0;padding-top:100px;padding-bottom:60px">
-      <div class="lp-badge" id="lp-badge">🌊 Tecnologia para a beira-mar</div>
-      <h1 id="lp-h1">Peça na praia,<br/><span id="lp-h1-span">sem sair do lugar</span></h1>
-      <p id="lp-hero-p">O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
+      <div class="lp-badge">🌊 Tecnologia para a beira-mar</div>
+      <h1>Peça na praia,<br/><span>sem sair do lugar</span></h1>
+      <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToScreen('client')">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" id="lp-cta2" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
       </div>
 
     </div>
@@ -544,7 +542,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- COMO FUNCIONA -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.7);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
-      <div class="lp-section-tag" id="lp-tag-how">Como funciona</div>
+      <div class="lp-section-tag">Como funciona</div>
       <div class="lp-section-title">Simples como deve ser</div>
       <div class="lp-section-sub" style="margin:0 auto">Três passos e o pedido está a caminho do seu guarda-sol.</div>
       <div class="lp-steps">
@@ -575,7 +573,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- PARA O CLIENTE -->
     <div class="lp-section" style="position:relative;z-index:10">
-      <div class="lp-section-tag" id="lp-tag-client">Para o cliente</div>
+      <div class="lp-section-tag">Para o cliente</div>
       <div class="lp-section-title">Mais tempo curtindo,<br/>menos tempo esperando</div>
       <div class="lp-section-sub">Chega de levantar do guarda-sol para pedir ou pagar. Tudo pelo celular.</div>
       <div class="lp-cards">
@@ -616,7 +614,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- PARA O QUIOSQUE -->
     <div class="lp-section" style="position:relative;z-index:10">
-      <div class="lp-section-tag" id="lp-tag-kiosk">Para o quiosque</div>
+      <div class="lp-section-tag">Para o quiosque</div>
       <div class="lp-section-title">Venda mais com<br/>menos esforço</div>
       <div class="lp-section-sub">Painel completo para gerenciar pedidos, cardápio e relatórios em tempo real.</div>
       <div class="lp-cards">
@@ -657,7 +655,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center">
-      <div class="lp-section-tag" id="lp-tag-mission">Nossa missão</div>
+      <div class="lp-section-tag">Nossa missão</div>
       <div class="lp-section-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
       <div class="lp-section-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
       <div class="lp-cards" style="text-align:left">
@@ -683,7 +681,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- ACESSO -->
     <div class="lp-section" style="text-align:center">
-      <div class="lp-section-tag" id="lp-tag-access">Acesse agora</div>
+      <div class="lp-section-tag">Acesse agora</div>
       <div class="lp-section-title">Por onde você quer entrar?</div>
       <div class="lp-access">
         <div class="lp-access-card client" onclick="goToScreen('client')">
@@ -734,15 +732,9 @@ tr:hover td{background:var(--sand-50)}
   <div id="client-menu" class="hidden">
     <div class="menu-header">
       <div class="menu-kiosk-logo" id="menu-logo">🌊</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;flex:1">
-        <div>
-          <div class="menu-kiosk-name" id="menu-kname">Quiosque</div>
-          <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
-        </div>
-        <div style="display:flex;gap:4px">
-            <button onclick="setClientLang('pt')" id="client-btn-pt" style="background:rgba(255,255,255,.9);border:none;border-radius:99px;padding:3px 9px;color:#0369a1;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🇧🇷 PT</button>
-            <button onclick="setClientLang('en')" id="client-btn-en" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:3px 9px;color:#fff;font-size:11px;cursor:pointer;font-family:inherit">🇺🇸 EN</button>
-          </div>
+      <div>
+        <div class="menu-kiosk-name" id="menu-kname">Quiosque</div>
+        <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
       </div>
       <div class="menu-tab-row">
         <button class="menu-tab active" id="tab-menu" onclick="clientTab('menu')">🍔 Cardápio</button>
@@ -1548,10 +1540,8 @@ tr:hover td{background:var(--sand-50)}
     Recebaa
   </div>
   <div class="lp-nav-btns">
-    <button onclick="setLandingLang('pt')" id="lp-btn-pt" class="lp-btn-primary" style="padding:6px 12px;font-size:12px">🇧🇷 PT</button>
-    <button onclick="setLandingLang('en')" id="lp-btn-en" class="lp-btn-outline" style="padding:6px 12px;font-size:12px">🇺🇸 EN</button>
-    <button class="lp-btn-outline" id="lp-nav-client" onclick="goToScreen('client')">📱 Sou cliente</button>
-    <button class="lp-btn-outline" id="lp-nav-kiosk" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
+    <button class="lp-btn-outline" onclick="goToScreen('client')">📱 Sou cliente</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
@@ -1639,12 +1629,12 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- HERO -->
     <div class="lp-hero">
-      <div class="lp-badge" id="lp-badge">🌊 Tecnologia para a beira-mar</div>
-      <h1 id="lp-h1">Peça na praia,<br/><span id="lp-h1-span">sem sair do lugar</span></h1>
-      <p id="lp-hero-p">O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
+      <div class="lp-badge">🌊 Tecnologia para a beira-mar</div>
+      <h1>Peça na praia,<br/><span>sem sair do lugar</span></h1>
+      <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToScreen('client')">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" id="lp-cta2" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
       </div>
 
     </div>
@@ -1653,7 +1643,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- COMO FUNCIONA -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.7);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
-      <div class="lp-section-tag" id="lp-tag-how">Como funciona</div>
+      <div class="lp-section-tag">Como funciona</div>
       <div class="lp-section-title">Simples como deve ser</div>
       <div class="lp-section-sub" style="margin:0 auto">Três passos e o pedido está a caminho do seu guarda-sol.</div>
       <div class="lp-steps">
@@ -1684,7 +1674,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- PARA O CLIENTE -->
     <div class="lp-section" style="position:relative;z-index:10">
-      <div class="lp-section-tag" id="lp-tag-client">Para o cliente</div>
+      <div class="lp-section-tag">Para o cliente</div>
       <div class="lp-section-title">Mais tempo curtindo,<br/>menos tempo esperando</div>
       <div class="lp-section-sub">Chega de levantar do guarda-sol para pedir ou pagar. Tudo pelo celular.</div>
       <div class="lp-cards">
@@ -1725,7 +1715,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- PARA O QUIOSQUE -->
     <div class="lp-section" style="position:relative;z-index:10">
-      <div class="lp-section-tag" id="lp-tag-kiosk">Para o quiosque</div>
+      <div class="lp-section-tag">Para o quiosque</div>
       <div class="lp-section-title">Venda mais com<br/>menos esforço</div>
       <div class="lp-section-sub">Painel completo para gerenciar pedidos, cardápio e relatórios em tempo real.</div>
       <div class="lp-cards">
@@ -1766,7 +1756,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center">
-      <div class="lp-section-tag" id="lp-tag-mission">Nossa missão</div>
+      <div class="lp-section-tag">Nossa missão</div>
       <div class="lp-section-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
       <div class="lp-section-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
       <div class="lp-cards" style="text-align:left">
@@ -1792,7 +1782,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- ACESSO -->
     <div class="lp-section" style="text-align:center">
-      <div class="lp-section-tag" id="lp-tag-access">Acesse agora</div>
+      <div class="lp-section-tag">Acesse agora</div>
       <div class="lp-section-title">Por onde você quer entrar?</div>
       <div class="lp-access">
         <div class="lp-access-card client" onclick="goToScreen('client')">
@@ -1843,15 +1833,9 @@ tr:hover td{background:var(--sand-50)}
   <div id="client-menu" class="hidden">
     <div class="menu-header">
       <div class="menu-kiosk-logo" id="menu-logo">🌊</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;flex:1">
-        <div>
-          <div class="menu-kiosk-name" id="menu-kname">Quiosque</div>
-          <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
-        </div>
-        <div style="display:flex;gap:4px">
-            <button onclick="setClientLang('pt')" id="client-btn-pt" style="background:rgba(255,255,255,.9);border:none;border-radius:99px;padding:3px 9px;color:#0369a1;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🇧🇷 PT</button>
-            <button onclick="setClientLang('en')" id="client-btn-en" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:3px 9px;color:#fff;font-size:11px;cursor:pointer;font-family:inherit">🇺🇸 EN</button>
-          </div>
+      <div>
+        <div class="menu-kiosk-name" id="menu-kname">Quiosque</div>
+        <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
       </div>
       <div class="menu-tab-row">
         <button class="menu-tab active" id="tab-menu" onclick="clientTab('menu')">🍔 Cardápio</button>
@@ -1891,6 +1875,21 @@ tr:hover td{background:var(--sand-50)}
         <textarea class="textarea" id="order-notes" placeholder="Ex: sem cebola, bem gelado..."></textarea>
       </div>
       <button class="btn btn-ocean" id="place-order-btn" style="width:100%" onclick="placeOrder()">Enviar Pedido 🚀</button>
+    </div>
+  </div>
+
+  <div id="client-status" class="hidden">
+    <div class="status-wrap">
+      <div class="status-card">
+        <div class="status-icon">✅</div>
+        <div class="status-num">Pedido #<span id="status-num">0</span></div>
+        <div class="status-sub-txt">Obrigado, <span id="status-name">—</span>!</div>
+        <div class="status-steps" id="status-steps"></div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-dark" onclick="goBackToMenu()">🍽️ Voltar para o Cardápio</button>
+          <button class="btn btn-ghost" onclick="goToOrders()">📋 Pedidos</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -2239,85 +2238,6 @@ function toast(msg){
 // ══════════════════════════════════════════════════════
 // NAV
 // ══════════════════════════════════════════════════════
-// ── Idioma Landing ───────────────────────────────────
-var landingLang = 'pt';
-
-var LANDING_LANG = {
-  pt: {
-    btn: '🇧🇷 PT',
-    nav_client: '📱 Sou cliente',
-    nav_kiosk: '🏪 Meu quiosque',
-    badge: '🌊 Tecnologia para a beira-mar',
-    h1: 'Peça na praia,',
-    h1_span: 'sem sair do lugar',
-    hero_p: 'O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.',
-    cta1: '☂️ Fazer um pedido',
-    cta2: '🏪 Quero meu quiosque',
-    tag_how: 'Como funciona',
-    tag_client: 'Para o cliente',
-    tag_kiosk: 'Para o quiosque',
-    tag_mission: 'Nossa missão',
-    tag_access: 'Acesse agora',
-    footer: '© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil'
-  },
-  en: {
-    btn: '🇺🇸 EN',
-    nav_client: '📱 I am a customer',
-    nav_kiosk: '🏪 My kiosk',
-    badge: '🌊 Beach technology',
-    h1: 'Order at the beach,',
-    h1_span: 'without leaving your spot',
-    hero_p: 'Recebaa connects customers to beach kiosks via QR Code. No lines, no waiting. Just enjoy the sun.',
-    cta1: '☂️ Place an order',
-    cta2: '🏪 I want my kiosk',
-    tag_how: 'How it works',
-    tag_client: 'For customers',
-    tag_kiosk: 'For kiosks',
-    tag_mission: 'Our mission',
-    tag_access: 'Access now',
-    footer: '© 2025 Recebaa · Technology for beach kiosks · Made with ❤️ in Brazil'
-  }
-};
-
-function toggleLandingLang(){ setLandingLang(landingLang==='pt'?'en':'pt'); }
-
-function setLandingLang(lang){
-  landingLang = lang;
-  // Destacar botão ativo
-  var pt = document.getElementById('lp-btn-pt');
-  var en = document.getElementById('lp-btn-en');
-  if(pt){ pt.className = lang==='pt' ? 'lp-btn-primary' : 'lp-btn-outline'; pt.style.padding='6px 12px'; pt.style.fontSize='12px'; }
-  if(en){ en.className = lang==='en' ? 'lp-btn-primary' : 'lp-btn-outline'; en.style.padding='6px 12px'; en.style.fontSize='12px'; }
-  applyLandingLang();
-}
-
-function applyLandingLang(){
-  var l = LANDING_LANG[landingLang];
-  var set = function(id, txt){ var el=document.getElementById(id); if(el) el.textContent=txt; };
-  var setHtml = function(id, html){ var el=document.getElementById(id); if(el) el.innerHTML=html; };
-
-  set('lp-lang-btn', l.btn);
-  set('lp-nav-client', l.nav_client);
-  set('lp-nav-kiosk', l.nav_kiosk);
-  set('lp-badge', l.badge);
-  setHtml('lp-h1', l.h1+'<br/><span id="lp-h1-span">'+l.h1_span+'</span>');
-  set('lp-hero-p', l.hero_p);
-  set('lp-cta1', l.cta1);
-  set('lp-cta2', l.cta2);
-  set('lp-tag-how', l.tag_how);
-  set('lp-tag-client', l.tag_client);
-  set('lp-tag-kiosk', l.tag_kiosk);
-  set('lp-tag-mission', l.tag_mission);
-  set('lp-tag-access', l.tag_access);
-
-  // Footer
-  var footer = document.querySelector('.lp-footer div:last-child');
-  if(footer) footer.textContent = l.footer;
-
-  // Sincronizar idioma do cliente
-  if(typeof setClientLang === 'function') setClientLang(landingLang);
-}
-
 function goToLanding(){
   // Mostrar landing, esconder app nav
   document.querySelectorAll('.screen').forEach(function(s){ s.style.display='none'; s.classList.remove('active'); });
@@ -2864,181 +2784,6 @@ function encerrarSessaoCliente(){
   }, 2000);
 }
 
-// ── Idiomas ──────────────────────────────────────────
-var currentLang = 'pt';
-
-var LANG = {
-  pt: {
-    umbrella: 'Guarda-sol',
-    menu_tab: '🍔 Cardápio',
-    orders_tab: '📋 Pedidos',
-    waiter_tab: '🙋 Garçom',
-    bill_tab: '🧾 Conta',
-    your_order: 'Seu Pedido',
-    name_placeholder: 'Seu nome',
-    notes_placeholder: 'Observações (opcional)',
-    send_order: 'Enviar Pedido 🚀',
-    order_total: 'Total',
-    empty_cart: 'Carrinho vazio',
-    add_items: 'Adicione itens do cardápio',
-    view_menu: 'Ver cardápio',
-    order_received: 'Pedido recebido',
-    order_received_sub: 'Aguardando confirmação',
-    confirmed: 'Confirmado',
-    confirmed_sub: 'O quiosque aceitou!',
-    preparing: 'Em preparo',
-    preparing_sub: 'Preparando com carinho',
-    on_the_way: 'A caminho',
-    on_the_way_sub: 'Indo ao seu guarda-sol',
-    delivered: 'Entregue!',
-    delivered_sub: 'Bom apetite! 🌊',
-    billed: 'Faturado',
-    billed_sub: 'Conta paga. Obrigado!',
-    back_menu: '🍽️ Voltar para o Cardápio',
-    go_orders: '📋 Pedidos',
-    call_waiter: '🙋 Chamar atendente',
-    splash_title: 'Bem-vindo!',
-    splash_sub: 'Digite o número do seu guarda-sol para ver o cardápio',
-    splash_input: 'Número do guarda-sol',
-    splash_btn: 'Ver Cardápio →',
-    thanks: 'Obrigado',
-    order_no: 'Pedido #',
-    consumption: 'Resumo do consumo:',
-    total_general: 'Total geral',
-    pay_all: '💳 Pagar tudo',
-    split_equal: '🤝 Dividir igualmente',
-    split_prop: '⚖️ Dividir proporcionalmente',
-    per_person: 'por pessoa',
-    bill_title: '🧾 Pedir a conta',
-    waiter_called: '🙋 Garçom chamado! Ele virá em breve.',
-    add_btn: '+ Adicionar',
-    qty_label: 'Qtd',
-    lang_btn: '🇧🇷 PT'
-  },
-  en: {
-    umbrella: 'Umbrella',
-    menu_tab: '🍔 Menu',
-    orders_tab: '📋 Orders',
-    waiter_tab: '🙋 Waiter',
-    bill_tab: '🧾 Bill',
-    your_order: 'Your Order',
-    name_placeholder: 'Your name',
-    notes_placeholder: 'Notes (optional)',
-    send_order: 'Place Order 🚀',
-    order_total: 'Total',
-    empty_cart: 'Empty cart',
-    add_items: 'Add items from the menu',
-    view_menu: 'View menu',
-    order_received: 'Order received',
-    order_received_sub: 'Waiting for confirmation',
-    confirmed: 'Confirmed',
-    confirmed_sub: 'The kiosk accepted!',
-    preparing: 'Preparing',
-    preparing_sub: 'Preparing with care',
-    on_the_way: 'On the way',
-    on_the_way_sub: 'Heading to your umbrella',
-    delivered: 'Delivered!',
-    delivered_sub: 'Enjoy your meal! 🌊',
-    billed: 'Billed',
-    billed_sub: 'Bill paid. Thank you!',
-    back_menu: '🍽️ Back to Menu',
-    go_orders: '📋 Orders',
-    call_waiter: '🙋 Call waiter',
-    splash_title: 'Welcome!',
-    splash_sub: 'Enter your umbrella number to see the menu',
-    splash_input: 'Umbrella number',
-    splash_btn: 'See Menu →',
-    thanks: 'Thank you',
-    order_no: 'Order #',
-    consumption: 'Consumption summary:',
-    total_general: 'Grand total',
-    pay_all: '💳 Pay all',
-    split_equal: '🤝 Split equally',
-    split_prop: '⚖️ Split proportionally',
-    per_person: 'per person',
-    bill_title: '🧾 Request bill',
-    waiter_called: '🙋 Waiter called! He will be right with you.',
-    add_btn: '+ Add',
-    qty_label: 'Qty',
-    lang_btn: '🇺🇸 EN'
-  }
-};
-
-function t(key){ return (LANG[currentLang]||LANG.pt)[key]||key; }
-
-function toggleLang(){ setClientLang(currentLang==='pt'?'en':'pt'); }
-
-function setClientLang(lang){
-  currentLang = lang;
-  // Destacar botão ativo
-  var pt = document.getElementById('client-btn-pt');
-  var en = document.getElementById('client-btn-en');
-  if(pt) pt.style.cssText = lang==='pt'
-    ? 'background:rgba(255,255,255,.9);border:none;border-radius:99px;padding:3px 9px;color:#0369a1;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600'
-    : 'background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:3px 9px;color:#fff;font-size:11px;cursor:pointer;font-family:inherit';
-  if(en) en.style.cssText = lang==='en'
-    ? 'background:rgba(255,255,255,.9);border:none;border-radius:99px;padding:3px 9px;color:#0369a1;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600'
-    : 'background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:3px 9px;color:#fff;font-size:11px;cursor:pointer;font-family:inherit';
-  applyLang();
-}
-
-function applyLang(){
-  var l = LANG[currentLang];
-
-  // Botão idioma
-  var lb = $('lang-btn'); if(lb) lb.textContent = l.lang_btn;
-
-  // Tabs
-  var tabMenu = $('tab-menu'); if(tabMenu) tabMenu.childNodes[0] && (tabMenu.innerHTML = l.menu_tab);
-  var tabOrd = $('tab-orders');
-  if(tabOrd) tabOrd.innerHTML = l.orders_tab+' <span class="order-badge-dot hidden" id="orders-dot">0</span>';
-
-  // Tabs extras (garçom e conta)
-  var tabs = document.querySelectorAll('.menu-tab');
-  tabs.forEach(function(tab){
-    if(tab.getAttribute('onclick')==='callWaiter()') tab.textContent = l.waiter_tab;
-    if(tab.getAttribute('onclick')==='openBillModal()') tab.textContent = l.bill_tab;
-  });
-
-  // Splash
-  var splashSub = document.querySelector('#client-splash .splash-sub');
-  if(splashSub) splashSub.textContent = l.splash_sub;
-  var umbInput = $('umbrella-input');
-  if(umbInput) umbInput.placeholder = l.splash_input;
-  var splashBtn = $('splash-btn');
-  if(splashBtn) splashBtn.textContent = l.splash_btn;
-
-  // Carrinho
-  var cartTitle = document.querySelector('.cart-title');
-  if(cartTitle) cartTitle.textContent = l.your_order;
-  var nameInput = $('customer-name');
-  if(nameInput) nameInput.placeholder = l.name_placeholder;
-  var notesInput = $('order-notes');
-  if(notesInput) notesInput.placeholder = l.notes_placeholder;
-  var orderBtn = $('order-btn');
-  if(orderBtn) orderBtn.textContent = l.send_order;
-
-  // Status steps
-  var steps = ['pending','accepted','preparing','delivering','delivered','billed'];
-  steps.forEach(function(s){
-    var labels = {
-      pending:[l.order_received,l.order_received_sub],
-      accepted:[l.confirmed,l.confirmed_sub],
-      preparing:[l.preparing,l.preparing_sub],
-      delivering:[l.on_the_way,l.on_the_way_sub],
-      delivered:[l.delivered,l.delivered_sub],
-      billed:[l.billed,l.billed_sub]
-    };
-    // STATUS_STEPS_DEF update
-  });
-
-  // Remontar menu se estiver visível
-  var vm = $('view-menu');
-  if(vm && !vm.classList.contains('hidden')) buildMenu();
-  var vo = $('view-orders');
-  if(vo && !vo.classList.contains('hidden')) renderMyOrders();
-}
-
 function goBackToMenu(){
   $('client-status').classList.add('hidden');
   $('client-menu').classList.remove('hidden');
@@ -3052,7 +2797,7 @@ function goToOrders(){
 }
 async function callWaiter(){
   if(!currentKiosk || !window._umb){
-    toast(t('waiter_called'));
+    toast('🙋 Atendente chamado! Aguarde um momento.');
     return;
   }
   if(isConfigured && currentKiosk.id !== 'demo'){
@@ -3066,9 +2811,9 @@ async function callWaiter(){
       status: 'pending',
       total: 0
     });
-    toast(t('waiter_called'));
+    toast('🙋 Atendente chamado! Ele virá em breve.');
   } else {
-    toast(t('waiter_called'));
+    toast('🙋 Atendente chamado! Aguarde um momento.');
   }
 }
 
@@ -3104,7 +2849,7 @@ function openBillModal(){
 
   // Resumo por pessoa
   var resumoHtml = '<div style="margin-bottom:16px">'
-    +'<div style="font-size:13px;color:#64748b;margin-bottom:10px">'+t('consumption')+'</div>';
+    +'<div style="font-size:13px;color:#64748b;margin-bottom:10px">Resumo do consumo:</div>';
 
   if(!names.length){
     resumoHtml += '<div style="text-align:center;padding:16px;color:#94a3b8">Nenhum pedido encontrado.</div>';
@@ -3118,7 +2863,7 @@ function openBillModal(){
         +'</div>';
     });
     resumoHtml += '<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:15px;font-weight:700">'
-      +'<span>'+t('total_general')+'</span><span>'+fmt(total)+'</span></div>';
+      +'<span>Total geral</span><span>'+fmt(total)+'</span></div>';
   }
   resumoHtml += '</div>';
 
@@ -3132,7 +2877,7 @@ function openBillModal(){
   if(names.length > 1){
     // Dividir igualmente
     botoesHtml += '<button data-bt="split" onclick="requestBillBtn(this)" style="width:100%;padding:14px;background:#0ea5e9;color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">'
-      +t('split_equal')+' · '+fmt(perPerson)+' por pessoa</button>';
+      +'🤝 Dividir igualmente · '+fmt(perPerson)+' por pessoa</button>';
 
     // Dividir proporcionalmente
     botoesHtml += '<button data-bt="proportional" onclick="requestBillBtn(this)" style="width:100%;padding:14px;background:#8b5cf6;color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">'
@@ -3149,7 +2894,7 @@ function openBillModal(){
   div.onclick = function(e){ if(e.target===div) closeBillModal(); };
   div.innerHTML = '<div style="background:#fff;border-radius:14px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 48px rgba(15,23,42,.14)">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid #f1f5f9">'
-    +'<div style="font-size:15px;font-weight:600">'+t('bill_title')+'</div>'
+    +'<div style="font-size:15px;font-weight:600">🧾 Pedir a conta</div>'
     +'<button onclick="closeBillModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8">✕</button>'
     +'</div>'
     +'<div style="padding:18px 20px 22px">'+resumoHtml+botoesHtml+'</div>'
