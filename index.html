@@ -3261,27 +3261,81 @@ function histFilter(f,btn){
   btn.classList.add('active'); renderHist();
 }
 
-function renderHist(){
+async function renderHist(){
   const el=$('hist-table'); if(!el) return;
-  const list=histFilterVal==='all'?orders:orders.filter(o=>o.status===histFilterVal);
-  if(!list.length){el.innerHTML='<div style="padding:32px;text-align:center;color:var(--sl-400)">Nenhum pedido encontrado.</div>';return;}
-  el.innerHTML='<table><thead><tr><th>#</th><th>Guarda-sol</th><th>Cliente</th><th>Hora</th><th>Itens</th><th>Total</th><th>Status</th><th>A\xe7\xe3o</th></tr></thead><tbody>'
-    +list.map(o=>{
+  el.innerHTML='<div class="page-loading"></div>';
+
+  // Sempre buscar do banco para garantir dados atualizados
+  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    var query = sb.from('orders')
+      .select('*,order_items(*)')
+      .eq('kiosk_id', currentKiosk.id)
+      .not('customer_name','eq','ENCERRAMENTO')
+      .order('created_at',{ascending:false})
+      .limit(200);
+
+    if(histFilterVal !== 'all'){
+      query = query.eq('status', histFilterVal);
+    }
+
+    var {data, error} = await query;
+    if(data){
+      // Atualizar orders em memória também
+      data.forEach(function(o){
+        o.umb = o.umbrella_num;
+        o.time = new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        o.items = (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price}; });
+        // Atualizar no array orders
+        var existing = orders.find(function(x){ return x.id===o.id; });
+        if(existing) Object.assign(existing, o);
+        else orders.push(o);
+      });
+      var list = data;
+      renderHistTable(list);
+      return;
+    }
+  }
+
+  // Fallback: usar orders em memória
+  var list2 = histFilterVal==='all'
+    ? orders.filter(function(o){ return o.customer_name!=='ENCERRAMENTO'; })
+    : orders.filter(function(o){ return o.status===histFilterVal && o.customer_name!=='ENCERRAMENTO'; });
+  renderHistTable(list2);
+}
+
+function renderHistTable(list){
+  const el=$('hist-table'); if(!el) return;
+  if(!list.length){
+    el.innerHTML='<div style="padding:32px;text-align:center;color:var(--sl-400)">Nenhum pedido encontrado.</div>';
+    return;
+  }
+  el.innerHTML='<table><thead><tr><th>#</th><th>Guarda-sol</th><th>Cliente</th><th>Hora</th><th>Itens</th><th>Total</th><th>Status</th><th>Ação</th></tr></thead><tbody>'
+    +list.map(function(o){
       const p=PILL[o.status]||{l:o.status,c:''};
-      const can=!['delivered','cancelled'].includes(o.status);
-      return '<tr><td><b>#'+(o.order_number||'?')+'</b></td>'
-        +'<td>&#x2602;&#xFE0F; '+(o.umb||o.umbrella_num||'?')+'</td>'
-        +'<td>'+(o.customer_name||o.customer||'?')+'</td>'
-        +'<td>'+(o.time||'?')+'</td>'
-        +'<td style="color:var(--sl-500)">'+(o.items||[]).map(i=>i.qty+'\xd7 '+i.name).join(', ')+'</td>'
+      const can=!['delivered','cancelled','billed'].includes(o.status);
+      const isSpecial = o.customer_name==='PEDIDO DE CONTA'||o.customer_name==='CHAMADA DE ATENDENTE';
+      return '<tr>'
+        +'<td><b>#'+(o.order_number||'—')+'</b></td>'
+        +'<td>☂️ '+(o.umb||o.umbrella_num||'?')+'</td>'
+        +'<td>'+(o.customer_name||'?')+'</td>'
+        +'<td>'+(o.time||'—')+'</td>'
+        +'<td style="color:var(--sl-500);font-size:11px">'+(isSpecial?(o.notes||'').split(' · ')[0]:(o.items||[]).map(i=>i.qty+'× '+i.name).join(', '))+'</td>'
         +'<td><b>'+fmt(o.total)+'</b></td>'
         +'<td><span class="pill '+p.c+'">'+p.l+'</span></td>'
-        +'<td>'+(can?'<select class="select" style="width:auto;font-size:11px;padding:4px 8px" onchange="changeHistStatus(\''+o.id+'\',this.value)">'
+        +'<td>'+(can&&!isSpecial?'<select class="select" style="width:auto;font-size:11px;padding:4px 8px" data-oid="'+o.id+'" onchange="changeHistStatusSel(this)">'
           +'<option value="">Alterar...</option>'
-          +'<option value="pending">Pendente</option><option value="preparing">Em produ\xe7\xe3o</option>'
-          +'<option value="delivered">Entregue</option><option value="cancelled">Cancelado</option>'
-          +'</select>':'&mdash;')+'</td></tr>';
+          +'<option value="pending">Pendente</option>'
+          +'<option value="preparing">Em produção</option>'
+          +'<option value="delivered">Entregue</option>'
+          +'<option value="cancelled">Cancelado</option>'
+          +'</select>':'—')+'</td>'
+        +'</tr>';
     }).join('')+'</tbody></table>';
+}
+
+
+function changeHistStatusSel(sel){
+  changeHistStatus(sel.dataset.oid, sel.value);
 }
 
 async function changeHistStatus(id,st){
