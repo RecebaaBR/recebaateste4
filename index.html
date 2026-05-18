@@ -2317,6 +2317,7 @@ async function goToMenu(){
       .not('customer_name', 'eq', 'CHAMADA DE ATENDENTE')
       .not('customer_name', 'eq', 'PEDIDO DE CONTA')
       .not('customer_name', 'eq', 'ENCERRAMENTO')
+      .not('status', 'in', '("delivered","cancelled","billed")')
       .order('created_at', {ascending: false})
       .limit(50)
       .then(function(r){
