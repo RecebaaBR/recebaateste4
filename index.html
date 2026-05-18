@@ -2725,12 +2725,10 @@ function clientTab(tab){
   if(!isMenu) renderMyOrders();
 }
 function openBillModal(){
-  // Remover modal antigo se existir
   var old = document.getElementById('dynamic-bill-modal');
   if(old) old.remove();
 
   var validOrders = myOrders.filter(function(o){ return o.status!=='cancelled'; });
-
   var byName = {};
   validOrders.forEach(function(o){
     var name = o.customer_name||o.customer||'Cliente';
@@ -2742,33 +2740,34 @@ function openBillModal(){
   var total = Object.values(byName).reduce(function(s,v){ return s+v; }, 0);
   var perPerson = names.length ? total/names.length : 0;
 
-  var bodyHtml = '<div style="margin-bottom:16px">'
-    + '<div style="font-size:13px;color:#64748b;margin-bottom:12px">Resumo do consumo:</div>';
+  // Resumo por pessoa
+  var resumoHtml = '<div style="margin-bottom:16px">'
+    +'<div style="font-size:13px;color:#64748b;margin-bottom:10px">Resumo do consumo:</div>';
 
   if(!names.length){
-    bodyHtml += '<div style="text-align:center;padding:20px;color:#94a3b8">Nenhum pedido encontrado.</div>';
+    resumoHtml += '<div style="text-align:center;padding:16px;color:#94a3b8">Nenhum pedido encontrado.</div>';
   } else {
     names.forEach(function(name){
-      bodyHtml += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9">'
+      resumoHtml += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9">'
         +'<span style="font-size:13px">👤 '+name+'</span>'
-        +'<span style="font-size:13px;font-weight:600">R$ '+byName[name].toFixed(2).replace('.',',')+'</span>'
+        +'<span style="font-size:13px;font-weight:600">'+fmt(byName[name])+'</span>'
         +'</div>';
     });
-    bodyHtml += '<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:15px;font-weight:700">'
-      +'<span>Total geral</span><span>R$ '+total.toFixed(2).replace('.',',')+'</span></div>';
+    resumoHtml += '<div style="display:flex;justify-content:space-between;padding:10px 0;font-size:15px;font-weight:700">'
+      +'<span>Total geral</span><span>'+fmt(total)+'</span></div>';
   }
+  resumoHtml += '</div>';
 
-  bodyHtml += '</div><div style="display:flex;flex-direction:column;gap:10px">';
-  bodyHtml += '<button data-bt="total" onclick="requestBillBtn(this)" style="width:100%;padding:13px;background:#1e293b;color:#fff;border:none;border-radius:99px;font-size:14px;cursor:pointer">💳 Pagar tudo · R$ '+total.toFixed(2).replace('.',',')+'</button>';
+  // Botões — só pagar tudo e dividir (sem pagar por pessoa)
+  var botoesHtml = '<div style="display:flex;flex-direction:column;gap:10px">';
+  botoesHtml += '<button data-bt="total" onclick="requestBillBtn(this)" style="width:100%;padding:14px;background:#1e293b;color:#fff;border:none;border-radius:99px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">'
+    +'💳 Pagar a conta · '+fmt(total)+'</button>';
 
   if(names.length > 1){
-    bodyHtml += '<button data-bt="split" onclick="requestBillBtn(this)" style="width:100%;padding:13px;background:#0ea5e9;color:#fff;border:none;border-radius:99px;font-size:14px;cursor:pointer">🤝 Dividir · R$ '+perPerson.toFixed(2).replace('.',',')+' por pessoa</button>';
-    names.forEach(function(name){
-      bodyHtml += '<button data-bt="person" data-name="'+name+'" data-amt="'+byName[name]+'" onclick="requestBillBtn(this)" style="width:100%;padding:10px;background:#f1f5f9;color:#334155;border:none;border-radius:99px;font-size:13px;cursor:pointer">👤 '+name+' · R$ '+byName[name].toFixed(2).replace('.',',')+'</button>';
-    });
+    botoesHtml += '<button data-bt="split" onclick="requestBillBtn(this)" style="width:100%;padding:14px;background:#0ea5e9;color:#fff;border:none;border-radius:99px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">'
+      +'🤝 Dividir entre '+names.length+' pessoas</button>';
   }
-
-  bodyHtml += '</div>';
+  botoesHtml += '</div>';
 
   var div = document.createElement('div');
   div.id = 'dynamic-bill-modal';
@@ -2779,7 +2778,7 @@ function openBillModal(){
     +'<div style="font-size:15px;font-weight:600">🧾 Pedir a conta</div>'
     +'<button onclick="closeBillModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8">✕</button>'
     +'</div>'
-    +'<div style="padding:18px 20px 22px">'+bodyHtml+'</div>'
+    +'<div style="padding:18px 20px 22px">'+resumoHtml+botoesHtml+'</div>'
     +'</div>';
 
   document.body.appendChild(div);
