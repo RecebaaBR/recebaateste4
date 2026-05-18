@@ -424,7 +424,7 @@ tr:hover td{background:var(--sand-50)}
 .qr-title{color:#fff;font-size:18px;font-weight:600;margin-bottom:8px}
 .qr-sub{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:24px;line-height:1.5}
 .qr-video-wrap{position:relative;width:100%;max-width:320px;margin:0 auto 20px;border-radius:16px;overflow:hidden;box-shadow:0 0 0 3px #0ea5e9}
-.qr-video-wrap video{width:100%;display:block;border-radius:16px}
+.qr-video-wrap video{width:100%;min-height:220px;display:block;border-radius:16px;object-fit:cover;background:#000}
 .qr-corner{position:absolute;width:24px;height:24px;border-color:#0ea5e9;border-style:solid}
 .qr-corner.tl{top:8px;left:8px;border-width:3px 0 0 3px}
 .qr-corner.tr{top:8px;right:8px;border-width:3px 3px 0 0}
@@ -1514,7 +1514,7 @@ tr:hover td{background:var(--sand-50)}
 .qr-title{color:#fff;font-size:18px;font-weight:600;margin-bottom:8px}
 .qr-sub{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:24px;line-height:1.5}
 .qr-video-wrap{position:relative;width:100%;max-width:320px;margin:0 auto 20px;border-radius:16px;overflow:hidden;box-shadow:0 0 0 3px #0ea5e9}
-.qr-video-wrap video{width:100%;display:block;border-radius:16px}
+.qr-video-wrap video{width:100%;min-height:220px;display:block;border-radius:16px;object-fit:cover;background:#000}
 .qr-corner{position:absolute;width:24px;height:24px;border-color:#0ea5e9;border-style:solid}
 .qr-corner.tl{top:8px;left:8px;border-width:3px 0 0 3px}
 .qr-corner.tr{top:8px;right:8px;border-width:3px 3px 0 0}
@@ -2224,32 +2224,41 @@ function openQrScanner(){
   var overlay = document.getElementById('qr-overlay');
   if(overlay) overlay.classList.add('open');
 
-  var video = document.getElementById('qr-video');
-  if(!video) return;
+  // Aguardar modal ficar visível antes de iniciar câmera
+  setTimeout(function(){
+    var video = document.getElementById('qr-video');
+    if(!video) return;
 
-  // Verificar se browser suporta câmera
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    // Sem suporte - mostrar só input manual
-    var wrap = document.getElementById('qr-video-wrap');
-    if(wrap) wrap.style.display='none';
-    toast('Câmera não disponível. Use o campo manual.');
-    return;
-  }
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      var wrap = document.getElementById('qr-video-wrap');
+      if(wrap) wrap.style.display='none';
+      return;
+    }
 
-  navigator.mediaDevices.getUserMedia({
-    video: { facingMode: 'environment', width: {ideal:1280}, height: {ideal:720} }
-  }).then(function(stream){
-    qrStream = stream;
-    video.srcObject = stream;
-    video.play();
-    video.addEventListener('loadedmetadata', function(){
-      scanQrFrame();
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: {ideal:'environment'}, width: {ideal:1280}, height: {ideal:720} }
+    }).then(function(stream){
+      qrStream = stream;
+      video.srcObject = stream;
+      video.setAttribute('playsinline', true);
+      video.setAttribute('autoplay', true);
+      video.muted = true;
+      video.play().then(function(){
+        // Garantir que o vídeo está visível
+        video.style.display = 'block';
+        video.style.width = '100%';
+        video.style.minHeight = '200px';
+        scanQrFrame();
+      }).catch(function(e){
+        console.log('Play error:', e);
+        scanQrFrame();
+      });
+    }).catch(function(err){
+      console.log('Camera error:', err.name, err.message);
+      var wrap = document.getElementById('qr-video-wrap');
+      if(wrap) wrap.innerHTML='<div style="padding:40px;color:rgba(255,255,255,.6);font-size:14px;text-align:center">📷<br/>Câmera bloqueada.<br/><small style="font-size:12px;opacity:.7">Permita o acesso nas configurações do navegador</small></div>';
     });
-  }).catch(function(err){
-    console.log('Câmera erro:', err);
-    var wrap = document.getElementById('qr-video-wrap');
-    if(wrap) wrap.innerHTML='<div style="padding:40px;color:rgba(255,255,255,.5);font-size:13px">Câmera não disponível.<br/>Use o campo manual abaixo.</div>';
-  });
+  }, 300);
 }
 
 function scanQrFrame(){
