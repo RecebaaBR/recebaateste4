@@ -2552,6 +2552,8 @@ async function placeOrder(){
   setLoading('place-order-btn',false,'Enviar Pedido 🚀');
   cart={}; refreshCart(); closeCart();
   $('customer-name').value=''; $('order-notes').value='';
+  // Atualizar todos os cards do cardápio para resetar os botões de quantidade
+  buildMenu();
   $('client-menu').classList.add('hidden');
   $('client-status').classList.remove('hidden');
   $('status-num').textContent=orderNum;
