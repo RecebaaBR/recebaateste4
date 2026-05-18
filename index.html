@@ -2945,12 +2945,23 @@ async function closeUmbrellaSession(umbNum){
   if(!confirm('Faturar e encerrar guarda-sol '+umbNum+'?\nIsso vai marcar todos os pedidos como faturados e limpar a sessão do cliente.')) return;
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-    // Marcar TODOS os pedidos do guarda-sol como 'billed'
-    await sb.from('orders')
-      .update({status:'billed'})
+    // Marcar pedidos de conta como entregues (status permitido no enum)
+    var {error: e1} = await sb.from('orders')
+      .update({status:'delivered', notes: 'FATURADO'})
       .eq('kiosk_id', currentKiosk.id)
       .eq('umbrella_num', String(umbNum))
-      .in('status', ['pending','accepted','preparing','delivering','delivered']);
+      .eq('customer_name', 'PEDIDO DE CONTA');
+
+    if(e1) console.log('Erro ao faturar pedidos de conta:', e1.message);
+
+    // Marcar todos os outros pedidos pendentes como entregues
+    var {error: e2} = await sb.from('orders')
+      .update({status:'delivered'})
+      .eq('kiosk_id', currentKiosk.id)
+      .eq('umbrella_num', String(umbNum))
+      .eq('status', 'pending');
+
+    if(e2) console.log('Erro ao finalizar pendentes:', e2.message);
 
     // Criar registro de encerramento
     await sb.from('orders').insert({
@@ -2958,19 +2969,24 @@ async function closeUmbrellaSession(umbNum){
       umbrella_num: String(umbNum),
       order_number: 0,
       customer_name: 'ENCERRAMENTO',
-      notes: '✅ Guarda-sol '+umbNum+' faturado e encerrado.',
-      status: 'billed',
+      notes: 'Guarda-sol '+umbNum+' faturado e encerrado.',
+      status: 'cancelled',
       total: 0
-    });
-  } else {
-    orders.forEach(function(o){
-      if((o.umb===String(umbNum)||o.umbrella_num===String(umbNum))){
-        o.status = 'billed';
-      }
     });
   }
 
+  // Atualizar em memória
+  orders.forEach(function(o){
+    if(o.umb===String(umbNum)||o.umbrella_num===String(umbNum)){
+      if(['pending','accepted','preparing','delivering'].includes(o.status)){
+        o.status = 'delivered';
+      }
+      if(o.customer_name === 'PEDIDO DE CONTA') o.status = 'delivered';
+    }
+  });
+
   renderLiveOrders();
+  renderHist();
   updateDashMetrics();
   toast('💰 Guarda-sol '+umbNum+' faturado! Mesa liberada para novos clientes.');
 }
