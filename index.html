@@ -421,24 +421,19 @@ tr:hover td{background:var(--sand-50)}
 .qr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
 .qr-overlay.open{display:flex}
 .qr-box{width:100%;max-width:400px;text-align:center}
-.qr-title{color:#fff;font-size:18px;font-weight:600;margin-bottom:8px}
-.qr-sub{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:24px;line-height:1.5}
-.qr-video-wrap{position:relative;width:100%;max-width:320px;margin:0 auto 20px;border-radius:16px;overflow:hidden;box-shadow:0 0 0 3px #0ea5e9}
-.qr-video-wrap video{width:100%;min-height:220px;display:block;border-radius:16px;object-fit:cover;background:#000}
-.qr-corner{position:absolute;width:24px;height:24px;border-color:#0ea5e9;border-style:solid}
-.qr-corner.tl{top:8px;left:8px;border-width:3px 0 0 3px}
-.qr-corner.tr{top:8px;right:8px;border-width:3px 3px 0 0}
-.qr-corner.bl{bottom:8px;left:8px;border-width:0 0 3px 3px}
-.qr-corner.br{bottom:8px;right:8px;border-width:0 3px 3px 0}
-.qr-scan-line{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,#0ea5e9,transparent);animation:scanline 2s linear infinite}
-@keyframes scanline{0%{top:10%}100%{top:90%}}
-.qr-manual{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:16px;margin-top:4px}
+.qr-title{color:#fff;font-size:20px;font-weight:600;margin-bottom:8px}
+.qr-sub{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:28px;line-height:1.6}
+.qr-camera-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:18px;background:linear-gradient(135deg,#0ea5e9,#6366f1);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:16px;position:relative;overflow:hidden}
+.qr-camera-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.qr-processing{display:none;color:rgba(255,255,255,.7);font-size:13px;margin-bottom:16px;padding:12px;background:rgba(255,255,255,.08);border-radius:10px}
+.qr-preview{display:none;width:100%;max-width:280px;margin:0 auto 16px;border-radius:12px;border:2px solid #0ea5e9}
+.qr-manual{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:16px;margin-bottom:16px}
 .qr-manual p{color:rgba(255,255,255,.6);font-size:13px;margin-bottom:10px}
 .qr-manual-input{display:flex;gap:8px}
 .qr-manual-input input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none}
 .qr-manual-input input::placeholder{color:rgba(255,255,255,.35)}
 .qr-manual-input button{padding:10px 16px;background:#0ea5e9;border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
-.qr-close{margin-top:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:10px 28px;color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.qr-close{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:10px 28px;color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif}
 
 /* Divisor */
 .lp-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);margin:0}
@@ -1511,24 +1506,19 @@ tr:hover td{background:var(--sand-50)}
 .qr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
 .qr-overlay.open{display:flex}
 .qr-box{width:100%;max-width:400px;text-align:center}
-.qr-title{color:#fff;font-size:18px;font-weight:600;margin-bottom:8px}
-.qr-sub{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:24px;line-height:1.5}
-.qr-video-wrap{position:relative;width:100%;max-width:320px;margin:0 auto 20px;border-radius:16px;overflow:hidden;box-shadow:0 0 0 3px #0ea5e9}
-.qr-video-wrap video{width:100%;min-height:220px;display:block;border-radius:16px;object-fit:cover;background:#000}
-.qr-corner{position:absolute;width:24px;height:24px;border-color:#0ea5e9;border-style:solid}
-.qr-corner.tl{top:8px;left:8px;border-width:3px 0 0 3px}
-.qr-corner.tr{top:8px;right:8px;border-width:3px 3px 0 0}
-.qr-corner.bl{bottom:8px;left:8px;border-width:0 0 3px 3px}
-.qr-corner.br{bottom:8px;right:8px;border-width:0 3px 3px 0}
-.qr-scan-line{position:absolute;left:8px;right:8px;height:2px;background:linear-gradient(90deg,transparent,#0ea5e9,transparent);animation:scanline 2s linear infinite}
-@keyframes scanline{0%{top:10%}100%{top:90%}}
-.qr-manual{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:16px;margin-top:4px}
+.qr-title{color:#fff;font-size:20px;font-weight:600;margin-bottom:8px}
+.qr-sub{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:28px;line-height:1.6}
+.qr-camera-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:18px;background:linear-gradient(135deg,#0ea5e9,#6366f1);border:none;border-radius:16px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:16px;position:relative;overflow:hidden}
+.qr-camera-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.qr-processing{display:none;color:rgba(255,255,255,.7);font-size:13px;margin-bottom:16px;padding:12px;background:rgba(255,255,255,.08);border-radius:10px}
+.qr-preview{display:none;width:100%;max-width:280px;margin:0 auto 16px;border-radius:12px;border:2px solid #0ea5e9}
+.qr-manual{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:16px;margin-bottom:16px}
 .qr-manual p{color:rgba(255,255,255,.6);font-size:13px;margin-bottom:10px}
 .qr-manual-input{display:flex;gap:8px}
 .qr-manual-input input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none}
 .qr-manual-input input::placeholder{color:rgba(255,255,255,.35)}
 .qr-manual-input button{padding:10px 16px;background:#0ea5e9;border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap}
-.qr-close{margin-top:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:10px 28px;color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.qr-close{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:10px 28px;color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif}
 
 /* Divisor */
 .lp-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);margin:0}
@@ -2223,90 +2213,67 @@ var qrAnimFrame = null;
 function openQrScanner(){
   var overlay = document.getElementById('qr-overlay');
   if(overlay) overlay.classList.add('open');
-
-  // Aguardar modal ficar visível antes de iniciar câmera
-  setTimeout(function(){
-    var video = document.getElementById('qr-video');
-    if(!video) return;
-
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-      var wrap = document.getElementById('qr-video-wrap');
-      if(wrap) wrap.style.display='none';
-      return;
-    }
-
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: {ideal:'environment'}, width: {ideal:1280}, height: {ideal:720} }
-    }).then(function(stream){
-      qrStream = stream;
-      video.srcObject = stream;
-      video.setAttribute('playsinline', true);
-      video.setAttribute('autoplay', true);
-      video.muted = true;
-      video.play().then(function(){
-        // Garantir que o vídeo está visível
-        video.style.display = 'block';
-        video.style.width = '100%';
-        video.style.minHeight = '200px';
-        scanQrFrame();
-      }).catch(function(e){
-        console.log('Play error:', e);
-        scanQrFrame();
-      });
-    }).catch(function(err){
-      console.log('Camera error:', err.name, err.message);
-      var wrap = document.getElementById('qr-video-wrap');
-      if(wrap) wrap.innerHTML='<div style="padding:40px;color:rgba(255,255,255,.6);font-size:14px;text-align:center">📷<br/>Câmera bloqueada.<br/><small style="font-size:12px;opacity:.7">Permita o acesso nas configurações do navegador</small></div>';
-    });
-  }, 300);
+  // Limpar input anterior
+  var input = document.getElementById('qr-file-input');
+  if(input) input.value = '';
+  var preview = document.getElementById('qr-preview');
+  if(preview) preview.style.display = 'none';
+  var proc = document.getElementById('qr-processing');
+  if(proc) proc.style.display = 'none';
 }
 
-function scanQrFrame(){
-  var video = document.getElementById('qr-video');
-  if(!video || !video.videoWidth) {
-    qrAnimFrame = requestAnimationFrame(scanQrFrame);
-    return;
-  }
+function processQrImage(event){
+  var file = event.target.files[0];
+  if(!file) return;
 
-  var canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  var ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  var proc = document.getElementById('qr-processing');
+  var preview = document.getElementById('qr-preview');
+  if(proc) proc.style.display = 'block';
 
-  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      // Mostrar preview
+      if(preview){ preview.src = e.target.result; preview.style.display = 'block'; }
 
-  // Usar jsQR se disponível
-  if(typeof jsQR !== 'undefined'){
-    var code = jsQR(imageData.data, imageData.width, imageData.height, {
-      inversionAttempts: 'dontInvert'
-    });
-    if(code && code.data){
-      handleQrResult(code.data);
-      return;
-    }
-  }
+      // Processar com jsQR
+      var canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  qrAnimFrame = requestAnimationFrame(scanQrFrame);
+      if(proc) proc.style.display = 'none';
+
+      if(typeof jsQR !== 'undefined'){
+        var code = jsQR(imageData.data, imageData.width, imageData.height);
+        if(code && code.data){
+          handleQrResult(code.data);
+          return;
+        }
+      }
+      // QR não encontrado
+      toast('QR Code não encontrado. Tente novamente ou use o campo manual.');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function handleQrResult(url){
   closeQrScanner();
   toast('✅ QR Code lido!');
-
-  // Verificar se é URL do Recebaa
   if(url.includes('?kiosk=') || url.includes('kiosk=')){
-    // Navegar para a URL
     window.location.href = url;
-  } else if(url.match(/^\d+$/)){
-    // É só um número - usar como guarda-sol
+  } else if(/^\d+$/.test(url)){
     goToScreen('client');
     setTimeout(function(){
       var input = document.getElementById('umbrella-input');
       if(input){ input.value = url; goToMenu(); }
     }, 300);
   } else {
-    // URL genérica - tentar navegar
     window.location.href = url;
   }
 }
@@ -2325,8 +2292,6 @@ function qrManualGo(){
 function closeQrScanner(){
   var overlay = document.getElementById('qr-overlay');
   if(overlay) overlay.classList.remove('open');
-  if(qrAnimFrame){ cancelAnimationFrame(qrAnimFrame); qrAnimFrame=null; }
-  if(qrStream){ qrStream.getTracks().forEach(function(t){ t.stop(); }); qrStream=null; }
 }
 
 function goToLanding(){
@@ -3982,17 +3947,18 @@ function aPage(name,btn){
 <div class="qr-overlay" id="qr-overlay">
   <div class="qr-box">
     <div class="qr-title">📷 Escanear QR Code</div>
-    <div class="qr-sub">Aponte a câmera para o QR Code<br/>do seu guarda-sol</div>
-    <div class="qr-video-wrap" id="qr-video-wrap">
-      <video id="qr-video" autoplay playsinline muted></video>
-      <div class="qr-corner tl"></div>
-      <div class="qr-corner tr"></div>
-      <div class="qr-corner bl"></div>
-      <div class="qr-corner br"></div>
-      <div class="qr-scan-line"></div>
-    </div>
+    <div class="qr-sub">Tire uma foto do QR Code do seu guarda-sol<br/>ou digite o número manualmente</div>
+
+    <button class="qr-camera-btn">
+      <input type="file" accept="image/*" capture="environment" id="qr-file-input" onchange="processQrImage(event)"/>
+      📷 Abrir câmera
+    </button>
+
+    <div class="qr-processing" id="qr-processing">⏳ Lendo QR Code...</div>
+    <img class="qr-preview" id="qr-preview" alt="preview"/>
+
     <div class="qr-manual">
-      <p>Ou digite o número do guarda-sol manualmente:</p>
+      <p>Ou digite o número do guarda-sol:</p>
       <div class="qr-manual-input">
         <input type="number" id="qr-manual-num" placeholder="Ex: 7" min="1" max="99"/>
         <button onclick="qrManualGo()">Ir →</button>
