@@ -3947,24 +3947,24 @@ function aPage(name,btn){
 <div class="qr-overlay" id="qr-overlay">
   <div class="qr-box">
     <div class="qr-title">📷 Escanear QR Code</div>
-    <div class="qr-sub">Tire uma foto do QR Code do seu guarda-sol<br/>ou digite o número manualmente</div>
+    <div class="qr-sub">Toque no botão abaixo para abrir a câmera<br/>e fotografe o QR Code do guarda-sol</div>
 
-    <button class="qr-camera-btn">
-      <input type="file" accept="image/*" capture="environment" id="qr-file-input" onchange="processQrImage(event)"/>
+    <label for="qr-file-input" style="display:block;padding:18px;background:linear-gradient(135deg,#0ea5e9,#6366f1);border-radius:16px;color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:20px;text-align:center">
       📷 Abrir câmera
-    </button>
+    </label>
+    <input type="file" accept="image/*" capture="environment" id="qr-file-input" onchange="processQrImage(event)" style="display:none"/>
 
-    <div class="qr-processing" id="qr-processing">⏳ Lendo QR Code...</div>
-    <img class="qr-preview" id="qr-preview" alt="preview"/>
+    <div id="qr-processing" style="display:none;color:rgba(255,255,255,.7);font-size:13px;margin-bottom:12px">⏳ Lendo QR Code...</div>
+    <img id="qr-preview" style="display:none;width:100%;max-width:260px;margin:0 auto 16px;border-radius:12px;border:2px solid #0ea5e9;display:none" alt="preview"/>
 
-    <div class="qr-manual">
-      <p>Ou digite o número do guarda-sol:</p>
-      <div class="qr-manual-input">
-        <input type="number" id="qr-manual-num" placeholder="Ex: 7" min="1" max="99"/>
-        <button onclick="qrManualGo()">Ir →</button>
+    <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:16px;margin-bottom:16px">
+      <p style="color:rgba(255,255,255,.6);font-size:13px;margin-bottom:10px">Ou digite o número do guarda-sol:</p>
+      <div style="display:flex;gap:8px">
+        <input type="number" id="qr-manual-num" placeholder="Ex: 7" min="1" max="99" style="flex:1;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none"/>
+        <button onclick="qrManualGo()" style="padding:10px 16px;background:#0ea5e9;border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Ir →</button>
       </div>
     </div>
-    <button class="qr-close" onclick="closeQrScanner()">✕ Fechar</button>
+    <button onclick="closeQrScanner()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:99px;padding:10px 28px;color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif">✕ Fechar</button>
   </div>
 </div>
 
