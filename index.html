@@ -2822,11 +2822,10 @@ function openBillModal(){
   var old = document.getElementById('dynamic-bill-modal');
   if(old) old.remove();
 
-  // Usar todos os pedidos do guarda-sol (não só os desta sessão)
-  var allOrders = (window._allUmbOrders || myOrders).filter(function(o){
+  var validOrders = (window._allUmbOrders || myOrders).filter(function(o){
     return o.status!=='cancelled' && o.status!=='billed';
   });
-  var validOrders = allOrders;
+
   var byName = {};
   validOrders.forEach(function(o){
     var name = o.customer_name||o.customer||'Cliente';
@@ -2846,8 +2845,10 @@ function openBillModal(){
     resumoHtml += '<div style="text-align:center;padding:16px;color:#94a3b8">Nenhum pedido encontrado.</div>';
   } else {
     names.forEach(function(name){
-      resumoHtml += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9">'
-        +'<span style="font-size:13px">👤 '+name+'</span>'
+      var pct = total > 0 ? Math.round(byName[name]/total*100) : 0;
+      resumoHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9">'
+        +'<div><span style="font-size:13px">👤 '+name+'</span>'
+        +'<span style="font-size:11px;color:#94a3b8;margin-left:6px">'+pct+'%</span></div>'
         +'<span style="font-size:13px;font-weight:600">'+fmt(byName[name])+'</span>'
         +'</div>';
     });
@@ -2856,20 +2857,38 @@ function openBillModal(){
   }
   resumoHtml += '</div>';
 
-  // Botões — só pagar tudo e dividir (sem pagar por pessoa)
+  // Botões
   var botoesHtml = '<div style="display:flex;flex-direction:column;gap:10px">';
-  botoesHtml += '<button data-bt="total" onclick="requestBillBtn(this)" style="width:100%;padding:14px;background:#1e293b;color:#fff;border:none;border-radius:99px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">'
-    +'💳 Pagar a conta · '+fmt(total)+'</button>';
+
+  // Pagar tudo
+  botoesHtml += '<button data-bt="total" onclick="requestBillBtn(this)" style="width:100%;padding:14px;background:#1e293b;color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">'
+    +'💳 Pagar tudo · '+fmt(total)+'</button>';
 
   if(names.length > 1){
-    botoesHtml += '<button data-bt="split" onclick="requestBillBtn(this)" style="width:100%;padding:14px;background:#0ea5e9;color:#fff;border:none;border-radius:99px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">'
-      +'🤝 Dividir entre '+names.length+' pessoas</button>';
+    // Dividir igualmente
+    botoesHtml += '<button data-bt="split" onclick="requestBillBtn(this)" style="width:100%;padding:14px;background:#0ea5e9;color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">'
+      +'🤝 Dividir igualmente · '+fmt(perPerson)+' por pessoa</button>';
+
+    // Dividir proporcionalmente
+    botoesHtml += '<button data-bt="proportional" onclick="requestBillBtn(this)" style="width:100%;padding:14px;background:#8b5cf6;color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">'
+      +'⚖️ Dividir proporcionalmente</button>';
+
+    // Detalhe proporcional
+    botoesHtml += '<div style="background:#f8fafc;border-radius:12px;padding:10px 14px">'
+      +'<div style="font-size:11px;color:#94a3b8;margin-bottom:6px">Cada um paga o que consumiu:</div>';
+    names.forEach(function(name){
+      botoesHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0">'
+        +'<span style="color:#475569">👤 '+name+'</span>'
+        +'<span style="font-weight:600;color:#6d28d9">'+fmt(byName[name])+'</span></div>';
+    });
+    botoesHtml += '</div>';
   }
+
   botoesHtml += '</div>';
 
   var div = document.createElement('div');
   div.id = 'dynamic-bill-modal';
-  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto';
   div.onclick = function(e){ if(e.target===div) closeBillModal(); };
   div.innerHTML = '<div style="background:#fff;border-radius:14px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 12px 48px rgba(15,23,42,.14)">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid #f1f5f9">'
@@ -2898,7 +2917,6 @@ function requestBillBtn(btn){
 }
 
 async function requestBill(type, personName, personTotal){
-  // Calcular totais por pessoa
   var allOrders = (window._allUmbOrders || myOrders).filter(function(o){
     return o.status!=='cancelled' && o.status!=='billed';
   });
@@ -2915,33 +2933,31 @@ async function requestBill(type, personName, personTotal){
   var msg = '';
   var billTotal = 0;
   var detalhes = '';
-
-  // Montar detalhamento por pessoa
-  var detalhesPorPessoa = names.map(function(n){
-    return n + ': ' + fmt(byName[n]);
-  }).join(' | ');
+  var detalhesPorPessoa = names.map(function(n){ return n+': '+fmt(byName[n]); }).join(' | ');
 
   if(type==='total'){
     msg = '💳 PAGAR TUDO';
     billTotal = totalGeral;
-    detalhes = 'Total: ' + fmt(totalGeral);
-    if(names.length > 1){
-      detalhes += ' | Por pessoa: ' + fmt(perPerson) + ' | Detalhamento: ' + detalhesPorPessoa;
-    }
+    detalhes = 'Total: '+fmt(totalGeral);
+    if(names.length>1) detalhes += ' | Detalhamento: '+detalhesPorPessoa;
+
   } else if(type==='split'){
     msg = '🤝 DIVIDIR IGUALMENTE';
     billTotal = totalGeral;
-    detalhes = 'Total: ' + fmt(totalGeral) + ' | ' + names.length + ' pessoas × ' + fmt(perPerson) + ' cada | Detalhamento: ' + detalhesPorPessoa;
+    detalhes = 'Total: '+fmt(totalGeral)+' | '+names.length+' pessoas × '+fmt(perPerson)+' cada | Detalhamento: '+detalhesPorPessoa;
+
+  } else if(type==='proportional'){
+    msg = '⚖️ DIVIDIR PROPORCIONALMENTE';
+    billTotal = totalGeral;
+    detalhes = 'Total: '+fmt(totalGeral)+' | Cada um paga o que consumiu: '+detalhesPorPessoa;
+
   } else if(type==='person'){
-    msg = '👤 CONTA DE ' + personName.toUpperCase();
+    msg = '👤 CONTA DE '+(personName||'').toUpperCase();
     billTotal = personTotal;
-    detalhes = 'Valor: ' + fmt(personTotal) + ' | Total mesa: ' + fmt(totalGeral);
-    if(names.length > 1){
-      detalhes += ' | Detalhamento: ' + detalhesPorPessoa;
-    }
+    detalhes = 'Valor: '+fmt(personTotal)+' | Total mesa: '+fmt(totalGeral);
   }
 
-  var notasCompletas = msg + ' · ' + detalhes + ' · ☂️ ' + (window._umb||'?');
+  var notasCompletas = msg+' · '+detalhes+' · ☂️ '+(window._umb||'?');
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     await sb.from('orders').insert({
@@ -2953,19 +2969,12 @@ async function requestBill(type, personName, personTotal){
       status: 'pending',
       total: billTotal
     });
-  } else {
-    var demoOrder = {
-      id:'bill-'+Date.now(), order_number:'CONTA', umb:String(window._umb||'?'),
-      customer_name:'PEDIDO DE CONTA', notes:notasCompletas, status:'pending',
-      total:billTotal, items:[], time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
-      created_at:new Date().toISOString()
-    };
-    orders.unshift(demoOrder);
   }
 
   closeBillModal();
   toast('🧾 Conta solicitada! O garçom já foi avisado.');
 }
+
 
 function updateOrdersBadge(){
   const active=myOrders.filter(o=>!['delivered','cancelled'].includes(o.status)).length;
