@@ -818,6 +818,10 @@ tr:hover td{background:var(--sand-50)}
         <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
       </div>
       <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      <div class="field" style="margin-top:12px;margin-bottom:0">
+        <label class="label">CPF ou CNPJ *</label>
+        <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)"/>
+      </div>
       <div class="grid-2" style="margin-top:12px">
         <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"/></div>
@@ -844,7 +848,12 @@ tr:hover td{background:var(--sand-50)}
         <button class="s-item" onclick="kPage('contas',this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
         <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
       </nav>
-      <div class="sidebar-foot"><button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button></div>
+      <div class="sidebar-foot">
+        <button class="s-item" id="mute-btn" onclick="toggleMute()" style="margin-bottom:4px">
+          <span class="s-icon">🔔</span>Sons ativos
+        </button>
+        <button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button>
+      </div>
     </aside>
     <main class="kiosk-main">
       <div class="kpage active" id="kpage-overview">
@@ -1896,6 +1905,10 @@ tr:hover td{background:var(--sand-50)}
         <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
       </div>
       <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      <div class="field" style="margin-top:12px;margin-bottom:0">
+        <label class="label">CPF ou CNPJ *</label>
+        <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)"/>
+      </div>
       <div class="grid-2" style="margin-top:12px">
         <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"/></div>
@@ -1922,7 +1935,12 @@ tr:hover td{background:var(--sand-50)}
         <button class="s-item" onclick="kPage('contas',this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
         <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
       </nav>
-      <div class="sidebar-foot"><button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button></div>
+      <div class="sidebar-foot">
+        <button class="s-item" id="mute-btn" onclick="toggleMute()" style="margin-bottom:4px">
+          <span class="s-icon">🔔</span>Sons ativos
+        </button>
+        <button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button>
+      </div>
     </aside>
     <main class="kiosk-main">
       <div class="kpage active" id="kpage-overview">
@@ -2917,7 +2935,10 @@ async function doLogin(){
   if(isConfigured){
     const {data:kiosks,error}=await sb.from('kiosks').select('*').eq('owner_email',email).limit(1);
     if(error||!kiosks||!kiosks.length){ toast('E-mail não encontrado. Verifique suas credenciais.'); setLoading('login-btn',false,'Entrar'); return; }
-    currentKiosk=kiosks[0];
+    const k = kiosks[0];
+    if(k.blocked){ toast('⛔ Quiosque bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+    if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+    currentKiosk=k;
   } else {
     currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo'};
   }
@@ -2925,18 +2946,37 @@ async function doLogin(){
   enterDash();
 }
 
+function formatDoc(input){
+  var v = input.value.replace(/\D/g,'');
+  if(v.length <= 11){
+    // CPF: 000.000.000-00
+    v = v.replace(/(\d{3})(\d)/,'$1.$2');
+    v = v.replace(/(\d{3})(\d)/,'$1.$2');
+    v = v.replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+  } else {
+    // CNPJ: 00.000.000/0001-00
+    v = v.replace(/^(\d{2})(\d)/,'$1.$2');
+    v = v.replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3');
+    v = v.replace(/\.(\d{3})(\d)/,'.$1/$2');
+    v = v.replace(/(\d{4})(\d)/,'$1-$2');
+  }
+  input.value = v;
+}
+
 async function doRegister(){
   const owner=$('reg-owner').value.trim(), email=$('reg-email').value.trim(),
     pass=$('reg-pass').value.trim(), phone=$('reg-phone').value.trim(),
-    kname=$('reg-kname').value.trim();
+    kname=$('reg-kname').value.trim(), doc=($('reg-doc')&&$('reg-doc').value.trim())||'';
   if(!owner||!email||!pass||!phone||!kname){ toast('Preencha todos os campos obrigatórios *'); return; }
+  if(!doc){ toast('Informe o CPF ou CNPJ *'); return; }
   if(pass.length<6){ toast('Senha deve ter mínimo 6 caracteres'); return; }
   setLoading('register-btn',true,'Criando conta...');
 
   if(isConfigured){
     const {data,error}=await sb.from('kiosks').insert({
       name:kname, owner_email:email, owner_name:owner, phone,
-      city:$('reg-city').value.trim(), beach:$('reg-beach').value.trim(), is_active:true
+      city:$('reg-city').value.trim(), beach:$('reg-beach').value.trim(),
+      is_active:true, owner_doc:doc
     }).select().single();
     if(error){ toast('Erro ao criar conta: '+(error.message)); setLoading('register-btn',false,'Criar conta 🚀'); return; }
     currentKiosk=data;
@@ -2950,17 +2990,37 @@ async function doRegister(){
   enterDash();
 }
 
+async function checkKioskAccess(){
+  if(!isConfigured || !currentKiosk || currentKiosk.id==='demo') return true;
+  var {data} = await sb.from('kiosks').select('is_active,blocked').eq('id',currentKiosk.id).single();
+  if(!data) return true;
+  if(data.blocked){
+    toast('⛔ Quiosque bloqueado pelo administrador.');
+    doLogout();
+    return false;
+  }
+  if(!data.is_active){
+    toast('⏸️ Quiosque desativado pelo administrador.');
+    doLogout();
+    return false;
+  }
+  return true;
+}
+
 async function enterDash(){
   $('kiosk-auth').classList.add('hidden');
   $('kiosk-dash').classList.remove('hidden');
   $('dash-kname').textContent=currentKiosk.name;
-  // Ativar overview
   document.querySelectorAll('.kpage').forEach(p=>p.classList.remove('active'));
   $('kpage-overview').classList.add('active');
   $('kiosk-dash').querySelectorAll('.s-item').forEach(b=>b.classList.remove('active'));
   $('kiosk-dash').querySelectorAll('.s-item')[0].classList.add('active');
   await loadKioskData();
   subscribeRealtime();
+  loadMuteState();
+  // Verificar acesso periodicamente a cada 30 segundos
+  if(window._accessChecker) clearInterval(window._accessChecker);
+  window._accessChecker = setInterval(checkKioskAccess, 30000);
 }
 
 async function loadKioskData(){
@@ -2978,6 +3038,21 @@ async function loadKioskData(){
   updateDashMetrics();
   renderLiveOrders();
   populateCatSelect();
+}
+
+async function atenderChamada(orderId){
+  // Marcar chamada de atendente como entregue (atendida)
+  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    var {error} = await sb.from('orders')
+      .update({status:'delivered'})
+      .eq('id', orderId);
+    if(error){ toast('Erro: '+error.message); return; }
+  }
+  // Atualizar em memória
+  var o = orders.find(function(x){ return x.id===orderId; });
+  if(o) o.status = 'delivered';
+  renderLiveOrders();
+  toast('✅ Chamada atendida!');
 }
 
 async function closeUmbrellaSession(umbNum){
@@ -3032,6 +3107,7 @@ async function closeUmbrellaSession(umbNum){
 
 
 function doLogout(){
+  if(window._accessChecker){ clearInterval(window._accessChecker); window._accessChecker=null; }
   if(realtimeChannel) sb.removeChannel(realtimeChannel);
   currentKiosk=null; catalog=[]; dbCategories=[]; orders=[];
   $('kiosk-dash').classList.add('hidden');
@@ -3044,6 +3120,21 @@ function doLogout(){
 // ══════════════════════════════════════════════════════
 function subscribeRealtime(){
   if(!isConfigured||!currentKiosk||currentKiosk.id==='demo') return;
+  // Escutar mudanças no próprio quiosque (bloqueio/inativação pelo admin)
+  sb.channel('kiosk-status-'+currentKiosk.id)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'kiosks',
+      filter:'id=eq.'+currentKiosk.id},
+      function(payload){
+        var k = payload.new;
+        if(k.blocked){
+          toast('⛔ Quiosque bloqueado pelo administrador.');
+          setTimeout(doLogout, 2000);
+        } else if(!k.is_active){
+          toast('⏸️ Quiosque desativado pelo administrador.');
+          setTimeout(doLogout, 2000);
+        }
+      })
+    .subscribe();
   // Atualizar dashboard a cada 30 segundos automaticamente
   setInterval(function(){
     updateDashMetrics();
@@ -3089,7 +3180,40 @@ function subscribeRealtime(){
     .subscribe();
 }
 
+// ── Mute de alertas ──────────────────────
+var isMuted = false;
+
+function toggleMute(){
+  isMuted = !isMuted;
+  var btn = $('mute-btn');
+  if(btn){
+    btn.innerHTML = isMuted
+      ? '<span class="s-icon">🔕</span>Sons mutados'
+      : '<span class="s-icon">🔔</span>Sons ativos';
+    btn.style.color = isMuted ? '#ef4444' : '';
+    btn.style.background = isMuted ? 'rgba(239,68,68,.08)' : '';
+  }
+  toast(isMuted ? '🔕 Alertas sonoros desativados' : '🔔 Alertas sonoros ativados');
+  try{ localStorage.setItem('recebaa-muted', isMuted ? '1' : '0'); }catch(e){}
+}
+
+function loadMuteState(){
+  try{
+    var saved = localStorage.getItem('recebaa-muted');
+    if(saved === '1'){
+      isMuted = true;
+      var btn = $('mute-btn');
+      if(btn){
+        btn.innerHTML = '<span class="s-icon">🔕</span>Sons mutados';
+        btn.style.background = 'rgba(239,68,68,.08)';
+        btn.style.color = '#ef4444';
+      }
+    }
+  }catch(e){}
+}
+
 function playAlert(){
+  if(isMuted) return;
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
     [0,300].forEach(delay=>{
@@ -3201,8 +3325,15 @@ function renderLiveOrders(){
 
   if(callOrders.length){
     alertHtml += '<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:var(--r);padding:12px 16px;margin-bottom:14px;grid-column:1/-1">'
-      +'<div style="font-size:14px;font-weight:700;color:#b45309">🙋 '+callOrders.length+' chamada(s) de atendente!</div>'
-      +'<div style="font-size:12px;color:#92400e">'+callOrders.map(function(o){ return 'Guarda-sol '+(o.umbrella_num||o.umb||'?'); }).join(', ')+'</div>'
+      +'<div style="font-size:14px;font-weight:700;color:#b45309;margin-bottom:8px">🙋 '+callOrders.length+' chamada(s) de atendente!</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
+      +callOrders.map(function(o){
+        return '<div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #fde68a;border-radius:8px;padding:6px 10px">'
+          +'<span style="font-size:13px;color:#92400e">☂️ Guarda-sol '+(o.umbrella_num||o.umb||'?')+'</span>'
+          +'<button class="btn btn-sm" style="background:#f59e0b;color:#fff;font-size:11px;padding:4px 10px" data-oid="'+o.id+'" onclick="atenderChamada(this.dataset.oid)">✅ Atendido</button>'
+          +'</div>';
+      }).join('')
+      +'</div>'
       +'</div>';
   }
 
@@ -3407,7 +3538,8 @@ function openAddModal(){
   if($('photo-ph')) $('photo-ph').style.display='block';
   if($('photo-area')) $('photo-area').style.padding='24px';
   photoFile=null;
-  $('modal-product').classList.add('open');
+  var mp = $('modal-product');
+  if(mp){ mp.style.display='flex'; }
 }
 function closeModal(){$('modal-product').classList.remove('open');}
 
@@ -3595,7 +3727,9 @@ async function renderUmbrellas(){
       +'<div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap">'
       +'<button class="btn btn-ghost btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" data-area="'+(u.area||'')+'" data-label="'+(u.label||'')+'" data-active="'+isActive+'" onclick="editUmbFromBtn(this)">✏️ Editar</button>'
       +'<button class="btn btn-danger btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" onclick="delUmbFromBtn(this)">🗑️</button>'
-      +'</div></div>';
+      +'</div>'
+      +'<button class="btn btn-sm" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;font-size:11px" data-num="'+u.number+'" onclick="closeUmbrellaSession(this.dataset.num)">💰 Encerrar conta</button>'
+      +'</div>';
   }).join('');
 
   grid.innerHTML = qrSection + umbHtml;
