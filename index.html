@@ -2704,27 +2704,47 @@ function requestBillBtn(btn){
 }
 
 async function requestBill(type, personName, personTotal){
-  var totalGeral = myOrders.filter(function(o){return o.status!=='cancelled';}).reduce(function(s,o){return s+Number(o.total);},0);
+  // Calcular totais por pessoa
+  var byName = {};
+  myOrders.filter(function(o){ return o.status!=='cancelled'; }).forEach(function(o){
+    var n = o.customer_name||o.customer||'Cliente';
+    if(!byName[n]) byName[n] = 0;
+    byName[n] += Number(o.total);
+  });
+  var names = Object.keys(byName);
+  var totalGeral = Object.values(byName).reduce(function(s,v){ return s+v; }, 0);
+  var perPerson = names.length ? totalGeral/names.length : 0;
+
   var msg = '';
   var billTotal = 0;
+  var detalhes = '';
+
+  // Montar detalhamento por pessoa
+  var detalhesPorPessoa = names.map(function(n){
+    return n + ': ' + fmt(byName[n]);
+  }).join(' | ');
 
   if(type==='total'){
-    msg = '💳 Pagar tudo';
+    msg = '💳 PAGAR TUDO';
     billTotal = totalGeral;
+    detalhes = 'Total: ' + fmt(totalGeral);
+    if(names.length > 1){
+      detalhes += ' | Por pessoa: ' + fmt(perPerson) + ' | Detalhamento: ' + detalhesPorPessoa;
+    }
   } else if(type==='split'){
-    var byName={};
-    myOrders.filter(function(o){return o.status!=='cancelled';}).forEach(function(o){
-      var n=o.customer_name||o.customer||'Cliente';
-      if(!byName[n]) byName[n]=0;
-      byName[n]+=Number(o.total);
-    });
-    var names=Object.keys(byName);
-    billTotal = totalGeral/names.length;
-    msg = '🤝 Dividir entre '+names.length+' pessoas ('+fmt(billTotal)+' cada)';
+    msg = '🤝 DIVIDIR IGUALMENTE';
+    billTotal = totalGeral;
+    detalhes = 'Total: ' + fmt(totalGeral) + ' | ' + names.length + ' pessoas × ' + fmt(perPerson) + ' cada | Detalhamento: ' + detalhesPorPessoa;
   } else if(type==='person'){
-    msg = '👤 Conta de '+personName;
+    msg = '👤 CONTA DE ' + personName.toUpperCase();
     billTotal = personTotal;
+    detalhes = 'Valor: ' + fmt(personTotal) + ' | Total mesa: ' + fmt(totalGeral);
+    if(names.length > 1){
+      detalhes += ' | Detalhamento: ' + detalhesPorPessoa;
+    }
   }
+
+  var notasCompletas = msg + ' · ' + detalhes + ' · ☂️ ' + (window._umb||'?');
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     await sb.from('orders').insert({
@@ -2732,15 +2752,17 @@ async function requestBill(type, personName, personTotal){
       umbrella_num: String(window._umb||'?'),
       order_number: 0,
       customer_name: 'PEDIDO DE CONTA',
-      notes: msg + ' · Total: ' + fmt(billTotal) + ' · Guarda-sol ' + (window._umb||'?'),
+      notes: notasCompletas,
       status: 'pending',
       total: billTotal
     });
   } else {
-    // Demo
-    var demoOrder = {id:'bill-'+Date.now(),order_number:'CONTA',umb:String(window._umb||'?'),
-      customer_name:'PEDIDO DE CONTA',notes:msg,status:'pending',total:billTotal,
-      items:[],time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),created_at:new Date().toISOString()};
+    var demoOrder = {
+      id:'bill-'+Date.now(), order_number:'CONTA', umb:String(window._umb||'?'),
+      customer_name:'PEDIDO DE CONTA', notes:notasCompletas, status:'pending',
+      total:billTotal, items:[], time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
+      created_at:new Date().toISOString()
+    };
     orders.unshift(demoOrder);
   }
 
