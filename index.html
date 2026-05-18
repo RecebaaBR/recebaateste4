@@ -925,7 +925,15 @@ tr:hover td{background:var(--sand-50)}
 
         <div class="umbrellas-grid" id="umb-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px"></div>
       </div>
-<div class="kpage" id="kpage-reports">
+<div class="kpage" id="kpage-contas">
+        <div class="page-header">
+          <div class="page-title">Fechamento de Contas</div>
+          <div class="live-dot">Ao vivo</div>
+        </div>
+        <div id="contas-grid" style="display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+
+      <div class="kpage" id="kpage-reports">
         <div class="page-header"><div class="page-title">Relatórios</div></div>
 
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:16px;margin-bottom:16px">
@@ -3045,15 +3053,30 @@ function subscribeRealtime(){
         if(full){
           const o={...full,items:(full.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price})),umb:full.umbrella_num,time:new Date(full.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
           orders.unshift(o);
-          renderLiveOrders(); updateDashMetrics();
-          playAlert();
-        if(full.customer_name === 'PEDIDO DE CONTA'){
-          toast('🧾 Pedido de conta — Guarda-sol '+full.umbrella_num);
-          var contasPage = $('kpage-contas');
-          if(contasPage && contasPage.classList.contains('active')) renderContas();
-        } else {
-          toast('🆕 Novo pedido #'+full.order_number+' — Guarda-sol '+full.umbrella_num);
-        }
+          updateDashMetrics();
+
+          if(full.customer_name === 'PEDIDO DE CONTA'){
+            // Pedido de conta: não aparece no ao vivo, só na aba Contas
+            playAlert();
+            toast('🧾 Pedido de conta — Guarda-sol '+full.umbrella_num);
+            var contasBadge = $('contas-badge');
+            var contasPend = orders.filter(function(x){ return x.customer_name==='PEDIDO DE CONTA' && !['delivered','cancelled','billed'].includes(x.status); });
+            if(contasBadge) contasBadge.textContent = contasPend.length;
+            var contasPage = $('kpage-contas');
+            if(contasPage && contasPage.classList.contains('active')) renderContas();
+            renderLiveOrders(); // Só para atualizar o alerta roxo
+          } else if(full.customer_name === 'CHAMADA DE ATENDENTE'){
+            playAlert();
+            toast('🙋 Chamada de atendente — Guarda-sol '+full.umbrella_num);
+            renderLiveOrders();
+          } else if(full.customer_name === 'ENCERRAMENTO'){
+            renderLiveOrders();
+          } else {
+            // Pedido normal
+            playAlert();
+            toast('🆕 Novo pedido #'+full.order_number+' — Guarda-sol '+full.umbrella_num);
+            renderLiveOrders();
+          }
         }
       })
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',filter:'kiosk_id=eq.'+currentKiosk.id},
@@ -3388,16 +3411,37 @@ function irParaContas(){
   kPage('contas', btn);
 }
 
-function renderContas(){
+async function renderContas(){
   var grid = $('contas-grid');
   if(!grid) return;
+  grid.innerHTML = '<div class="page-loading"></div>';
 
-  // Filtrar pedidos de conta ativos (pendentes)
-  var contasAtivas = orders.filter(function(o){
-    return o.customer_name === 'PEDIDO DE CONTA' && !['delivered','cancelled','billed'].includes(o.status);
+  // Buscar pedidos de conta do banco se configurado
+  var contasOrders = orders.filter(function(o){ return o.customer_name === 'PEDIDO DE CONTA'; });
+
+  if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
+    var {data} = await sb.from('orders')
+      .select('*')
+      .eq('kiosk_id', currentKiosk.id)
+      .eq('customer_name', 'PEDIDO DE CONTA')
+      .order('created_at', {ascending: false})
+      .limit(50);
+    if(data && data.length){
+      // Mesclar com orders em memória
+      data.forEach(function(o){
+        o.umb = o.umbrella_num;
+        o.time = new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      });
+      contasOrders = data;
+    }
+  }
+
+  // Filtrar ativas e fechadas
+  var contasAtivas = contasOrders.filter(function(o){
+    return !['delivered','cancelled','billed'].includes(o.status);
   });
-  var contasFechadas = orders.filter(function(o){
-    return o.customer_name === 'PEDIDO DE CONTA' && ['delivered','cancelled','billed'].includes(o.status);
+  var contasFechadas = contasOrders.filter(function(o){
+    return ['delivered','cancelled','billed'].includes(o.status);
   });
 
   // Atualizar badge
