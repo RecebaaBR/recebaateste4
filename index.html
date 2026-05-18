@@ -2339,17 +2339,35 @@ async function goToMenu(){
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',
         filter:'kiosk_id=eq.'+currentKiosk.id},
         function(payload){
-          var mo = myOrders.find(function(o){ return o.id===payload.new.id; });
+          var updated = payload.new;
+          // Detectar encerramento do guarda-sol
+          if(updated.customer_name === 'PEDIDO DE CONTA' &&
+             updated.umbrella_num === String(window._umb||'?') &&
+             (updated.status === 'delivered' || updated.status === 'cancelled')){
+            toast('💰 Conta faturada! Obrigado pela visita. 🌊');
+            setTimeout(function(){ encerrarSessaoCliente(); }, 2000);
+            return;
+          }
+          var mo = myOrders.find(function(o){ return o.id===updated.id; });
           if(mo){
-            mo.status = payload.new.status;
+            mo.status = updated.status;
             updateOrdersBadge();
             var vo = $('view-orders');
             if(vo && !vo.classList.contains('hidden')) renderMyOrders();
             var ss = $('client-status');
             if(ss && !ss.classList.contains('hidden')){
               var sn = $('status-num');
-              if(sn && sn.textContent==String(payload.new.order_number)) renderStatusSteps(payload.new.status);
+              if(sn && sn.textContent==String(updated.order_number)) renderStatusSteps(updated.status);
             }
+          }
+        })
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',
+        filter:'kiosk_id=eq.'+currentKiosk.id},
+        function(payload){
+          if(payload.new.customer_name === 'ENCERRAMENTO' &&
+             payload.new.umbrella_num === String(window._umb||'?')){
+            toast('💰 Mesa encerrada! Obrigado pela visita. 🌊');
+            setTimeout(function(){ encerrarSessaoCliente(); }, 2000);
           }
         })
       .subscribe();
