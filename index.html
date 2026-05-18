@@ -1045,7 +1045,13 @@ tr:hover td{background:var(--sand-50)}
         <div class="table-wrap" id="admin-subs-wrap"><div class="page-loading"></div></div>
       </div>
       <div class="apage" id="apage-metrics">
-        <div class="page-header"><div class="page-title">Métricas globais</div></div>
+        <div class="page-header">
+          <div class="page-title">Métricas globais</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="printAdminMetrics()">🖨️ Imprimir</button>
+            <button class="btn btn-ocean btn-sm" onclick="exportAdminExcel()">📊 Excel</button>
+          </div>
+        </div>
 
         <!-- Filtros -->
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:16px;margin-bottom:16px">
@@ -2094,7 +2100,13 @@ tr:hover td{background:var(--sand-50)}
         <div class="table-wrap" id="admin-subs-wrap"><div class="page-loading"></div></div>
       </div>
       <div class="apage" id="apage-metrics">
-        <div class="page-header"><div class="page-title">Métricas globais</div></div>
+        <div class="page-header">
+          <div class="page-title">Métricas globais</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="printAdminMetrics()">🖨️ Imprimir</button>
+            <button class="btn btn-ocean btn-sm" onclick="exportAdminExcel()">📊 Excel</button>
+          </div>
+        </div>
         <div class="metrics-grid" id="admin-metrics-grid"><div class="page-loading" style="grid-column:1/-1"></div></div>
       </div>
     </main>
@@ -2370,13 +2382,23 @@ async function goToMenu(){
       .limit(50)
       .then(function(r){
         if(r.data && r.data.length){
-          myOrders = r.data.map(function(o){
+          var sessionName = '';
+          try{ sessionName = sessionStorage.getItem('recebaa-client-name')||''; }catch(e){}
+          var allOrders = r.data.map(function(o){
             return Object.assign({}, o, {
               items: (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price}; }),
               umb: o.umbrella_num,
               time: new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
             });
           });
+          // Guardar todos os pedidos do guarda-sol (para cálculo de conta)
+          window._allUmbOrders = allOrders;
+          // myOrders = só os da sessão atual (se tiver nome salvo)
+          if(sessionName){
+            myOrders = allOrders.filter(function(o){ return o.customer_name === sessionName; });
+          } else {
+            myOrders = allOrders;
+          }
           updateOrdersBadge();
         }
       });
@@ -2397,7 +2419,10 @@ async function goToMenu(){
             setTimeout(function(){ encerrarSessaoCliente(); }, 2000);
             return;
           }
+          // Atualizar em myOrders e _allUmbOrders
           var mo = myOrders.find(function(o){ return o.id===updated.id; });
+          var ao = (window._allUmbOrders||[]).find(function(o){ return o.id===updated.id; });
+          if(ao) ao.status = updated.status;
           if(mo){
             mo.status = updated.status;
             updateOrdersBadge();
@@ -2536,6 +2561,7 @@ function closeCart(){
 async function placeOrder(){
   const name=$('customer-name').value.trim();
   if(!name){ toast('Informe seu nome 😊'); return; }
+  try{ sessionStorage.setItem('recebaa-client-name', name); }catch(e){}
   const items=Object.values(cart);
   if(!items.length){ toast('Adicione itens ao carrinho'); return; }
   const total=items.reduce((s,i)=>s+i.price*i.qty,0);
@@ -2567,7 +2593,9 @@ async function placeOrder(){
     orderId=ord.id; orderNum=ord.order_number;
     const fullOrder={...ord,items:items.map(i=>({name:i.name,qty:i.qty,price:i.price})),umb:String(window._umb||'?'),time:timeNow()};
     orders.unshift(fullOrder);
-    myOrders.unshift(fullOrder);
+    if(!window._allUmbOrders) window._allUmbOrders=[];
+  window._allUmbOrders.unshift(fullOrder);
+  myOrders.unshift(fullOrder);
   } else {
     // Demo sem banco
     const num=orders.length?Math.max(...orders.map(o=>o.order_number||0))+1:1;
@@ -2663,7 +2691,6 @@ function simulateProgress(oid){
 }
 
 function encerrarSessaoCliente(){
-  // Limpar todos os dados da sessão
   myOrders = [];
   orders = [];
   cart = {};
@@ -2671,6 +2698,8 @@ function encerrarSessaoCliente(){
   catalog = [];
   dbCategories = [];
   window._umb = null;
+  window._allUmbOrders = [];
+  try{ sessionStorage.removeItem('recebaa-client-name'); }catch(e){}
 
   // Mostrar mensagem de encerramento e voltar para splash
   toast('💰 Conta faturada! Obrigado pela visita. 🌊');
@@ -2728,7 +2757,11 @@ function openBillModal(){
   var old = document.getElementById('dynamic-bill-modal');
   if(old) old.remove();
 
-  var validOrders = myOrders.filter(function(o){ return o.status!=='cancelled'; });
+  // Usar todos os pedidos do guarda-sol (não só os desta sessão)
+  var allOrders = (window._allUmbOrders || myOrders).filter(function(o){
+    return o.status!=='cancelled' && o.status!=='billed';
+  });
+  var validOrders = allOrders;
   var byName = {};
   validOrders.forEach(function(o){
     var name = o.customer_name||o.customer||'Cliente';
@@ -2801,8 +2834,11 @@ function requestBillBtn(btn){
 
 async function requestBill(type, personName, personTotal){
   // Calcular totais por pessoa
+  var allOrders = (window._allUmbOrders || myOrders).filter(function(o){
+    return o.status!=='cancelled' && o.status!=='billed';
+  });
   var byName = {};
-  myOrders.filter(function(o){ return o.status!=='cancelled'; }).forEach(function(o){
+  allOrders.forEach(function(o){
     var n = o.customer_name||o.customer||'Cliente';
     if(!byName[n]) byName[n] = 0;
     byName[n] += Number(o.total);
@@ -4362,6 +4398,123 @@ function getAdminDates(){
     from=new Date(df+'T00:00:00'); to=new Date(dt+'T23:59:59');
   }
   return { from: from.toISOString(), to: to.toISOString() };
+}
+
+function exportAdminExcel(){
+  var period = document.querySelector('.hf-btn[id^="am-"].active');
+  var periodTxt = period ? period.textContent.trim() : '';
+
+  // Métricas
+  var gmv = $('am-gmv') ? $('am-gmv').textContent : '—';
+  var orders = $('am-orders') ? $('am-orders').textContent : '—';
+  var ticket = $('am-ticket') ? $('am-ticket').textContent : '—';
+  var delivered = $('am-delivered') ? $('am-delivered').textContent : '—';
+  var cancelled = $('am-cancelled') ? $('am-cancelled').textContent : '—';
+
+  var nl = String.fromCharCode(10);
+  var rows = [];
+
+  // Cabeçalho
+  rows.push('"Relatório Admin Recebaa"');
+  rows.push('"Período: '+periodTxt+'"');
+  rows.push('"Gerado em: '+new Date().toLocaleString('pt-BR')+'"');
+  rows.push('""');
+  rows.push('"GMV Total";"Pedidos";"Ticket Médio";"Entregues";"Cancelamentos"');
+  rows.push('"'+gmv+'";"'+orders+'";"'+ticket+'";"'+delivered+'";"'+cancelled+'"');
+  rows.push('""');
+
+  // Tabela de quiosques
+  var tableEl = $('am-kiosk-table');
+  if(tableEl && tableEl.querySelector('table')){
+    rows.push('"Detalhamento por quiosque"');
+    var ths = tableEl.querySelectorAll('thead th');
+    var headers = [];
+    ths.forEach(function(th){ headers.push('"'+th.textContent.trim()+'"'); });
+    rows.push(headers.join(';'));
+    tableEl.querySelectorAll('tbody tr').forEach(function(tr){
+      var cols = [];
+      tr.querySelectorAll('td').forEach(function(td){
+        cols.push('"'+td.textContent.trim().replace(/"/g,'""')+'"');
+      });
+      rows.push(cols.join(';'));
+    });
+  }
+
+  var csv = '﻿' + rows.join(nl);
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'recebaa-admin-'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📊 Exportado para Excel!');
+}
+
+function printAdminMetrics(){
+  var period = document.querySelector('.hf-btn[id^="am-"].active');
+  var periodTxt = period ? period.textContent.trim() : '';
+  var now = new Date().toLocaleString('pt-BR');
+
+  var gmv = $('am-gmv') ? $('am-gmv').textContent : '—';
+  var orders = $('am-orders') ? $('am-orders').textContent : '—';
+  var ticket = $('am-ticket') ? $('am-ticket').textContent : '—';
+  var activeKiosks = $('am-active-kiosks') ? $('am-active-kiosks').textContent : '—';
+  var delivered = $('am-delivered') ? $('am-delivered').textContent : '—';
+  var cancelled = $('am-cancelled') ? $('am-cancelled').textContent : '—';
+
+  var rankingEl = $('am-kiosk-ranking');
+  var rankingHtml = rankingEl ? rankingEl.innerHTML : '';
+  var tableEl = $('am-kiosk-table');
+  var tableHtml = tableEl ? tableEl.innerHTML : '';
+
+  var css = [
+    'body{font-family:Arial,sans-serif;padding:24px;color:#1e293b;font-size:13px}',
+    'h1{font-size:20px;margin-bottom:4px}',
+    '.sub{color:#64748b;margin-bottom:20px;font-size:13px}',
+    '.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}',
+    '.metric{border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center}',
+    '.metric-label{font-size:11px;color:#64748b;text-transform:uppercase}',
+    '.metric-val{font-size:20px;font-weight:700;margin:4px 0}',
+    'table{width:100%;border-collapse:collapse;margin-top:8px}',
+    'th{background:#f8fafc;padding:8px;text-align:left;font-size:11px;border-bottom:2px solid #e2e8f0}',
+    'td{padding:8px;border-bottom:1px solid #f1f5f9;font-size:12px}',
+    '.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}',
+    '.bar-track{flex:1;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden}',
+    '.bar-fill{height:100%;background:#0ea5e9;border-radius:4px}',
+    '.bar-lbl{min-width:120px;font-size:12px}',
+    '.bar-val{min-width:60px;text-align:right;font-size:12px;font-weight:600}',
+    '.footer{margin-top:24px;text-align:center;color:#94a3b8;font-size:11px;border-top:1px solid #e2e8f0;padding-top:12px}',
+    '@media print{.no-print{display:none}}'
+  ].join('');
+
+  var body = [
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start">',
+    '<div><h1>Métricas Admin Recebaa</h1>',
+    '<div class="sub">Período: '+periodTxt+' · '+now+'</div></div>',
+    '<button class="no-print" onclick="window.print()" style="padding:8px 16px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir</button>',
+    '</div>',
+    '<div class="metrics">',
+    '<div class="metric"><div class="metric-label">GMV Total</div><div class="metric-val">'+gmv+'</div></div>',
+    '<div class="metric"><div class="metric-label">Pedidos</div><div class="metric-val">'+orders+'</div></div>',
+    '<div class="metric"><div class="metric-label">Ticket Médio</div><div class="metric-val">'+ticket+'</div></div>',
+    '<div class="metric"><div class="metric-label">Quiosques Ativos</div><div class="metric-val">'+activeKiosks+'</div></div>',
+    '<div class="metric"><div class="metric-label">Entregues</div><div class="metric-val">'+delivered+'</div></div>',
+    '<div class="metric"><div class="metric-label">Cancelamentos</div><div class="metric-val">'+cancelled+'</div></div>',
+    '</div>',
+    '<h3 style="margin-bottom:12px">Ranking de quiosques</h3>',
+    rankingHtml,
+    '<h3 style="margin:20px 0 8px">Detalhamento por quiosque</h3>',
+    tableHtml,
+    '<div class="footer">Recebaa · Painel administrativo</div>'
+  ].join('');
+
+  var win = window.open('','_blank','width=960,height=700');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Métricas Admin Recebaa</title><style>'+css+'</style></head><body>'+body+'</body></html>');
+  win.document.close();
+  win.focus();
 }
 
 async function loadAdminMetrics(){
