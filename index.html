@@ -2418,14 +2418,9 @@ async function goToMenu(){
               time: new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
             });
           });
-          // Guardar todos os pedidos do guarda-sol (para cálculo de conta)
+          // Todos os pedidos do guarda-sol visíveis para todos
           window._allUmbOrders = allOrders;
-          // myOrders = só os da sessão atual (se tiver nome salvo)
-          if(sessionName){
-            myOrders = allOrders.filter(function(o){ return o.customer_name === sessionName; });
-          } else {
-            myOrders = allOrders;
-          }
+          myOrders = allOrders;
           updateOrdersBadge();
         }
       });
@@ -2467,6 +2462,49 @@ async function goToMenu(){
         function(payload){
           if(payload.new.customer_name === 'ENCERRAMENTO' &&
              payload.new.umbrella_num === String(window._umb||'?')){
+            toast('💰 Mesa encerrada! Obrigado pela visita. 🌊');
+            setTimeout(function(){ encerrarSessaoCliente(); }, 2000);
+          }
+        })
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',
+        filter:'kiosk_id=eq.'+currentKiosk.id},
+        function(payload){
+          var inserted = payload.new;
+          // Ignorar pedidos especiais
+          var special = ['CHAMADA DE ATENDENTE','PEDIDO DE CONTA','ENCERRAMENTO'];
+          if(special.indexOf(inserted.customer_name) > -1) return;
+          // Só processar pedidos deste guarda-sol
+          if(inserted.umbrella_num !== String(window._umb||'?')) return;
+
+          // Adicionar em _allUmbOrders se ainda não estiver
+          if(!window._allUmbOrders) window._allUmbOrders = [];
+          var exists = window._allUmbOrders.find(function(o){ return o.id===inserted.id; });
+          if(!exists){
+            var newOrder = Object.assign({}, inserted, {
+              umb: inserted.umbrella_num,
+              items: [],
+              time: new Date(inserted.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+            });
+            // Buscar itens do pedido
+            sb.from('order_items').select('*').eq('order_id', inserted.id).then(function(r){
+              if(r.data) newOrder.items = r.data.map(function(i){
+                return {name:i.product_name, qty:i.quantity, price:i.unit_price};
+              });
+              // Verificar se é pedido desta sessão
+              var sessionName = '';
+              try{ sessionName = sessionStorage.getItem('recebaa-client-name')||''; }catch(e){}
+              window._allUmbOrders.unshift(newOrder);
+              // Todos veem todos os pedidos da mesa
+              myOrders.unshift(newOrder);
+              updateOrdersBadge();
+              var vo = $('view-orders');
+              if(vo && !vo.classList.contains('hidden')) renderMyOrders();
+            });
+          }
+
+          // Detectar encerramento
+          if(inserted.customer_name === 'ENCERRAMENTO' &&
+             inserted.umbrella_num === String(window._umb||'?')){
             toast('💰 Mesa encerrada! Obrigado pela visita. 🌊');
             setTimeout(function(){ encerrarSessaoCliente(); }, 2000);
           }
