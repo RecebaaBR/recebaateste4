@@ -786,7 +786,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="status-steps" id="status-steps"></div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <button class="btn btn-dark" onclick="goBackToMenu()">🍽️ Voltar para o Cardápio</button>
-          <button class="btn btn-ghost" onclick="clientTab('orders')">📋 Pedidos</button>
+          <button class="btn btn-ghost" onclick="goToOrders()">📋 Pedidos</button>
         </div>
       </div>
     </div>
@@ -1887,7 +1887,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="status-steps" id="status-steps"></div>
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <button class="btn btn-dark" onclick="goBackToMenu()">🍽️ Voltar para o Cardápio</button>
-          <button class="btn btn-ghost" onclick="clientTab('orders')">📋 Pedidos</button>
+          <button class="btn btn-ghost" onclick="goToOrders()">📋 Pedidos</button>
         </div>
       </div>
     </div>
@@ -2788,6 +2788,12 @@ function goBackToMenu(){
   $('client-status').classList.add('hidden');
   $('client-menu').classList.remove('hidden');
   clientTab('menu');
+}
+
+function goToOrders(){
+  $('client-status').classList.add('hidden');
+  $('client-menu').classList.remove('hidden');
+  clientTab('orders');
 }
 async function callWaiter(){
   if(!currentKiosk || !window._umb){
