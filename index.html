@@ -741,6 +741,8 @@ tr:hover td{background:var(--sand-50)}
         <button class="menu-tab" id="tab-orders" onclick="clientTab('orders')">
           📋 Pedidos <span class="order-badge-dot hidden" id="orders-dot">0</span>
         </button>
+        <button class="menu-tab" onclick="callWaiter()">🙋 Garçom</button>
+        <button class="menu-tab" onclick="openBillModal()">🧾 Conta</button>
       </div>
     </div>
     <div id="view-menu">
@@ -785,7 +787,6 @@ tr:hover td{background:var(--sand-50)}
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <button class="btn btn-dark" onclick="goBackToMenu()">🍽️ Voltar para o Cardápio</button>
           <button class="btn btn-ghost" onclick="clientTab('orders')">📋 Pedidos</button>
-          <button class="btn btn-ghost" onclick="callWaiter()">🙋 Chamar atendente</button>
         </div>
       </div>
     </div>
@@ -1841,6 +1842,8 @@ tr:hover td{background:var(--sand-50)}
         <button class="menu-tab" id="tab-orders" onclick="clientTab('orders')">
           📋 Pedidos <span class="order-badge-dot hidden" id="orders-dot">0</span>
         </button>
+        <button class="menu-tab" onclick="callWaiter()">🙋 Garçom</button>
+        <button class="menu-tab" onclick="openBillModal()">🧾 Conta</button>
       </div>
     </div>
     <div id="view-menu">
@@ -1885,7 +1888,6 @@ tr:hover td{background:var(--sand-50)}
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <button class="btn btn-dark" onclick="goBackToMenu()">🍽️ Voltar para o Cardápio</button>
           <button class="btn btn-ghost" onclick="clientTab('orders')">📋 Pedidos</button>
-          <button class="btn btn-ghost" onclick="callWaiter()">🙋 Chamar atendente</button>
         </div>
       </div>
     </div>
@@ -2875,15 +2877,7 @@ function openBillModal(){
     botoesHtml += '<button data-bt="proportional" onclick="requestBillBtn(this)" style="width:100%;padding:14px;background:#8b5cf6;color:#fff;border:none;border-radius:99px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">'
       +'⚖️ Dividir proporcionalmente</button>';
 
-    // Detalhe proporcional
-    botoesHtml += '<div style="background:#f8fafc;border-radius:12px;padding:10px 14px">'
-      +'<div style="font-size:11px;color:#94a3b8;margin-bottom:6px">Cada um paga o que consumiu:</div>';
-    names.forEach(function(name){
-      botoesHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0">'
-        +'<span style="color:#475569">👤 '+name+'</span>'
-        +'<span style="font-weight:600;color:#6d28d9">'+fmt(byName[name])+'</span></div>';
-    });
-    botoesHtml += '</div>';
+
   }
 
   botoesHtml += '</div>';
