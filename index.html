@@ -1802,7 +1802,7 @@ function openBillModal(){
   if(!validOrders.length){
     // Se não tem pedidos válidos, mostrar mesmo assim com total 0
     body.innerHTML='<div style="text-align:center;padding:20px;color:var(--sl-400)">Nenhum pedido ativo encontrado.<br/>Faça um pedido primeiro.</div>';
-    modal.classList.add('open');
+    modal.style.display='flex';
     return;
   }
   validOrders.forEach(function(o){
@@ -1851,12 +1851,12 @@ function openBillModal(){
 
   html += '</div>';
   body.innerHTML = html;
-  modal.classList.add('open');
+  modal.style.display='flex';
 }
 
 function closeBillModal(){
   var modal = $('modal-bill');
-  if(modal) modal.classList.remove('open');
+  if(modal){ modal.classList.remove('open'); modal.style.display=''; }
 }
 
 function requestBillBtn(btn){
