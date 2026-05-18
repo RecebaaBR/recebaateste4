@@ -841,6 +841,7 @@ tr:hover td{background:var(--sand-50)}
         <button class="s-item" onclick="kPage('history',this)"><span class="s-icon">🗂️</span>Histórico</button>
         <button class="s-item" onclick="kPage('menu',this)"><span class="s-icon">🍔</span>Cardápio</button>
         <button class="s-item" onclick="kPage('umbrellas',this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
+        <button class="s-item" onclick="kPage('contas',this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
         <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
       </nav>
       <div class="sidebar-foot"><button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button></div>
@@ -1910,6 +1911,7 @@ tr:hover td{background:var(--sand-50)}
         <button class="s-item" onclick="kPage('history',this)"><span class="s-icon">🗂️</span>Histórico</button>
         <button class="s-item" onclick="kPage('menu',this)"><span class="s-icon">🍔</span>Cardápio</button>
         <button class="s-item" onclick="kPage('umbrellas',this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
+        <button class="s-item" onclick="kPage('contas',this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
         <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
       </nav>
       <div class="sidebar-foot"><button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button></div>
@@ -1949,6 +1951,14 @@ tr:hover td{background:var(--sand-50)}
         <div class="page-header"><div class="page-title">Cardápio</div><button class="btn btn-ocean btn-sm" onclick="openAddModal()">+ Produto</button></div>
         <div class="menu-grid" id="mgmt-grid"></div>
       </div>
+      <div class="kpage" id="kpage-contas">
+        <div class="page-header">
+          <div class="page-title">Fechamento de Contas</div>
+          <div class="live-dot">Ao vivo</div>
+        </div>
+        <div id="contas-grid" style="display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+
       <div class="kpage" id="kpage-reports">
         <div class="page-header"><div class="page-title">Relatórios</div></div>
 
@@ -3036,7 +3046,14 @@ function subscribeRealtime(){
           const o={...full,items:(full.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price})),umb:full.umbrella_num,time:new Date(full.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
           orders.unshift(o);
           renderLiveOrders(); updateDashMetrics();
-          playAlert(); toast('🆕 Novo pedido #'+full.order_number+' — Guarda-sol '+full.umbrella_num);
+          playAlert();
+        if(full.customer_name === 'PEDIDO DE CONTA'){
+          toast('🧾 Pedido de conta — Guarda-sol '+full.umbrella_num);
+          var contasPage = $('kpage-contas');
+          if(contasPage && contasPage.classList.contains('active')) renderContas();
+        } else {
+          toast('🆕 Novo pedido #'+full.order_number+' — Guarda-sol '+full.umbrella_num);
+        }
         }
       })
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',filter:'kiosk_id=eq.'+currentKiosk.id},
@@ -3075,6 +3092,7 @@ function kPage(name,btn){
   else if(name==='history') renderHist();
   else if(name==='menu') renderMgmt();
   else if(name==='umbrellas') renderUmbrellas();
+  else if(name==='contas') renderContas();
   else if(name==='reports') loadReports();
   closeSidebar(); // fechar menu no mobile após clicar
 }
@@ -3096,6 +3114,10 @@ function updateDashMetrics(){
   if(m('m-products')) m('m-products').textContent=catalog.filter(p=>p.is_available!==false).length;
   if(m('m-cancelled')) m('m-cancelled').textContent=cancelled.length;
   if(m('live-badge')) m('live-badge').textContent=active.length;
+  // Atualizar badge de contas
+  var contasPend = orders.filter(function(o){ return o.customer_name==='PEDIDO DE CONTA' && !['delivered','cancelled','billed'].includes(o.status); });
+  var contasBadge = $('contas-badge');
+  if(contasBadge) contasBadge.textContent = contasPend.length;
   const counts={};
   orders.forEach(o=>(o.items||[]).forEach(i=>{counts[i.name]=(counts[i.name]||0)+i.qty;}));
   const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
@@ -3116,10 +3138,18 @@ function renderLiveOrders(){
   const grid=$('live-orders-grid'); if(!grid) return;
   const seq=['pending','accepted','preparing','delivering','delivered','cancelled'];
   const sorted=[...orders].sort((a,b)=>seq.indexOf(a.status)-seq.indexOf(b.status));
-  // Separar pedidos especiais (conta/atendente) dos normais
-  var billOrders = sorted.filter(function(o){ return o.customer_name==='PEDIDO DE CONTA' && !['delivered','cancelled','billed'].includes(o.status); });
-  var callOrders = sorted.filter(function(o){ return o.customer_name==='CHAMADA DE ATENDENTE' && !['delivered','cancelled'].includes(o.status); });
-  var normalOrders = sorted.filter(function(o){ return o.customer_name!=='PEDIDO DE CONTA' && o.customer_name!=='CHAMADA DE ATENDENTE'; });
+  // Filtrar só pedidos ATIVOS (excluir entregues, cancelados, faturados, encerramento)
+  var activeOrders = sorted.filter(function(o){
+    return !['delivered','cancelled','billed'].includes(o.status)
+      && o.customer_name !== 'ENCERRAMENTO';
+  });
+
+  // Separar pedidos especiais dos normais
+  var billOrders = activeOrders.filter(function(o){ return o.customer_name==='PEDIDO DE CONTA'; });
+  var callOrders = activeOrders.filter(function(o){ return o.customer_name==='CHAMADA DE ATENDENTE'; });
+  var normalOrders = activeOrders.filter(function(o){ 
+    return o.customer_name!=='PEDIDO DE CONTA' && o.customer_name!=='CHAMADA DE ATENDENTE'; 
+  });
 
   var alertHtml = '';
   if(billOrders.length){
@@ -3140,7 +3170,7 @@ function renderLiveOrders(){
       +'</div>';
   }
 
-  grid.innerHTML = alertHtml + (sorted.length ? sorted.map(orderCard).join('') : '<div style="padding:40px;text-align:center;color:var(--sl-400)">Nenhum pedido ativo.</div>');
+  grid.innerHTML = alertHtml + (normalOrders.length ? normalOrders.map(orderCard).join('') : '<div style="padding:40px;text-align:center;color:var(--sl-400)">Nenhum pedido ativo.</div>');
   updateDashMetrics();
 }
 
@@ -3334,6 +3364,72 @@ async function saveProduct(){
   setLoading('save-prod-btn',false,'Salvar produto');
   closeModal(); renderMgmt(); updateDashMetrics();
   toast('\u2705 "'+name+'" adicionado!');
+}
+
+function renderContas(){
+  var grid = $('contas-grid');
+  if(!grid) return;
+
+  // Filtrar pedidos de conta ativos (pendentes)
+  var contasAtivas = orders.filter(function(o){
+    return o.customer_name === 'PEDIDO DE CONTA' && !['delivered','cancelled','billed'].includes(o.status);
+  });
+  var contasFechadas = orders.filter(function(o){
+    return o.customer_name === 'PEDIDO DE CONTA' && ['delivered','cancelled','billed'].includes(o.status);
+  });
+
+  // Atualizar badge
+  var badge = $('contas-badge');
+  if(badge) badge.textContent = contasAtivas.length;
+
+  if(!contasAtivas.length && !contasFechadas.length){
+    grid.innerHTML = '<div style="padding:48px;text-align:center;color:var(--sl-400)"><div style="font-size:40px;margin-bottom:12px">🧾</div><div>Nenhuma solicitação de conta.</div></div>';
+    return;
+  }
+
+  var html = '';
+
+  // Contas pendentes
+  if(contasAtivas.length){
+    html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--sl-400);margin-bottom:8px">Aguardando pagamento ('+contasAtivas.length+')</div>';
+    html += contasAtivas.map(function(o){
+      var detalhes = (o.notes||'').split(' · ');
+      return '<div style="background:#fff;border-radius:var(--r);border:2px solid #8b5cf6;padding:16px;position:relative">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">'
+        +'<div style="font-size:14px;font-weight:700;color:#6d28d9">🧾 ☂️ Guarda-sol '+(o.umbrella_num||o.umb||'?')+'</div>'
+        +'<div style="font-size:12px;color:var(--sl-400)">🕐 '+(o.time||'')+'</div>'
+        +'</div>'
+        +'<div style="background:#f5f3ff;border-radius:8px;padding:10px 12px;margin-bottom:12px">'
+        +detalhes.map(function(d){ return '<div style="font-size:12px;color:#5b21b6;padding:2px 0">'+d+'</div>'; }).join('')
+        +'</div>'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+        +'<div style="font-size:22px;font-weight:700;color:#6d28d9">💰 '+fmt(o.total)+'</div>'
+        +'<button class="btn btn-sm" style="background:#10b981;color:#fff;font-weight:600;font-size:13px;padding:10px 20px" '
+        +'data-umb="'+(o.umbrella_num||o.umb||'')+'" onclick="closeUmbrellaSession(this.dataset.umb)">'
+        +'✅ Faturar e encerrar mesa</button>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  // Contas fechadas (histórico)
+  if(contasFechadas.length){
+    html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--sl-400);margin:16px 0 8px">Fechadas hoje ('+contasFechadas.length+')</div>';
+    html += contasFechadas.map(function(o){
+      return '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:14px;opacity:.7;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+        +'<div>'
+        +'<div style="font-size:13px;font-weight:600">☂️ Guarda-sol '+(o.umbrella_num||o.umb||'?')+'</div>'
+        +'<div style="font-size:11px;color:var(--sl-400);margin-top:2px">'+(o.notes||'').split(' · ')[0]+'</div>'
+        +'</div>'
+        +'<div style="text-align:right">'
+        +'<div style="font-size:14px;font-weight:700">'+fmt(o.total)+'</div>'
+        +'<span class="pill pill-delivered" style="font-size:10px">✅ Faturado</span>'
+        +'</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  grid.innerHTML = html;
 }
 
 function getKioskUrl(){
