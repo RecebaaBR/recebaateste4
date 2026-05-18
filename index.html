@@ -943,7 +943,13 @@ tr:hover td{background:var(--sand-50)}
       </div>
 
       <div class="kpage" id="kpage-reports">
-        <div class="page-header"><div class="page-title">Relatórios</div></div>
+        <div class="page-header">
+          <div class="page-title">Relatórios</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="printReports()">🖨️ Imprimir</button>
+            <button class="btn btn-ocean btn-sm" onclick="exportToExcel()">📊 Excel</button>
+          </div>
+        </div>
 
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:16px;margin-bottom:16px">
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
@@ -1986,7 +1992,13 @@ tr:hover td{background:var(--sand-50)}
       </div>
 
       <div class="kpage" id="kpage-reports">
-        <div class="page-header"><div class="page-title">Relatórios</div></div>
+        <div class="page-header">
+          <div class="page-title">Relatórios</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="printReports()">🖨️ Imprimir</button>
+            <button class="btn btn-ocean btn-sm" onclick="exportToExcel()">📊 Excel</button>
+          </div>
+        </div>
 
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:16px;margin-bottom:16px">
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
@@ -2103,7 +2115,7 @@ tr:hover td{background:var(--sand-50)}
 </div>
 
 <!-- MODAL PRODUTO -->
-<div class="modal-overlay" id="modal-product">
+<div class="modal-overlay" id="modal-product" onclick="if(event.target===this)closeModal()">
   <div class="modal-box">
     <div class="modal-head"><div class="modal-ttl" id="modal-prod-title">Novo produto</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
@@ -3529,19 +3541,137 @@ async function removeProd(id){
 }
 
 function openAddModal(){
-  populateCatSelect();
-  ['prod-name','prod-desc','prod-price'].forEach(id=>{const e=$(id);if(e)e.value='';});
-  if($('prod-cat')) $('prod-cat').value='';
-  if($('prod-status')) $('prod-status').value='on';
-  const prev=$('photo-preview');
-  if(prev){prev.style.display='none';prev.src='';}
-  if($('photo-ph')) $('photo-ph').style.display='block';
-  if($('photo-area')) $('photo-area').style.padding='24px';
-  photoFile=null;
-  var mp = $('modal-product');
-  if(mp){ mp.style.display='flex'; }
+  // Remover modal anterior se existir
+  var old = document.getElementById('dynamic-prod-modal');
+  if(old) old.remove();
+
+  var cats = dbCategories.length ? dbCategories : (typeof MOCK_CATS !== 'undefined' ? MOCK_CATS : []);
+  var catOptions = '<option value="">Selecione...</option>' + cats.map(function(c){
+    return '<option value="'+c.id+'">'+c.name+'</option>';
+  }).join('');
+
+  var div = document.createElement('div');
+  div.id = 'dynamic-prod-modal';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto';
+  div.onclick = function(e){ if(e.target===div) closeDynProdModal(); };
+
+  div.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9">'
+    +'<div style="font-size:15px;font-weight:600">Novo produto</div>'
+    +'<button onclick="closeDynProdModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;line-height:1">✕</button>'
+    +'</div>'
+    +'<div style="padding:20px;display:flex;flex-direction:column;gap:14px">'
+    // Foto
+    +'<div id="dyn-photo-area" onclick="var i=document.getElementById(\'dyn-photo-input\');if(i)i.click()" style="border:2px dashed #e2e8f0;border-radius:12px;padding:24px;text-align:center;cursor:pointer;background:#f8fafc">'
+    +'<div style="font-size:32px;margin-bottom:6px">📷</div>'
+    +'<div style="font-size:13px;font-weight:500;color:#475569">Clique para adicionar foto</div>'
+    +'<div style="font-size:11px;color:#94a3b8;margin-top:3px">JPG, PNG ou WebP</div>'
+    +'<input type="file" id="dyn-photo-input" accept="image/*" style="display:none" onchange="dynPhotoPreview(event)"/>'
+    +'</div>'
+    +'<img id="dyn-photo-preview" style="display:none;width:100%;max-height:180px;object-fit:cover;border-radius:10px" alt="preview"/>'
+    // Nome e Categoria
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Nome *</label>'
+    +'<input id="dyn-prod-name" class="input" placeholder="Ex: Caipirinha" style="width:100%"/></div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Categoria *</label>'
+    +'<select id="dyn-prod-cat" class="select" style="width:100%">'+catOptions+'</select></div>'
+    +'</div>'
+    // Descrição
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Descrição</label>'
+    +'<input id="dyn-prod-desc" class="input" placeholder="Breve descrição" style="width:100%"/></div>'
+    // Preço e Status
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Preço (R$) *</label>'
+    +'<input id="dyn-prod-price" class="input" type="number" min="0" step="0.50" placeholder="0,00" style="width:100%"/></div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Status</label>'
+    +'<select id="dyn-prod-status" class="select" style="width:100%"><option value="on">✅ Ativo</option><option value="off">⏸️ Inativo</option></select></div>'
+    +'</div>'
+    // Botão salvar
+    +'<button id="dyn-save-btn" onclick="saveDynProduct()" style="width:100%;padding:14px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Salvar produto</button>'
+    +'</div>'
+    +'</div>';
+
+  document.body.appendChild(div);
+  setTimeout(function(){ var n=document.getElementById('dyn-prod-name'); if(n) n.focus(); }, 100);
 }
-function closeModal(){$('modal-product').classList.remove('open');}
+
+
+function closeModal(){
+  var mp=$('modal-product');
+  if(mp){ mp.classList.remove('open'); mp.style.cssText=''; }
+  closeDynProdModal();
+}
+
+function closeDynProdModal(){
+  var d = document.getElementById('dynamic-prod-modal');
+  if(d) d.remove();
+}
+
+var dynPhotoFile = null;
+
+function dynPhotoPreview(e){
+  var file = e.target.files[0]; if(!file) return;
+  dynPhotoFile = file;
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var prev = document.getElementById('dyn-photo-preview');
+    var area = document.getElementById('dyn-photo-area');
+    if(prev){ prev.src = ev.target.result; prev.style.display='block'; }
+    if(area) area.style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveDynProduct(){
+  var name = (document.getElementById('dyn-prod-name').value||'').trim();
+  var catId = (document.getElementById('dyn-prod-cat').value||'').trim();
+  var desc = (document.getElementById('dyn-prod-desc').value||'').trim();
+  var price = parseFloat(document.getElementById('dyn-prod-price').value||'0');
+  var available = (document.getElementById('dyn-prod-status').value||'on') === 'on';
+
+  if(!name){ toast('Informe o nome'); return; }
+  if(!catId){ toast('Selecione a categoria'); return; }
+  if(!price||price<=0){ toast('Informe um preço válido'); return; }
+
+  var btn = document.getElementById('dyn-save-btn');
+  if(btn){ btn.textContent='Salvando...'; btn.disabled=true; }
+
+  var cats = dbCategories.length ? dbCategories : (typeof MOCK_CATS !== 'undefined' ? MOCK_CATS : []);
+  var emojis = {'beb':'🥤','cer':'🍺','drk':'🍹','por':'🍟','ref':'🍽️','sob':'🍨'};
+  var cat = cats.find(function(c){ return c.id===catId; })||{};
+  var emoji = emojis[catId]||cat.emoji||'🍴';
+  var imageUrl = null;
+
+  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    if(dynPhotoFile){
+      var ext = dynPhotoFile.name.split('.').pop();
+      var path = currentKiosk.id+'/'+Date.now()+'.'+ext;
+      var {data:ud,error:ue} = await sb.storage.from('product-images').upload(path,dynPhotoFile,{upsert:true});
+      if(!ue && ud){ var {data:url}=sb.storage.from('product-images').getPublicUrl(path); imageUrl=url.publicUrl; }
+    }
+    var {data,error} = await sb.from('products').insert({
+      kiosk_id:currentKiosk.id, category_id:catId,
+      name, description:desc, price, emoji, image_url:imageUrl,
+      is_available:available, sort_order:catalog.length
+    }).select().single();
+    if(error){
+      toast('Erro: '+error.message);
+      if(btn){ btn.textContent='Salvar produto'; btn.disabled=false; }
+      return;
+    }
+    catalog.unshift(Object.assign({},data,{cat:catId}));
+  } else {
+    var prevEl = document.getElementById('dyn-photo-preview');
+    var src = prevEl ? prevEl.src : null;
+    catalog.unshift({id:'local-'+Date.now(),cat:catId,category_id:catId,name,description:desc,price,emoji,is_available:available,image_url:src&&src.startsWith('data:')?src:null});
+  }
+
+  dynPhotoFile = null;
+  closeDynProdModal();
+  renderMgmt();
+  updateDashMetrics();
+  toast('✅ "'+name+'" adicionado!');
+}
 
 function previewPhoto(e){
   const file=e.target.files[0]; if(!file) return;
@@ -3865,6 +3995,111 @@ function printQr(url,num){
 var reportPeriod = 'today';
 var reportDateFrom = null;
 var reportDateTo = null;
+
+function exportToExcel(){
+  // Buscar dados da tabela de relatórios
+  var tableEl = $('r-orders-table');
+  if(!tableEl || !tableEl.querySelector('table')){
+    toast('Carregue os relatórios primeiro.'); return;
+  }
+
+  // Montar CSV com BOM para Excel reconhecer UTF-8
+  var rows = [];
+  var headers = [];
+  var ths = tableEl.querySelectorAll('thead th');
+  ths.forEach(function(th){ headers.push('"'+th.textContent.trim()+'"'); });
+  rows.push(headers.join(';'));
+
+  var trs = tableEl.querySelectorAll('tbody tr');
+  trs.forEach(function(tr){
+    var cols = [];
+    tr.querySelectorAll('td').forEach(function(td){
+      var val = td.textContent.trim().replace(/"/g,'""');
+      cols.push('"'+val+'"');
+    });
+    rows.push(cols.join(';'));
+  });
+
+  // Adicionar métricas no topo
+  var rev = $('r-rev') ? $('r-rev').textContent : '';
+  var orders = $('r-orders') ? $('r-orders').textContent : '';
+  var ticket = $('r-ticket') ? $('r-ticket').textContent : '';
+  var cancel = $('r-cancel') ? $('r-cancel').textContent : '';
+  var kioskName = (currentKiosk && currentKiosk.name) || 'Quiosque';
+  var period = document.querySelector('.hf-btn.active') ? document.querySelector('.hf-btn.active').textContent : '';
+
+  var meta = [
+    '"Relatório Recebaa - '+kioskName+'"',
+    '"Período: '+period+'"',
+    '"Faturamento;"+Pedidos;Ticket médio;Cancelamentos"',
+    '"'+rev+'";"'+orders+'";"'+ticket+'";"'+cancel+'"',
+    '""',
+  ];
+
+  var nl = String.fromCharCode(10);
+  var csv = '\uFEFF' + meta.join(nl) + nl + rows.join(nl);
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  var filename = 'recebaa-'+kioskName.replace(/\s+/g,'-')+'-'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.csv';
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📊 Exportado para Excel!');
+}
+
+function printReports(){
+  var kioskName = (currentKiosk && currentKiosk.name) || 'Quiosque';
+  var period = document.querySelector('.hf-btn.active') ? document.querySelector('.hf-btn.active').textContent : '';
+  var rev = $('r-rev') ? $('r-rev').textContent : 'R$ 0';
+  var ordersCount = $('r-orders') ? $('r-orders').textContent : '0';
+  var ticket = $('r-ticket') ? $('r-ticket').textContent : 'R$ 0';
+  var cancel = $('r-cancel') ? $('r-cancel').textContent : '0';
+  var tableEl = $('r-orders-table');
+  var tableHtml = tableEl ? tableEl.innerHTML : '<p>Sem dados</p>';
+  var topProds = $('r-top-products') ? $('r-top-products').innerHTML : '';
+  var now = new Date().toLocaleString('pt-BR');
+
+  var css = [
+    'body{font-family:Arial,sans-serif;padding:24px;color:#1e293b;font-size:13px}',
+    'h1{font-size:20px;margin-bottom:4px}',
+    '.sub{color:#64748b;margin-bottom:20px;font-size:13px}',
+    '.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}',
+    '.metric{border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center}',
+    '.metric-label{font-size:11px;color:#64748b;text-transform:uppercase}',
+    '.metric-val{font-size:22px;font-weight:700;margin:4px 0}',
+    'table{width:100%;border-collapse:collapse;margin-top:8px}',
+    'th{background:#f8fafc;padding:8px;text-align:left;font-size:11px;border-bottom:2px solid #e2e8f0}',
+    'td{padding:8px;border-bottom:1px solid #f1f5f9;font-size:12px}',
+    '.footer{margin-top:24px;text-align:center;color:#94a3b8;font-size:11px;border-top:1px solid #e2e8f0;padding-top:12px}',
+    '@media print{.no-print{display:none}}'
+  ].join('');
+
+  var body = [
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start">',
+    '<div><h1>Relatorio Recebaa</h1>',
+    '<div class="sub">'+kioskName+' - Periodo: '+period+' - '+now+'</div></div>',
+    '<button class="no-print" onclick="window.print()" style="padding:8px 16px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir</button>',
+    '</div>',
+    '<div class="metrics">',
+    '<div class="metric"><div class="metric-label">Faturamento</div><div class="metric-val">'+rev+'</div></div>',
+    '<div class="metric"><div class="metric-label">Pedidos</div><div class="metric-val">'+ordersCount+'</div></div>',
+    '<div class="metric"><div class="metric-label">Ticket medio</div><div class="metric-val">'+ticket+'</div></div>',
+    '<div class="metric"><div class="metric-label">Cancelamentos</div><div class="metric-val">'+cancel+'</div></div>',
+    '</div>',
+    '<h3>Itens mais pedidos</h3>'+topProds,
+    '<h3 style="margin-top:16px">Pedidos no periodo</h3>'+tableHtml,
+    '<div class="footer">Recebaa - Sistema de pedidos para quiosques de praia</div>'
+  ].join('');
+
+  var win = window.open('','_blank','width=900,height=700');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatorio '+kioskName+'</title><style>'+css+'</style></head><body>'+body+'</body></html>');
+  win.document.close();
+  win.focus();
+}
 
 function setReportPeriod(period, btn){
   reportPeriod = period;
