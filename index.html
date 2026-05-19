@@ -909,6 +909,7 @@ tr:hover td{background:var(--sand-50)}
           <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
           <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
           <button class="hf-btn" onclick="histFilter('billed',this)">💰 Faturado</button>
+          <button class="hf-btn" onclick="histFilter('waiter',this)">🙋 Garçom</button>
           <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
         </div>
         <div class="hist-table" id="hist-table"></div>
@@ -2066,6 +2067,7 @@ tr:hover td{background:var(--sand-50)}
           <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
           <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
           <button class="hf-btn" onclick="histFilter('billed',this)">💰 Faturado</button>
+          <button class="hf-btn" onclick="histFilter('waiter',this)">🙋 Garçom</button>
           <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
         </div>
         <div class="hist-table" id="hist-table"></div>
@@ -3674,7 +3676,23 @@ async function renderHist(){
       .order('created_at',{ascending:false})
       .limit(500);
 
-    if(histFilterVal !== 'all') query = query.eq('status', histFilterVal);
+    // Filtro de status - lógica especial para tipos de pedido
+    if(histFilterVal !== 'all'){
+      if(histFilterVal === 'billed'){
+        // Faturado = pedidos de conta entregues
+        query = query.eq('customer_name', 'PEDIDO DE CONTA').eq('status','delivered');
+      } else if(histFilterVal === 'delivered'){
+        // Entregue = pedidos normais entregues (excluir pedidos especiais)
+        query = query.eq('status','delivered')
+          .not('customer_name','eq','PEDIDO DE CONTA')
+          .not('customer_name','eq','CHAMADA DE ATENDENTE');
+      } else if(histFilterVal === 'waiter'){
+        // Resolvido = chamadas de atendente entregues
+        query = query.eq('customer_name','CHAMADA DE ATENDENTE');
+      } else {
+        query = query.eq('status', histFilterVal);
+      }
+    }
 
     // Filtro de período
     var dates = getHistDates();
@@ -3701,9 +3719,18 @@ async function renderHist(){
   }
 
   // Fallback: usar orders em memória
-  var list2 = histFilterVal==='all'
-    ? orders.filter(function(o){ return o.customer_name!=='ENCERRAMENTO'; })
-    : orders.filter(function(o){ return o.status===histFilterVal && o.customer_name!=='ENCERRAMENTO'; });
+  var list2;
+  if(histFilterVal==='all'){
+    list2 = orders.filter(function(o){ return o.customer_name!=='ENCERRAMENTO'; });
+  } else if(histFilterVal==='billed'){
+    list2 = orders.filter(function(o){ return o.customer_name==='PEDIDO DE CONTA' && o.status==='delivered'; });
+  } else if(histFilterVal==='delivered'){
+    list2 = orders.filter(function(o){ return o.status==='delivered' && o.customer_name!=='PEDIDO DE CONTA' && o.customer_name!=='CHAMADA DE ATENDENTE' && o.customer_name!=='ENCERRAMENTO'; });
+  } else if(histFilterVal==='waiter'){
+    list2 = orders.filter(function(o){ return o.customer_name==='CHAMADA DE ATENDENTE'; });
+  } else {
+    list2 = orders.filter(function(o){ return o.status===histFilterVal && o.customer_name!=='ENCERRAMENTO'; });
+  }
   renderHistTable(list2);
 }
 
