@@ -1020,10 +1020,7 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </div>
 
-        <div class="report-card" style="margin-top:16px">
-          <div class="report-title">Pedidos no período</div>
-          <div id="r-orders-table" style="overflow:auto;margin-top:12px"><div style="color:var(--sl-400);font-size:13px;padding:16px">Selecione um período.</div></div>
-        </div>
+
       </div>
     </main>
   </div>
@@ -2106,10 +2103,7 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </div>
 
-        <div class="report-card" style="margin-top:16px">
-          <div class="report-title">Pedidos no período</div>
-          <div id="r-orders-table" style="overflow:auto;margin-top:12px"><div style="color:var(--sl-400);font-size:13px;padding:16px">Selecione um período.</div></div>
-        </div>
+
       </div>
     </main>
   </div>
@@ -4626,29 +4620,7 @@ async function loadReports(){
     }).join('');
   }
 
-  // Tabela de pedidos
-  var tableEl = $('r-orders-table');
-  if(tableEl){
-    if(!filteredOrders.length){
-      tableEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--sl-400)">Nenhum pedido no período selecionado.</div>';
-    } else {
-      tableEl.innerHTML = '<table><thead><tr><th>#</th><th>Data</th><th>Hora</th><th>Guarda-sol</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Status</th></tr></thead><tbody>'
-        + filteredOrders.map(function(o){
-          var p = PILL[o.status]||{l:o.status,c:''};
-          return '<tr>'
-            +'<td><b>#'+o.order_number+'</b></td>'
-            +'<td>'+(o.date||'—')+'</td>'
-            +'<td>'+(o.time||'—')+'</td>'
-            +'<td>☂️ '+(o.umbrella_num||o.umb||'?')+'</td>'
-            +'<td>'+(o.customer_name||o.customer||'?')+'</td>'
-            +'<td style="font-size:11px;color:var(--sl-500)">'+(o.items||[]).map(function(i){ return i.qty+'× '+i.name; }).join(', ')+'</td>'
-            +'<td><b>'+fmt(o.total)+'</b></td>'
-            +'<td><span class="pill '+p.c+'">'+p.l+'</span></td>'
-            +'</tr>';
-        }).join('')
-        + '</tbody></table>';
-    }
-  }
+
 }
 
 
