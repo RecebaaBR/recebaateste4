@@ -3526,28 +3526,85 @@ async function closeUmbrellaSession(umbNum){
   if(!confirm('Faturar e encerrar guarda-sol '+umbNum+'?\nIsso vai marcar todos os pedidos como faturados e limpar a sessão do cliente.')) return;
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-    // Marcar pedidos de conta como entregues (status permitido no enum)
-    var {error: e1} = await sb.from('orders')
-      .update({status:'delivered', notes: 'FATURADO'})
-      .eq('kiosk_id', currentKiosk.id)
-      .eq('umbrella_num', String(umbNum))
-      .eq('customer_name', 'PEDIDO DE CONTA');
+    var kid = currentKiosk.id;
+    var umbStr = String(umbNum);
 
-    if(e1) console.log('Erro ao faturar pedidos de conta:', e1.message);
+    // 1) Buscar todos os pedidos ATIVOS do guarda-sol (não cancelados, não especiais)
+    var {data: pedidos, error: eFetch} = await sb.from('orders')
+      .select('*, order_items(*)')
+      .eq('kiosk_id', kid)
+      .eq('umbrella_num', umbStr)
+      .not('customer_name','eq','ENCERRAMENTO')
+      .not('customer_name','eq','CHAMADA DE ATENDENTE')
+      .not('customer_name','eq','PEDIDO DE CONTA')
+      .not('status','eq','cancelled');
 
-    // Marcar todos os outros pedidos pendentes como entregues
-    var {error: e2} = await sb.from('orders')
-      .update({status:'delivered'})
-      .eq('kiosk_id', currentKiosk.id)
-      .eq('umbrella_num', String(umbNum))
-      .eq('status', 'pending');
+    if(eFetch){
+      toast('Erro ao buscar pedidos: '+eFetch.message);
+      return;
+    }
+    pedidos = pedidos || [];
 
-    if(e2) console.log('Erro ao finalizar pendentes:', e2.message);
+    // 2) Calcular total somado (pedidos não cancelados)
+    var totalConta = pedidos.reduce(function(s,o){ return s + (Number(o.total)||0); }, 0);
 
-    // Criar registro de encerramento
+    // 3) Marcar todos os pedidos ativos como delivered
+    if(pedidos.length){
+      var ids = pedidos.map(function(o){ return o.id; });
+      var {error: eUpd} = await sb.from('orders')
+        .update({status:'delivered'})
+        .in('id', ids);
+      if(eUpd) console.log('Erro ao atualizar pedidos:', eUpd.message);
+    }
+
+    // 4) Tratar PEDIDO DE CONTA
+    var {data: contasExist} = await sb.from('orders')
+      .select('id, total, notes')
+      .eq('kiosk_id', kid)
+      .eq('umbrella_num', umbStr)
+      .eq('customer_name', 'PEDIDO DE CONTA')
+      .not('status','in','("delivered","cancelled","billed")')
+      .limit(1);
+
+    if(contasExist && contasExist.length){
+      // Já existia pedido de conta: marca como delivered (faturado)
+      await sb.from('orders')
+        .update({status:'delivered', notes: (contasExist[0].notes||'') + ' · FATURADO'})
+        .eq('id', contasExist[0].id);
+    } else {
+      // Não existia: criar pedido de conta retroativo
+      // Resumo dos pedidos para o notes
+      var resumo = pedidos.length
+        ? pedidos.map(function(o){
+            var qtdItens = (o.order_items||[]).reduce(function(s,i){ return s + (i.quantity||0); }, 0);
+            return '#'+(o.order_number||'?')+' ('+qtdItens+' itens) '+fmt(Number(o.total)||0);
+          }).join(' · ')
+        : 'Encerramento sem pedidos';
+      var notes = 'Encerrado pelo quiosque · ' + resumo + ' · FATURADO';
+
+      // Pegar próximo order_number
+      var {data: lastNum} = await sb.from('orders')
+        .select('order_number')
+        .eq('kiosk_id', kid)
+        .order('order_number', {ascending: false})
+        .limit(1);
+      var nextNum = (lastNum && lastNum[0] && lastNum[0].order_number) ? lastNum[0].order_number + 1 : 1;
+
+      await sb.from('orders').insert({
+        kiosk_id: kid,
+        umbrella_num: umbStr,
+        order_number: nextNum,
+        customer_name: 'PEDIDO DE CONTA',
+        notes: notes,
+        status: 'delivered',
+        total: totalConta
+      });
+    }
+
+    // 5) Criar registro de ENCERRAMENTO (mantém comportamento existente)
     await sb.from('orders').insert({
-      kiosk_id: currentKiosk.id,
-      umbrella_num: String(umbNum),
+      kiosk_id: kid,
+      umbrella_num: umbStr,
       order_number: 0,
       customer_name: 'ENCERRAMENTO',
       notes: 'Guarda-sol '+umbNum+' faturado e encerrado.',
@@ -3556,18 +3613,22 @@ async function closeUmbrellaSession(umbNum){
     });
   }
 
-  // Atualizar em memória
+  // 6) Atualizar em memória — todos os pedidos ativos do guarda-sol viram delivered
   orders.forEach(function(o){
     if(o.umb===String(umbNum)||o.umbrella_num===String(umbNum)){
       if(['pending','accepted','preparing','delivering'].includes(o.status)){
         o.status = 'delivered';
       }
-      if(o.customer_name === 'PEDIDO DE CONTA') o.status = 'delivered';
+      if(o.customer_name === 'PEDIDO DE CONTA' && o.status !== 'cancelled'){
+        o.status = 'delivered';
+      }
     }
   });
 
+  // 7) Re-renderizar todas as abas relevantes (banco será re-lido se o usuário trocar de aba)
   renderLiveOrders();
   renderHist();
+  renderContas();
   updateDashMetrics();
   toast('💰 Guarda-sol '+umbNum+' faturado! Mesa liberada para novos clientes.');
 }
