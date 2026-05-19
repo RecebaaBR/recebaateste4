@@ -770,7 +770,10 @@ tr:hover td{background:var(--sand-50)}
         <label class="label">Observações</label>
         <textarea class="textarea" id="order-notes" placeholder="Ex: sem cebola, bem gelado..."></textarea>
       </div>
-      <button class="btn btn-ocean" id="place-order-btn" style="width:100%" onclick="placeOrder()">Enviar Pedido 🚀</button>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-ghost" style="flex:1" onclick="clearCart()">🗑️ Limpar</button>
+        <button class="btn btn-ocean" id="place-order-btn" style="flex:2" onclick="placeOrder()">Enviar Pedido 🚀</button>
+      </div>
     </div>
   </div>
 
@@ -1923,7 +1926,10 @@ tr:hover td{background:var(--sand-50)}
         <label class="label">Observações</label>
         <textarea class="textarea" id="order-notes" placeholder="Ex: sem cebola, bem gelado..."></textarea>
       </div>
-      <button class="btn btn-ocean" id="place-order-btn" style="width:100%" onclick="placeOrder()">Enviar Pedido 🚀</button>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn btn-ghost" style="flex:1" onclick="clearCart()">🗑️ Limpar</button>
+        <button class="btn btn-ocean" id="place-order-btn" style="flex:2" onclick="placeOrder()">Enviar Pedido 🚀</button>
+      </div>
     </div>
   </div>
 
@@ -2913,6 +2919,13 @@ function openCart(){
   $('cart-overlay').classList.add('open');
   $('cart-drawer').classList.add('open');
 }
+function clearCart(){
+  cart = {};
+  renderCartItems();
+  closeCart();
+  toast('🗑️ Carrinho limpo!');
+}
+
 function closeCart(){
   $('cart-overlay').classList.remove('open');
   $('cart-drawer').classList.remove('open');
