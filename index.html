@@ -5099,19 +5099,10 @@ async function loadReports(){
   var topEl = $('r-top-products');
   if(topEl){
     topEl.innerHTML = top.length ? top.map(function(e){
-      var prodRev = revenueByProd[e[0]]||0;
-      var prodCost = costByProd[e[0]]||0;
-      var prodProfit = prodRev - prodCost;
-      var hasCost = prodCost > 0;
-      return '<div class="bar-row" style="flex-wrap:wrap;gap:4px">'
+      return '<div class="bar-row">'
         +'<div class="bar-lbl" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e[0]+'</div>'
         +'<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(e[1]/maxQ*100)+'%"></div></div>'
         +'<div class="bar-val">'+e[1]+'</div>'
-        +(hasCost?'<div style="width:100%;padding-left:128px;font-size:11px;color:var(--sl-400);display:flex;gap:12px">'
-          +'<span>💰 '+fmt(prodRev)+'</span>'
-          +'<span style="color:var(--red)">💸 '+fmt(prodCost)+'</span>'
-          +'<span style="color:var(--green)">📈 '+fmt(prodProfit)+'</span>'
-          +'</div>':'')
         +'</div>';
     }).join('') : '<div style="color:var(--sl-400);font-size:13px">Nenhum dado no período.</div>';
   }
