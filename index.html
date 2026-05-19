@@ -529,8 +529,8 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- HERO -->
     <div class="lp-hero" style="position:relative;z-index:10;background:rgba(3,60,100,.55);backdrop-filter:blur(2px);margin:0;padding-top:100px;padding-bottom:60px">
-      <div class="lp-badge">🌊 Tecnologia para a beira-mar</div>
-      <h1>Peça na praia,<br/><span>sem sair do lugar</span></h1>
+      <div class="lp-badge" id="lp-badge">🌊 Tecnologia para a beira-mar</div>
+      <h1><span id="lp-h1-main">Peça na praia,</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
       <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToScreen('client')">📱 Fazer um pedido</button>
@@ -544,28 +544,24 @@ tr:hover td{background:var(--sand-50)}
     <!-- COMO FUNCIONA -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.7);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Como funciona</div>
-      <div class="lp-section-title">Simples como deve ser</div>
-      <div class="lp-section-sub" style="margin:0 auto">Três passos e o pedido está a caminho do seu guarda-sol.</div>
+      <div class="lp-section-title" id="lp-how-title">Simples como deve ser</div>
+      <div class="lp-section-sub" id="lp-how-sub" style="margin:0 auto">Três passos e o pedido está a caminho do seu guarda-sol.</div>
       <div class="lp-steps">
         <div class="lp-step">
           <div class="lp-step-num">1</div>
-          <h3>Escaneie o QR Code</h3>
-          <p>Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.</p>
+          <h3 id="lp-step1-t">Escaneie o QR Code</h3><p id="lp-step1-p">Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">2</div>
-          <h3>Escolha no cardápio</h3>
-          <p>Veja fotos, preços e descrições. Monte seu pedido com calma.</p>
+          <h3 id="lp-step2-t">Escolha no cardápio</h3><p id="lp-step2-p">Veja fotos, preços e descrições. Monte seu pedido com calma.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">3</div>
-          <h3>Receba no lugar</h3>
-          <p>O quiosque recebe o pedido e entrega direto no seu guarda-sol.</p>
+          <h3 id="lp-step3-t">Receba no lugar</h3><p id="lp-step3-p">O quiosque recebe o pedido e entrega direto no seu guarda-sol.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">4</div>
-          <h3>Peça a conta</h3>
-          <p>Quando quiser, solicite a conta pelo celular. Sem precisar chamar ninguém.</p>
+          <h3 id="lp-step4-t">Peça a conta</h3><p id="lp-step4-p">Quando quiser, solicite a conta pelo celular. Sem precisar chamar ninguém.</p>
         </div>
       </div>
     </div>
@@ -657,8 +653,8 @@ tr:hover td{background:var(--sand-50)}
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.75);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Nossa missão</div>
-      <div class="lp-section-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
-      <div class="lp-section-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
+      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
+      <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
       <div class="lp-cards" style="text-align:left">
         <div class="lp-card">
           <div class="lp-card-icon blue">💙</div>
@@ -683,7 +679,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- ACESSO -->
     <div class="lp-section" style="text-align:center">
       <div class="lp-section-tag">Acesse agora</div>
-      <div class="lp-section-title">Por onde você quer entrar?</div>
+      <div class="lp-section-title" id="lp-access-title">Por onde você quer entrar?</div>
       <div class="lp-access">
         <div class="lp-access-card client" onclick="goToScreen('client')">
           <div class="lp-access-icon">📱</div>
@@ -709,7 +705,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- FOOTER -->
     <div class="lp-footer" style="padding:20px 24px">
       <div style="font-family:'Playfair Display',serif;font-size:16px;color:rgba(255,255,255,.4);margin-bottom:4px">🌊 Recebaa</div>
-      <div>© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
+      <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
     </div>
 
   </div>
@@ -1686,8 +1682,8 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- HERO -->
     <div class="lp-hero">
-      <div class="lp-badge">🌊 Tecnologia para a beira-mar</div>
-      <h1>Peça na praia,<br/><span>sem sair do lugar</span></h1>
+      <div class="lp-badge" id="lp-badge">🌊 Tecnologia para a beira-mar</div>
+      <h1><span id="lp-h1-main">Peça na praia,</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
       <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToScreen('client')">📱 Fazer um pedido</button>
@@ -1701,28 +1697,24 @@ tr:hover td{background:var(--sand-50)}
     <!-- COMO FUNCIONA -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.7);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Como funciona</div>
-      <div class="lp-section-title">Simples como deve ser</div>
-      <div class="lp-section-sub" style="margin:0 auto">Três passos e o pedido está a caminho do seu guarda-sol.</div>
+      <div class="lp-section-title" id="lp-how-title">Simples como deve ser</div>
+      <div class="lp-section-sub" id="lp-how-sub" style="margin:0 auto">Três passos e o pedido está a caminho do seu guarda-sol.</div>
       <div class="lp-steps">
         <div class="lp-step">
           <div class="lp-step-num">1</div>
-          <h3>Escaneie o QR Code</h3>
-          <p>Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.</p>
+          <h3 id="lp-step1-t">Escaneie o QR Code</h3><p id="lp-step1-p">Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">2</div>
-          <h3>Escolha no cardápio</h3>
-          <p>Veja fotos, preços e descrições. Monte seu pedido com calma.</p>
+          <h3 id="lp-step2-t">Escolha no cardápio</h3><p id="lp-step2-p">Veja fotos, preços e descrições. Monte seu pedido com calma.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">3</div>
-          <h3>Receba no lugar</h3>
-          <p>O quiosque recebe o pedido e entrega direto no seu guarda-sol.</p>
+          <h3 id="lp-step3-t">Receba no lugar</h3><p id="lp-step3-p">O quiosque recebe o pedido e entrega direto no seu guarda-sol.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">4</div>
-          <h3>Peça a conta</h3>
-          <p>Quando quiser, solicite a conta pelo celular. Sem precisar chamar ninguém.</p>
+          <h3 id="lp-step4-t">Peça a conta</h3><p id="lp-step4-p">Quando quiser, solicite a conta pelo celular. Sem precisar chamar ninguém.</p>
         </div>
       </div>
     </div>
@@ -1814,8 +1806,8 @@ tr:hover td{background:var(--sand-50)}
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.75);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Nossa missão</div>
-      <div class="lp-section-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
-      <div class="lp-section-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
+      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
+      <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
       <div class="lp-cards" style="text-align:left">
         <div class="lp-card">
           <div class="lp-card-icon blue">💙</div>
@@ -1840,7 +1832,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- ACESSO -->
     <div class="lp-section" style="text-align:center">
       <div class="lp-section-tag">Acesse agora</div>
-      <div class="lp-section-title">Por onde você quer entrar?</div>
+      <div class="lp-section-title" id="lp-access-title">Por onde você quer entrar?</div>
       <div class="lp-access">
         <div class="lp-access-card client" onclick="goToScreen('client')">
           <div class="lp-access-icon">📱</div>
@@ -1866,7 +1858,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- FOOTER -->
     <div class="lp-footer" style="padding:20px 24px">
       <div style="font-family:'Playfair Display',serif;font-size:16px;color:rgba(255,255,255,.4);margin-bottom:4px">🌊 Recebaa</div>
-      <div>© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
+      <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
     </div>
 
   </div>
@@ -2245,6 +2237,182 @@ tr:hover td{background:var(--sand-50)}
 </div>
 
 <script>
+
+// ══════════════════════════════════════════════════════
+// INTERNACIONALIZAÇÃO PT / EN
+// ══════════════════════════════════════════════════════
+var LANG_CURRENT = 'pt';
+
+var I18N = {
+  pt: {
+    // Nav landing
+    lp_client: '📱 Sou cliente', lp_kiosk: '🏪 Meu quiosque', lp_admin: '⚙️ Admin',
+    // Hero
+    lp_badge: '🌊 Tecnologia para a beira-mar',
+    lp_h1: 'Peça na praia,', lp_h1s: 'sem sair do lugar',
+    lp_p: 'O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.',
+    lp_cta1: '☂️ Fazer um pedido', lp_cta2: '🏪 Quero meu quiosque',
+    // Seções
+    lp_how: 'Como funciona', lp_how_title: 'Simples como deve ser',
+    lp_how_sub: 'Três passos e o pedido está a caminho do seu guarda-sol.',
+    lp_step1_t: 'Escaneie o QR Code', lp_step1_p: 'Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.',
+    lp_step2_t: 'Escolha no cardápio', lp_step2_p: 'Veja fotos, preços e descrições. Monte seu pedido com calma.',
+    lp_step3_t: 'Receba no lugar', lp_step3_p: 'O quiosque recebe o pedido e entrega direto no seu guarda-sol.',
+    lp_step4_t: 'Peça a conta', lp_step4_p: 'Quando quiser, solicite a conta pelo celular. Sem precisar chamar ninguém.',
+    lp_client_tag: 'Para o cliente', lp_client_title: 'Mais tempo curtindo,\nmenos tempo esperando',
+    lp_kiosk_tag: 'Para o quiosque', lp_kiosk_title: 'Venda mais com\nmenos esforço',
+    lp_mission_tag: 'Nossa missão', lp_mission_title: 'Transformar a experiência\nde praia no Brasil',
+    lp_mission_sub: 'Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil.',
+    lp_access_tag: 'Acesse agora', lp_access_title: 'Por onde você quer entrar?',
+    lp_footer: '© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil',
+    // Cliente splash
+    splash_title: 'Bem-vindo!', splash_sub: 'Digite o número do seu guarda-sol para ver o cardápio',
+    splash_ph: 'Número do guarda-sol', splash_btn: 'Ver Cardápio →',
+    // Tabs cliente
+    tab_menu: '🍔 Cardápio', tab_orders: '📋 Pedidos', tab_waiter: '🙋 Garçom', tab_bill: '🧾 Conta',
+    // Carrinho
+    cart_title: 'Seu Pedido', name_ph: 'Seu nome', notes_ph: 'Observações (opcional)',
+    order_btn: 'Enviar Pedido 🚀',
+    // Status
+    s_pending: 'Pedido recebido', s_pending_sub: 'Aguardando confirmação',
+    s_accepted: 'Confirmado', s_accepted_sub: 'O quiosque aceitou!',
+    s_preparing: 'Em preparo', s_preparing_sub: 'Preparando com carinho',
+    s_delivering: 'A caminho', s_delivering_sub: 'Indo ao seu guarda-sol',
+    s_delivered: 'Entregue!', s_delivered_sub: 'Bom apetite! 🌊',
+    s_billed: 'Faturado', s_billed_sub: 'Conta paga. Obrigado!',
+    // Status btns
+    btn_back: '🍽️ Voltar para o Cardápio', btn_orders: '📋 Pedidos',
+    // Conta modal
+    bill_title: '🧾 Pedir a conta', bill_resume: 'Resumo do consumo:',
+    bill_total_lbl: 'Total geral', bill_pay_all: '💳 Pagar tudo',
+    bill_split_eq: '🤝 Dividir igualmente', bill_split_prop: '⚖️ Dividir proporcionalmente',
+    bill_per: 'por pessoa',
+    // Pedidos
+    orders_empty: 'Nenhum pedido ainda', orders_add: 'Adicione itens e faça seu pedido!',
+    pill_pending: 'Aguardando', pill_accepted: 'Confirmado', pill_preparing: 'Em preparo',
+    pill_delivering: 'A caminho', pill_delivered: 'Entregue ✅', pill_cancelled: 'Cancelado', pill_billed: 'Faturado 💰',
+    // Waiter
+    waiter_toast: '🙋 Garçom chamado! Ele virá em breve.',
+    // Erro guarda-sol
+    umb_not_found: '❌ Guarda-sol não encontrado. Verifique o número ou fale com o atendente.',
+    umb_inactive: '❌ Este guarda-sol está inativo. Fale com o atendente.',
+  },
+  en: {
+    lp_client: '📱 I am a customer', lp_kiosk: '🏪 My kiosk', lp_admin: '⚙️ Admin',
+    lp_badge: '🌊 Beach technology',
+    lp_h1: 'Order at the beach,', lp_h1s: 'without leaving your spot',
+    lp_p: 'Recebaa connects customers to beach kiosks via QR Code. No lines, no waiting. Just enjoy the sun.',
+    lp_cta1: '☂️ Place an order', lp_cta2: '🏪 I want my kiosk',
+    lp_how: 'How it works', lp_how_title: 'As simple as it should be',
+    lp_how_sub: 'Three steps and your order is on its way to your umbrella.',
+    lp_step1_t: 'Scan the QR Code', lp_step1_p: 'Each umbrella has a QR Code. Point your camera, select your umbrella and you are done.',
+    lp_step2_t: 'Choose from the menu', lp_step2_p: 'See photos, prices and descriptions. Build your order at your own pace.',
+    lp_step3_t: 'Receive at your spot', lp_step3_p: 'The kiosk receives the order and delivers it directly to your umbrella.',
+    lp_step4_t: 'Request the bill', lp_step4_p: 'Whenever you want, request the bill from your phone. No need to call anyone.',
+    lp_client_tag: 'For customers', lp_client_title: 'More time enjoying,\nless time waiting',
+    lp_kiosk_tag: 'For kiosks', lp_kiosk_title: 'Sell more with\nless effort',
+    lp_mission_tag: 'Our mission', lp_mission_title: 'Transforming the beach\nexperience in Brazil',
+    lp_mission_sub: 'We believe technology should be simple, accessible and make life easier for everyone.',
+    lp_access_tag: 'Access now', lp_access_title: 'Where would you like to go?',
+    lp_footer: '© 2025 Recebaa · Technology for beach kiosks · Made with ❤️ in Brazil',
+    splash_title: 'Welcome!', splash_sub: 'Enter your umbrella number to see the menu',
+    splash_ph: 'Umbrella number', splash_btn: 'See Menu →',
+    tab_menu: '🍔 Menu', tab_orders: '📋 Orders', tab_waiter: '🙋 Waiter', tab_bill: '🧾 Bill',
+    cart_title: 'Your Order', name_ph: 'Your name', notes_ph: 'Notes (optional)',
+    order_btn: 'Place Order 🚀',
+    s_pending: 'Order received', s_pending_sub: 'Waiting for confirmation',
+    s_accepted: 'Confirmed', s_accepted_sub: 'The kiosk accepted!',
+    s_preparing: 'Preparing', s_preparing_sub: 'Preparing with care',
+    s_delivering: 'On the way', s_delivering_sub: 'Heading to your umbrella',
+    s_delivered: 'Delivered!', s_delivered_sub: 'Enjoy your meal! 🌊',
+    s_billed: 'Billed', s_billed_sub: 'Bill paid. Thank you!',
+    btn_back: '🍽️ Back to Menu', btn_orders: '📋 Orders',
+    bill_title: '🧾 Request bill', bill_resume: 'Consumption summary:',
+    bill_total_lbl: 'Grand total', bill_pay_all: '💳 Pay all',
+    bill_split_eq: '🤝 Split equally', bill_split_prop: '⚖️ Split proportionally',
+    bill_per: 'per person',
+    orders_empty: 'No orders yet', orders_add: 'Add items and place your order!',
+    pill_pending: 'Waiting', pill_accepted: 'Confirmed', pill_preparing: 'Preparing',
+    pill_delivering: 'On the way', pill_delivered: 'Delivered ✅', pill_cancelled: 'Cancelled', pill_billed: 'Billed 💰',
+    waiter_toast: '🙋 Waiter called! He will be right with you.',
+    umb_not_found: '❌ Umbrella not found. Check the number or speak to the attendant.',
+    umb_inactive: '❌ This umbrella is inactive. Please speak to the attendant.',
+  }
+};
+
+function t(key){ return (I18N[LANG_CURRENT]||I18N.pt)[key]||key; }
+
+function switchLang(lang){
+  LANG_CURRENT = lang;
+  // Atualizar botões
+  document.querySelectorAll('[data-lang-pt]').forEach(function(el){
+    el.style.opacity = lang==='pt' ? '1' : '0.4';
+    el.style.fontWeight = lang==='pt' ? '700' : '400';
+  });
+  document.querySelectorAll('[data-lang-en]').forEach(function(el){
+    el.style.opacity = lang==='en' ? '1' : '0.4';
+    el.style.fontWeight = lang==='en' ? '700' : '400';
+  });
+  applyI18n();
+}
+
+function applyI18n(){
+  // Helper
+  var s = function(id, key){ var el=document.getElementById(id); if(el&&key) el.textContent=t(key); };
+  var sh = function(id, key){ var el=document.getElementById(id); if(el&&key) el.innerHTML=t(key).replace(/\\n/g,'<br/>'); };
+
+  // Landing nav
+  s('lp-nav-client', 'lp_client'); s('lp-nav-kiosk', 'lp_kiosk');
+  // Hero
+  s('lp-badge', 'lp_badge'); s('lp-h1-main', 'lp_h1'); s('lp-h1-span', 'lp_h1s');
+  s('lp-hero-p', 'lp_p'); s('lp-cta1', 'lp_cta1'); s('lp-cta2', 'lp_cta2');
+  // Seções
+  s('lp-tag-how', 'lp_how'); s('lp-how-title', 'lp_how_title'); s('lp-how-sub', 'lp_how_sub');
+  s('lp-step1-t', 'lp_step1_t'); s('lp-step1-p', 'lp_step1_p');
+  s('lp-step2-t', 'lp_step2_t'); s('lp-step2-p', 'lp_step2_p');
+  s('lp-step3-t', 'lp_step3_t'); s('lp-step3-p', 'lp_step3_p');
+  s('lp-step4-t', 'lp_step4_t'); s('lp-step4-p', 'lp_step4_p');
+  s('lp-tag-client', 'lp_client_tag'); s('lp-tag-kiosk', 'lp_kiosk_tag');
+  s('lp-tag-mission', 'lp_mission_tag'); s('lp-mission-title', 'lp_mission_title');
+  s('lp-mission-sub', 'lp_mission_sub');
+  s('lp-tag-access', 'lp_access_tag'); s('lp-access-title', 'lp_access_title');
+  s('lp-footer-txt', 'lp_footer');
+  // Cliente splash
+  s('splash-title', 'splash_title'); s('splash-sub-txt', 'splash_sub');
+  var umb = document.getElementById('umbrella-input'); if(umb) umb.placeholder = t('splash_ph');
+  var sb2 = document.getElementById('splash-btn'); if(sb2) sb2.textContent = t('splash_btn');
+  // Tabs
+  var tm = document.getElementById('tab-menu'); if(tm) tm.childNodes[0] && (tm.innerHTML = t('tab_menu'));
+  var to2 = document.getElementById('tab-orders');
+  if(to2) to2.innerHTML = t('tab_orders')+' <span class="order-badge-dot hidden" id="orders-dot">0</span>';
+  document.querySelectorAll('.menu-tab').forEach(function(btn){
+    var oc = btn.getAttribute('onclick')||'';
+    if(oc.includes('callWaiter')) btn.textContent = t('tab_waiter');
+    if(oc.includes('openBillModal')) btn.textContent = t('tab_bill');
+  });
+  // Carrinho
+  var ct = document.querySelector('.cart-title'); if(ct) ct.textContent = t('cart_title');
+  var ni = document.getElementById('customer-name'); if(ni) ni.placeholder = t('name_ph');
+  var no = document.getElementById('order-notes'); if(no) no.placeholder = t('notes_ph');
+  var ob = document.getElementById('order-btn'); if(ob) ob.textContent = t('order_btn');
+  // Btns status
+  var bb = document.querySelector('[onclick="goBackToMenu()"]'); if(bb) bb.textContent = t('btn_back');
+  var bo = document.querySelector('[onclick="goToOrders()"]'); if(bo) bo.textContent = t('btn_orders');
+  // PILL atualizado
+  if(typeof PILL !== 'undefined'){
+    PILL.pending.l = t('pill_pending'); PILL.accepted.l = t('pill_accepted');
+    PILL.preparing.l = t('pill_preparing'); PILL.delivering.l = t('pill_delivering');
+    PILL.delivered.l = t('pill_delivered'); PILL.cancelled.l = t('pill_cancelled');
+    if(PILL.billed) PILL.billed.l = t('pill_billed');
+  }
+  // Re-renderizar se necessário
+  var vm = document.getElementById('view-menu');
+  if(vm && !vm.classList.contains('hidden') && typeof buildMenu === 'function') buildMenu();
+  var vo = document.getElementById('view-orders');
+  if(vo && !vo.classList.contains('hidden') && typeof renderMyOrders === 'function') renderMyOrders();
+}
+
+
 // ══════════════════════════════════════════════════════
 // ⚙️  CONFIGURAÇÃO — cole suas chaves do Supabase aqui
 // ══════════════════════════════════════════════════════
@@ -2457,13 +2625,13 @@ async function goToMenu(){
 
     if(!umbCheck || umbCheck.length === 0){
       setLoading('splash-btn',false,'Ver Cardápio →');
-      toast('❌ Guarda-sol não encontrado. Verifique o número ou fale com o atendente.');
+      toast(t('umb_not_found'));
       return;
     }
 
     if(umbCheck[0].is_active === false){
       setLoading('splash-btn',false,'Ver Cardápio →');
-      toast('❌ Este guarda-sol está inativo. Fale com o atendente.');
+      toast(t('umb_inactive'));
       return;
     }
 
@@ -2504,7 +2672,7 @@ async function goToMenu(){
           try{ sessionName = sessionStorage.getItem('recebaa-client-name')||''; }catch(e){}
           var allOrders = r.data.map(function(o){
             return Object.assign({}, o, {
-              items: (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price}; }),
+              items: (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; }),
               umb: o.umbrella_num,
               time: new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
             });
@@ -2774,14 +2942,20 @@ async function placeOrder(){
     }).select().single();
     if(e1||!ord){ toast('Erro ao enviar pedido: '+(e1&&e1.message)); setLoading('place-order-btn',false,'Enviar Pedido 🚀'); return; }
     // Salvar itens
-    await sb.from('order_items').insert(items.map(i=>({
-      order_id:ord.id,
-      product_name:i.name,
-      quantity:i.qty,
-      unit_price:i.price,
-      notes:i.notes||null,
-      emoji:i.emoji||null
-    })));
+    await sb.from('order_items').insert(items.map(function(i){
+      // Buscar custo do produto no catalog no momento da venda
+      var prod = catalog.find(function(p){ return p.name===i.name || p.id===i.id; });
+      var costAtTime = prod && prod.cost_price ? Number(prod.cost_price) : null;
+      return {
+        order_id: ord.id,
+        product_name: i.name,
+        quantity: i.qty,
+        unit_price: i.price,
+        cost_price: costAtTime,
+        notes: i.notes||null,
+        emoji: i.emoji||null
+      };
+    }));
     orderId=ord.id; orderNum=ord.order_number;
     const fullOrder={...ord,items:items.map(i=>({name:i.name,qty:i.qty,price:i.price})),umb:String(window._umb||'?'),time:timeNow()};
     orders.unshift(fullOrder);
@@ -2934,7 +3108,7 @@ async function callWaiter(){
       status: 'pending',
       total: 0
     });
-    toast('🙋 Atendente chamado! Ele virá em breve.');
+    toast(t('waiter_toast'));
   } else {
     toast('🙋 Atendente chamado! Aguarde um momento.');
   }
@@ -4846,17 +5020,17 @@ async function loadReports(){
   var rev = delivered.reduce(function(s,o){ return s+Number(o.total); }, 0);
   var ticket = delivered.length ? rev/delivered.length : 0;
 
-  // Calcular custo total usando cost_price dos produtos
+  // Calcular custo total usando cost_price fixado no momento da venda
   var totalCost = 0;
   delivered.forEach(function(o){
     (o.items||[]).forEach(function(item){
-      // Buscar produto no catalog para pegar cost_price
-      var prod = catalog.find(function(p){
-        return p.name === item.name || p.id === item.product_id;
-      });
-      if(prod && prod.cost_price){
-        totalCost += Number(prod.cost_price) * Number(item.qty||1);
+      // Priorizar custo fixado no item; fallback para catalog atual
+      var itemCost = item.cost != null ? Number(item.cost) : null;
+      if(itemCost === null){
+        var prod = catalog.find(function(p){ return p.name===item.name; });
+        itemCost = prod && prod.cost_price ? Number(prod.cost_price) : 0;
       }
+      totalCost += itemCost * Number(item.qty||1);
     });
   });
   var profit = rev - totalCost;
@@ -4892,10 +5066,14 @@ async function loadReports(){
       if(!qtyByProd[n]) qtyByProd[n] = 0;
       revenueByProd[n] += Number(item.price||0) * Number(item.qty||1);
       qtyByProd[n] += Number(item.qty||1);
-      var prod = catalog.find(function(p){ return p.name===n; });
-      if(prod && prod.cost_price){
+      var itemCost3 = item.cost != null ? Number(item.cost) : null;
+      if(itemCost3 === null){
+        var prodC = catalog.find(function(p){ return p.name===n; });
+        itemCost3 = prodC && prodC.cost_price ? Number(prodC.cost_price) : null;
+      }
+      if(itemCost3 !== null){
         if(!costByProd[n]) costByProd[n] = 0;
-        costByProd[n] += Number(prod.cost_price) * Number(item.qty||1);
+        costByProd[n] += itemCost3 * Number(item.qty||1);
       }
     });
   });
