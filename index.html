@@ -2920,8 +2920,15 @@ function openCart(){
   $('cart-drawer').classList.add('open');
 }
 function clearCart(){
-  cart = {};
-  renderCartItems();
+  // Zerar todos os itens
+  Object.keys(cart).forEach(function(id){ delete cart[id]; });
+  // Atualizar UI
+  refreshCart();
+  // Atualizar botões + no cardápio
+  document.querySelectorAll('.menu-card').forEach(function(card){
+    var id = card.dataset.id;
+    if(id) refreshCard(id);
+  });
   closeCart();
   toast('🗑️ Carrinho limpo!');
 }
