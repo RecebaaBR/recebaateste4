@@ -834,6 +834,14 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="kpage" id="kpage-orders">
         <div class="page-header"><div class="page-title">Pedidos ao vivo</div><div class="live-dot">Ao vivo</div></div>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
+          <button class="hf-btn active" onclick="liveFilter('all',this)">Todos</button>
+          <button class="hf-btn" onclick="liveFilter('pending',this)">📋 Recebido</button>
+          <button class="hf-btn" onclick="liveFilter('accepted',this)">✅ Confirmado</button>
+          <button class="hf-btn" onclick="liveFilter('preparing',this)">👨‍🍳 Em preparo</button>
+          <button class="hf-btn" onclick="liveFilter('delivering',this)">🏃 A caminho</button>
+          <button class="hf-btn" onclick="liveFilter('delivered',this)">🎉 Entregue</button>
+        </div>
         <div class="orders-grid" id="live-orders-grid"></div>
       </div>
       <div class="kpage" id="kpage-history">
@@ -1991,6 +1999,14 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="kpage" id="kpage-orders">
         <div class="page-header"><div class="page-title">Pedidos ao vivo</div><div class="live-dot">Ao vivo</div></div>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
+          <button class="hf-btn active" onclick="liveFilter('all',this)">Todos</button>
+          <button class="hf-btn" onclick="liveFilter('pending',this)">📋 Recebido</button>
+          <button class="hf-btn" onclick="liveFilter('accepted',this)">✅ Confirmado</button>
+          <button class="hf-btn" onclick="liveFilter('preparing',this)">👨‍🍳 Em preparo</button>
+          <button class="hf-btn" onclick="liveFilter('delivering',this)">🏃 A caminho</button>
+          <button class="hf-btn" onclick="liveFilter('delivered',this)">🎉 Entregue</button>
+        </div>
         <div class="orders-grid" id="live-orders-grid"></div>
       </div>
       <div class="kpage" id="kpage-history">
@@ -2413,6 +2429,7 @@ var orders = [];           // pedidos em memória (sincronizados com DB)
 var myOrders = [];         // pedidos feitos nesta sessão (cliente)
 var cart = {};
 var histFilterVal = 'all';
+var liveFilterVal = 'all';
 var histPeriod = 'today';
 var realtimeChannel = null;
 var photoFile = null;      // arquivo de foto selecionado
@@ -2421,7 +2438,8 @@ var photoFile = null;      // arquivo de foto selecionado
 var MOCK_CATS = [
   {id:'beb',name:'Bebidas',emoji:'🥤'},{id:'cer',name:'Cervejas',emoji:'🍺'},
   {id:'drk',name:'Drinks',emoji:'🍹'},{id:'por',name:'Porções',emoji:'🍟'},
-  {id:'ref',name:'Refeições',emoji:'🍽️'},{id:'sob',name:'Sobremesas',emoji:'🍨'}
+  {id:'ref',name:'Refeições',emoji:'🍽️'},{id:'sob',name:'Sobremesas',emoji:'🍨'},
+  {id:'out',name:'Outros',emoji:'🛍️'}
 ];
 var MOCK_PRODUCTS = [
   {id:'p1',cat:'beb',name:'Água mineral 500ml',description:'Gelada e refrescante',price:5,emoji:'💧',is_available:true},
@@ -3732,17 +3750,35 @@ var STATUS_NEXT={
   delivered:[],cancelled:[]
 };
 
+function liveFilter(f, btn){
+  liveFilterVal = f;
+  // Atualizar visual dos botões: pega só os que invocam liveFilter
+  document.querySelectorAll('button.hf-btn').forEach(function(b){
+    var oc = b.getAttribute('onclick') || '';
+    if(oc.indexOf('liveFilter') > -1) b.classList.remove('active');
+  });
+  if(btn) btn.classList.add('active');
+  renderLiveOrders();
+}
+
 function renderLiveOrders(){
   const grid=$('live-orders-grid'); if(!grid) return;
   const seq=['pending','accepted','preparing','delivering','delivered','cancelled','billed'];
   const sorted=[...orders].sort((a,b)=>seq.indexOf(a.status)-seq.indexOf(b.status));
 
   // Só pedidos ATIVOS, sem contas e sem especiais
+  // (quando filtro = 'delivered', incluímos entregues para visualização)
   var activeOrders = sorted.filter(function(o){
-    return !['delivered','cancelled','billed'].includes(o.status)
-      && o.customer_name !== 'ENCERRAMENTO'
-      && o.customer_name !== 'PEDIDO DE CONTA'
-      && o.customer_name !== 'CHAMADA DE ATENDENTE';
+    var isSpecial = o.customer_name === 'ENCERRAMENTO'
+      || o.customer_name === 'PEDIDO DE CONTA'
+      || o.customer_name === 'CHAMADA DE ATENDENTE';
+    if(isSpecial) return false;
+    // Aplicar filtro de status
+    if(liveFilterVal !== 'all'){
+      return o.status === liveFilterVal;
+    }
+    // Sem filtro: comportamento original (só ativos)
+    return !['delivered','cancelled','billed'].includes(o.status);
   });
 
   // Alertas de chamada de atendente (sem contas)
@@ -3788,7 +3824,7 @@ function renderLiveOrders(){
 
   grid.innerHTML = alertHtml + (activeOrders.length
     ? activeOrders.map(orderCard).join('')
-    : (alertHtml ? '' : '<div style="padding:40px;text-align:center;color:var(--sl-400)">Nenhum pedido ativo.</div>'));
+    : (alertHtml ? '' : '<div style="padding:40px;text-align:center;color:var(--sl-400)">'+(liveFilterVal==='all'?'Nenhum pedido ativo.':'Nenhum pedido com este status.')+'</div>'));
 
   updateDashMetrics();
 }
