@@ -5024,13 +5024,10 @@ async function loadReports(){
   var totalCost = 0;
   delivered.forEach(function(o){
     (o.items||[]).forEach(function(item){
-      // Priorizar custo fixado no item; fallback para catalog atual
-      var itemCost = item.cost != null ? Number(item.cost) : null;
-      if(itemCost === null){
-        var prod = catalog.find(function(p){ return p.name===item.name; });
-        itemCost = prod && prod.cost_price ? Number(prod.cost_price) : 0;
+      // Usar apenas custo fixado no momento da venda
+      if(item.cost != null && Number(item.cost) > 0){
+        totalCost += Number(item.cost) * Number(item.qty||1);
       }
-      totalCost += itemCost * Number(item.qty||1);
     });
   });
   var profit = rev - totalCost;
@@ -5066,14 +5063,9 @@ async function loadReports(){
       if(!qtyByProd[n]) qtyByProd[n] = 0;
       revenueByProd[n] += Number(item.price||0) * Number(item.qty||1);
       qtyByProd[n] += Number(item.qty||1);
-      var itemCost3 = item.cost != null ? Number(item.cost) : null;
-      if(itemCost3 === null){
-        var prodC = catalog.find(function(p){ return p.name===n; });
-        itemCost3 = prodC && prodC.cost_price ? Number(prodC.cost_price) : null;
-      }
-      if(itemCost3 !== null){
+      if(item.cost != null && Number(item.cost) > 0){
         if(!costByProd[n]) costByProd[n] = 0;
-        costByProd[n] += itemCost3 * Number(item.qty||1);
+        costByProd[n] += Number(item.cost) * Number(item.qty||1);
       }
     });
   });
