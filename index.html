@@ -1004,6 +1004,8 @@ tr:hover td{background:var(--sand-50)}
 
         <div class="metrics-grid" style="margin-bottom:16px">
           <div class="metric-card"><div class="metric-label">Faturamento</div><div class="metric-val" id="r-rev">R$ 0</div><div class="metric-sub">pedidos entregues</div></div>
+          <div class="metric-card"><div class="metric-label">Custo total</div><div class="metric-val" id="r-cost" style="color:var(--red)">R$ 0</div><div class="metric-sub">custo dos produtos</div></div>
+          <div class="metric-card"><div class="metric-label">Lucro</div><div class="metric-val" id="r-profit" style="color:var(--green)">R$ 0</div><div class="metric-sub" id="r-margin">margem 0%</div></div>
           <div class="metric-card"><div class="metric-label">Total pedidos</div><div class="metric-val" id="r-orders">0</div></div>
           <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-val" id="r-ticket">R$ 0</div></div>
           <div class="metric-card"><div class="metric-label">Cancelamentos</div><div class="metric-val" id="r-cancel">0</div></div>
@@ -2087,6 +2089,8 @@ tr:hover td{background:var(--sand-50)}
 
         <div class="metrics-grid" style="margin-bottom:16px">
           <div class="metric-card"><div class="metric-label">Faturamento</div><div class="metric-val" id="r-rev">R$ 0</div><div class="metric-sub">pedidos entregues</div></div>
+          <div class="metric-card"><div class="metric-label">Custo total</div><div class="metric-val" id="r-cost" style="color:var(--red)">R$ 0</div><div class="metric-sub">custo dos produtos</div></div>
+          <div class="metric-card"><div class="metric-label">Lucro</div><div class="metric-val" id="r-profit" style="color:var(--green)">R$ 0</div><div class="metric-sub" id="r-margin">margem 0%</div></div>
           <div class="metric-card"><div class="metric-label">Total pedidos</div><div class="metric-val" id="r-orders">0</div></div>
           <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-val" id="r-ticket">R$ 0</div></div>
           <div class="metric-card"><div class="metric-label">Cancelamentos</div><div class="metric-val" id="r-cancel">0</div></div>
@@ -3956,11 +3960,13 @@ function openAddModal(){
     +'<input id="dyn-prod-desc" class="input" placeholder="Breve descrição" style="width:100%"/></div>'
     // Preço e Status
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Preço (R$) *</label>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Preço de venda (R$) *</label>'
     +'<input id="dyn-prod-price" class="input" type="number" min="0" step="0.50" placeholder="0,00" style="width:100%"/></div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Preço de custo (R$)</label>'
+    +'<input id="dyn-prod-cost" class="input" type="number" min="0" step="0.50" placeholder="0,00" style="width:100%"/></div>'
+    +'</div>'
     +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Status</label>'
     +'<select id="dyn-prod-status" class="select" style="width:100%"><option value="on">✅ Ativo</option><option value="off">⏸️ Inativo</option></select></div>'
-    +'</div>'
     // Botão salvar
     +'<button id="dyn-save-btn" onclick="saveDynProduct()" style="width:100%;padding:14px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Salvar produto</button>'
     +'</div>'
@@ -4015,6 +4021,7 @@ async function saveDynProduct(){
   var catId = (document.getElementById('dyn-prod-cat').value||'').trim();
   var desc = (document.getElementById('dyn-prod-desc').value||'').trim();
   var price = parseFloat(document.getElementById('dyn-prod-price').value||'0');
+  var cost = parseFloat(document.getElementById('dyn-prod-cost') ? document.getElementById('dyn-prod-cost').value||'0' : '0');
   var available = (document.getElementById('dyn-prod-status').value||'on') === 'on';
 
   if(!name){ toast('Informe o nome'); return; }
@@ -4038,7 +4045,7 @@ async function saveDynProduct(){
     }
     var {data,error} = await sb.from('products').insert({
       kiosk_id:currentKiosk.id, category_id:catId,
-      name, description:desc, price, emoji, image_url:imageUrl,
+      name, description:desc, price, cost_price:cost||null, emoji, image_url:imageUrl,
       is_available:available, sort_order:catalog.length
     }).select().single();
     if(error){
@@ -4581,11 +4588,31 @@ async function loadReports(){
   var rev = delivered.reduce(function(s,o){ return s+Number(o.total); }, 0);
   var ticket = delivered.length ? rev/delivered.length : 0;
 
+  // Calcular custo total usando cost_price dos produtos
+  var totalCost = 0;
+  delivered.forEach(function(o){
+    (o.items||[]).forEach(function(item){
+      // Buscar produto no catalog para pegar cost_price
+      var prod = catalog.find(function(p){
+        return p.name === item.name || p.id === item.product_id;
+      });
+      if(prod && prod.cost_price){
+        totalCost += Number(prod.cost_price) * Number(item.qty||1);
+      }
+    });
+  });
+  var profit = rev - totalCost;
+  var margin = rev > 0 ? Math.round(profit/rev*100) : 0;
+
   var set = function(id,v){ var el=$(id); if(el) el.textContent=v; };
   set('r-rev', fmt(rev));
+  set('r-cost', fmt(totalCost));
+  set('r-profit', fmt(profit));
   set('r-orders', filteredOrders.length);
   set('r-ticket', fmt(ticket));
   set('r-cancel', cancelled.length);
+  var marginEl = $('r-margin');
+  if(marginEl) marginEl.textContent = 'margem '+margin+'%';
 
   // Top produtos
   var counts = {};
@@ -4596,12 +4623,38 @@ async function loadReports(){
   });
   var top = Object.entries(counts).sort(function(a,b){ return b[1]-a[1]; }).slice(0,8);
   var maxQ = top[0] ? top[0][1] : 1;
+  // Calcular receita por produto
+  var revenueByProd = {};
+  var costByProd = {};
+  delivered.forEach(function(o){
+    (o.items||[]).forEach(function(item){
+      if(!revenueByProd[item.name]) revenueByProd[item.name] = 0;
+      revenueByProd[item.name] += Number(item.price||0) * Number(item.qty||1);
+      var prod = catalog.find(function(p){ return p.name===item.name; });
+      if(prod && prod.cost_price){
+        if(!costByProd[item.name]) costByProd[item.name] = 0;
+        costByProd[item.name] += Number(prod.cost_price) * Number(item.qty||1);
+      }
+    });
+  });
+
   var topEl = $('r-top-products');
   if(topEl){
     topEl.innerHTML = top.length ? top.map(function(e){
-      return '<div class="bar-row"><div class="bar-lbl" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e[0]+'</div>'
+      var prodRev = revenueByProd[e[0]]||0;
+      var prodCost = costByProd[e[0]]||0;
+      var prodProfit = prodRev - prodCost;
+      var hasCost = prodCost > 0;
+      return '<div class="bar-row" style="flex-wrap:wrap;gap:4px">'
+        +'<div class="bar-lbl" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e[0]+'</div>'
         +'<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(e[1]/maxQ*100)+'%"></div></div>'
-        +'<div class="bar-val">'+e[1]+'</div></div>';
+        +'<div class="bar-val">'+e[1]+'</div>'
+        +(hasCost?'<div style="width:100%;padding-left:128px;font-size:11px;color:var(--sl-400);display:flex;gap:12px">'
+          +'<span>💰 '+fmt(prodRev)+'</span>'
+          +'<span style="color:var(--red)">💸 '+fmt(prodCost)+'</span>'
+          +'<span style="color:var(--green)">📈 '+fmt(prodProfit)+'</span>'
+          +'</div>':'')
+        +'</div>';
     }).join('') : '<div style="color:var(--sl-400);font-size:13px">Nenhum dado no período.</div>';
   }
 
