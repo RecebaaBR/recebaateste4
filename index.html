@@ -2920,14 +2920,18 @@ function openCart(){
   $('cart-drawer').classList.add('open');
 }
 function clearCart(){
-  // Zerar todos os itens
-  Object.keys(cart).forEach(function(id){ delete cart[id]; });
-  // Atualizar UI
+  // Salvar IDs que estavam no carrinho antes de limpar
+  var ids = Object.keys(cart);
+  // Zerar carrinho
+  cart = {};
+  // Atualizar UI do drawer
   refreshCart();
-  // Atualizar botões + no cardápio
-  document.querySelectorAll('.menu-card').forEach(function(card){
-    var id = card.dataset.id;
-    if(id) refreshCard(id);
+  // Resetar cada card de produto que estava no carrinho
+  ids.forEach(function(id){ refreshCard(id); });
+  // Também resetar via DOM para garantir
+  document.querySelectorAll('[id^="pc-"]').forEach(function(el){
+    var id = el.id.replace('pc-','');
+    refreshCard(id);
   });
   closeCart();
   toast('🗑️ Carrinho limpo!');
