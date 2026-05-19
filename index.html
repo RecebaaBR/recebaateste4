@@ -6,7 +6,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Recebaa</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -1159,7 +1159,7 @@ tr:hover td{background:var(--sand-50)}
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Recebaa</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -3456,7 +3456,7 @@ async function loadKioskData(){
     const {data:cats}=await sb.from('categories').select('*').eq('kiosk_id',currentKiosk.id).order('sort_order');
     dbCategories=cats||[];
     const {data:ords}=await sb.from('orders').select('*,order_items(*)').eq('kiosk_id',currentKiosk.id).order('created_at',{ascending:false}).limit(100);
-    orders=(ords||[]).map(o=>({...o,items:(o.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price})),umb:o.umbrella_num,time:new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}));
+    orders=(ords||[]).map(o=>({...o,items:(o.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price})),umb:o.umbrella_num,time:new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}));
   } else {
     catalog=MOCK_PRODUCTS;
     dbCategories=MOCK_CATS;
@@ -3570,7 +3570,7 @@ function subscribeRealtime(){
       async payload=>{
         const {data:full}=await sb.from('orders').select('*,order_items(*)').eq('id',payload.new.id).single();
         if(full){
-          const o={...full,items:(full.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price})),umb:full.umbrella_num,time:new Date(full.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
+          const o={...full,items:(full.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price})),umb:full.umbrella_num,time:new Date(full.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
           orders.unshift(o);
           updateDashMetrics();
 
@@ -3884,7 +3884,7 @@ async function renderHist(){
       data.forEach(function(o){
         o.umb = o.umbrella_num;
         o.time = new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-        o.items = (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; });
+        o.items = (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price}; });
         // Atualizar no array orders
         var existing = orders.find(function(x){ return x.id===o.id; });
         if(existing) Object.assign(existing, o);
@@ -5001,7 +5001,7 @@ async function loadReports(){
       .order('created_at', {ascending: false});
     filteredOrders = (data||[]).map(function(o){
       return {...o,
-        items:(o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; }),
+        items:(o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price}; }),
         time:new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
         date:new Date(o.created_at).toLocaleDateString('pt-BR')
       };
@@ -5099,10 +5099,19 @@ async function loadReports(){
   var topEl = $('r-top-products');
   if(topEl){
     topEl.innerHTML = top.length ? top.map(function(e){
-      return '<div class="bar-row">'
+      var prodRev = revenueByProd[e[0]]||0;
+      var prodCost = costByProd[e[0]]||0;
+      var prodProfit = prodRev - prodCost;
+      var hasCost = prodCost > 0;
+      return '<div class="bar-row" style="flex-wrap:wrap;gap:4px">'
         +'<div class="bar-lbl" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e[0]+'</div>'
         +'<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(e[1]/maxQ*100)+'%"></div></div>'
         +'<div class="bar-val">'+e[1]+'</div>'
+        +(hasCost?'<div style="width:100%;padding-left:128px;font-size:11px;color:var(--sl-400);display:flex;gap:12px">'
+          +'<span>💰 '+fmt(prodRev)+'</span>'
+          +'<span style="color:var(--red)">💸 '+fmt(prodCost)+'</span>'
+          +'<span style="color:var(--green)">📈 '+fmt(prodProfit)+'</span>'
+          +'</div>':'')
         +'</div>';
     }).join('') : '<div style="color:var(--sl-400);font-size:13px">Nenhum dado no período.</div>';
   }
