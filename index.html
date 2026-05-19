@@ -3184,6 +3184,12 @@ async function doLogin(){
     const {data:kiosks,error}=await sb.from('kiosks').select('*').eq('owner_email',email).limit(1);
     if(error||!kiosks||!kiosks.length){ toast('E-mail não encontrado. Verifique suas credenciais.'); setLoading('login-btn',false,'Entrar'); return; }
     const k = kiosks[0];
+    // Verificar senha
+    const storedPass = k.password || k.owner_password || '';
+    if(storedPass && storedPass !== pass){
+      toast('❌ Senha incorreta. Tente novamente.'); setLoading('login-btn',false,'Entrar'); return;
+    }
+
     if(k.blocked){ toast('⛔ Quiosque bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
     if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
     currentKiosk=k;
