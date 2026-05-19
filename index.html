@@ -3456,7 +3456,7 @@ async function loadKioskData(){
     const {data:cats}=await sb.from('categories').select('*').eq('kiosk_id',currentKiosk.id).order('sort_order');
     dbCategories=cats||[];
     const {data:ords}=await sb.from('orders').select('*,order_items(*)').eq('kiosk_id',currentKiosk.id).order('created_at',{ascending:false}).limit(100);
-    orders=(ords||[]).map(o=>({...o,items:(o.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price})),umb:o.umbrella_num,time:new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}));
+    orders=(ords||[]).map(o=>({...o,items:(o.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price})),umb:o.umbrella_num,time:new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}));
   } else {
     catalog=MOCK_PRODUCTS;
     dbCategories=MOCK_CATS;
@@ -3570,7 +3570,7 @@ function subscribeRealtime(){
       async payload=>{
         const {data:full}=await sb.from('orders').select('*,order_items(*)').eq('id',payload.new.id).single();
         if(full){
-          const o={...full,items:(full.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price})),umb:full.umbrella_num,time:new Date(full.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
+          const o={...full,items:(full.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price})),umb:full.umbrella_num,time:new Date(full.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
           orders.unshift(o);
           updateDashMetrics();
 
@@ -3884,7 +3884,7 @@ async function renderHist(){
       data.forEach(function(o){
         o.umb = o.umbrella_num;
         o.time = new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-        o.items = (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price}; });
+        o.items = (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; });
         // Atualizar no array orders
         var existing = orders.find(function(x){ return x.id===o.id; });
         if(existing) Object.assign(existing, o);
@@ -5001,7 +5001,7 @@ async function loadReports(){
       .order('created_at', {ascending: false});
     filteredOrders = (data||[]).map(function(o){
       return {...o,
-        items:(o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price}; }),
+        items:(o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; }),
         time:new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
         date:new Date(o.created_at).toLocaleDateString('pt-BR')
       };
