@@ -2514,7 +2514,43 @@ async function goToMenu(){
           }
         })
       .subscribe();
+
+  // Escutar mudanças no cardápio (produtos) em tempo real
+  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    sb.channel('client-products-'+currentKiosk.id)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'products',
+        filter:'kiosk_id=eq.'+currentKiosk.id},
+        function(payload){
+          var updated = payload.new;
+          // Atualizar produto no catalog
+          var idx = catalog.findIndex(function(p){ return p.id===updated.id; });
+          if(idx > -1){
+            catalog[idx] = Object.assign({}, catalog[idx], updated);
+          } else {
+            catalog.push(updated);
+          }
+          // Rerender cardápio se estiver visível
+          var vm = $('view-menu');
+          if(vm && !vm.classList.contains('hidden')) buildMenu();
+        })
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'products',
+        filter:'kiosk_id=eq.'+currentKiosk.id},
+        function(payload){
+          var p = payload.new;
+          if(p.is_available !== false) catalog.push(p);
+          var vm = $('view-menu');
+          if(vm && !vm.classList.contains('hidden')) buildMenu();
+        })
+      .on('postgres_changes',{event:'DELETE',schema:'public',table:'products',
+        filter:'kiosk_id=eq.'+currentKiosk.id},
+        function(payload){
+          catalog = catalog.filter(function(p){ return p.id !== payload.old.id; });
+          var vm = $('view-menu');
+          if(vm && !vm.classList.contains('hidden')) buildMenu();
+        })
+      .subscribe();
   }
+}
 }
 
 // ══════════════════════════════════════════════════════
