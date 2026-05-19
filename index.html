@@ -1,12 +1,14 @@
-<!DOCTYPE htm>
-<!-- saved from url=(0048)file:///C:/Users/icgio/Downloads/recebaa_89.html -->
-<html lang="pt-BR"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!DOCTYPE htm
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+        l>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Recebaa</title>
-<script src="./index56_files/supabase.min.js.download"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com/">
-<link href="./index56_files/css2" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --sand-50:#fdf8f0;--sand-100:#f5ead8;--sand-200:#e8d5b2;
@@ -442,9 +444,9 @@ tr:hover td{background:var(--sand-50)}
     Recebaa
   </div>
   <div class="lp-nav-btns">
-    <button class="lp-btn-outline" onclick="goToScreen(&#39;client&#39;)">📱 Sou cliente</button>
-    <button class="lp-btn-outline" onclick="goToScreen(&#39;kiosk&#39;)">🏪 Meu quiosque</button>
-    <button class="lp-btn-primary" onclick="goToScreen(&#39;admin&#39;)">⚙️ Admin</button>
+    <button class="lp-btn-outline" onclick="goToScreen('client')">📱 Sou cliente</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
+    <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
 
@@ -454,9 +456,9 @@ tr:hover td{background:var(--sand-50)}
     <span></span><span></span><span></span>
   </button>
   <div class="nav-logo" style="cursor:pointer" onclick="goToLanding()">🌊 Recebaa</div>
-  <button class="nav-btn active" id="nav-client" onclick="showScreen(&#39;client&#39;,this)">📱 Cliente</button>
-  <button class="nav-btn" id="nav-kiosk" onclick="showScreen(&#39;kiosk&#39;,this)">🏪 Quiosque</button>
-  <button class="nav-btn" id="nav-admin" onclick="showScreen(&#39;admin&#39;,this)">⚙️ Admin</button>
+  <button class="nav-btn active" id="nav-client" onclick="showScreen('client',this)">📱 Cliente</button>
+  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Quiosque</button>
+  <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="toast" id="toast"></div>
@@ -471,16 +473,16 @@ tr:hover td{background:var(--sand-50)}
     <!-- Nuvens animadas -->
     <div style="position:absolute;top:0;left:0;right:0;height:200px;z-index:4;pointer-events:none;overflow:hidden">
       <div style="position:absolute;top:55px;left:-180px;animation:cloudFloat1 18s linear infinite">
-        <svg width="160" height="60" viewBox="0 0 160 60"><ellipse cx="80" cy="40" rx="70" ry="22" fill="rgba(255,255,255,.55)"></ellipse><ellipse cx="55" cy="32" rx="35" ry="22" fill="rgba(255,255,255,.55)"></ellipse><ellipse cx="105" cy="34" rx="30" ry="18" fill="rgba(255,255,255,.55)"></ellipse></svg>
+        <svg width="160" height="60" viewBox="0 0 160 60"><ellipse cx="80" cy="40" rx="70" ry="22" fill="rgba(255,255,255,.55)"/><ellipse cx="55" cy="32" rx="35" ry="22" fill="rgba(255,255,255,.55)"/><ellipse cx="105" cy="34" rx="30" ry="18" fill="rgba(255,255,255,.55)"/></svg>
       </div>
       <div style="position:absolute;top:80px;left:-300px;animation:cloudFloat2 28s linear infinite 5s">
-        <svg width="200" height="70" viewBox="0 0 200 70"><ellipse cx="100" cy="50" rx="90" ry="24" fill="rgba(255,255,255,.38)"></ellipse><ellipse cx="65" cy="38" rx="45" ry="26" fill="rgba(255,255,255,.38)"></ellipse><ellipse cx="140" cy="40" rx="40" ry="22" fill="rgba(255,255,255,.38)"></ellipse></svg>
+        <svg width="200" height="70" viewBox="0 0 200 70"><ellipse cx="100" cy="50" rx="90" ry="24" fill="rgba(255,255,255,.38)"/><ellipse cx="65" cy="38" rx="45" ry="26" fill="rgba(255,255,255,.38)"/><ellipse cx="140" cy="40" rx="40" ry="22" fill="rgba(255,255,255,.38)"/></svg>
       </div>
       <div style="position:absolute;top:35px;right:-200px;animation:cloudFloat3 22s linear infinite 9s">
-        <svg width="150" height="55" viewBox="0 0 150 55"><ellipse cx="75" cy="36" rx="64" ry="20" fill="rgba(255,255,255,.45)"></ellipse><ellipse cx="48" cy="28" rx="34" ry="20" fill="rgba(255,255,255,.45)"></ellipse><ellipse cx="108" cy="30" rx="30" ry="17" fill="rgba(255,255,255,.45)"></ellipse></svg>
+        <svg width="150" height="55" viewBox="0 0 150 55"><ellipse cx="75" cy="36" rx="64" ry="20" fill="rgba(255,255,255,.45)"/><ellipse cx="48" cy="28" rx="34" ry="20" fill="rgba(255,255,255,.45)"/><ellipse cx="108" cy="30" rx="30" ry="17" fill="rgba(255,255,255,.45)"/></svg>
       </div>
       <div style="position:absolute;top:20px;left:-100px;animation:cloudFloat1 32s linear infinite 14s">
-        <svg width="120" height="42" viewBox="0 0 120 42"><ellipse cx="60" cy="28" rx="52" ry="15" fill="rgba(255,255,255,.28)"></ellipse><ellipse cx="38" cy="22" rx="28" ry="17" fill="rgba(255,255,255,.28)"></ellipse><ellipse cx="88" cy="24" rx="24" ry="14" fill="rgba(255,255,255,.28)"></ellipse></svg>
+        <svg width="120" height="42" viewBox="0 0 120 42"><ellipse cx="60" cy="28" rx="52" ry="15" fill="rgba(255,255,255,.28)"/><ellipse cx="38" cy="22" rx="28" ry="17" fill="rgba(255,255,255,.28)"/><ellipse cx="88" cy="24" rx="24" ry="14" fill="rgba(255,255,255,.28)"/></svg>
       </div>
     </div>
     <div class="lp-sun"></div>
@@ -493,48 +495,48 @@ tr:hover td{background:var(--sand-50)}
     <!-- Mar com ondas SVG -->
     <div class="lp-sea" style="bottom:27%;height:120px">
       <svg viewBox="0 0 1440 120" preserveAspectRatio="none" style="position:absolute;bottom:0;width:100%;height:100%">
-        <path d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z" fill="rgba(14,165,233,0.6)" style="animation:wave1 6s ease-in-out infinite"></path>
-        <path d="M0,80 C200,40 400,100 600,70 C800,40 1000,90 1200,60 C1300,45 1380,70 1440,80 L1440,120 L0,120 Z" fill="rgba(7,89,133,0.5)"></path>
+        <path d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z" fill="rgba(14,165,233,0.6)" style="animation:wave1 6s ease-in-out infinite"/>
+        <path d="M0,80 C200,40 400,100 600,70 C800,40 1000,90 1200,60 C1300,45 1380,70 1440,80 L1440,120 L0,120 Z" fill="rgba(7,89,133,0.5)"/>
       </svg>
     </div>
     <div class="lp-sea" style="bottom:24%;height:80px">
       <svg viewBox="0 0 1440 80" preserveAspectRatio="none" style="position:absolute;bottom:0;width:100%;height:100%">
-        <path d="M0,40 C360,0 720,80 1080,40 C1260,20 1380,50 1440,40 L1440,80 L0,80 Z" fill="rgba(3,105,161,0.7)"></path>
+        <path d="M0,40 C360,0 720,80 1080,40 C1260,20 1380,50 1440,40 L1440,80 L0,80 Z" fill="rgba(3,105,161,0.7)"/>
       </svg>
     </div>
 
     <!-- Guarda-sóis decorativos -->
     <div class="lp-umbrella-deco" style="left:8%;animation-delay:0s">
       <svg width="60" height="80" viewBox="0 0 60 80">
-        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#ef4444" opacity=".9"></ellipse>
-        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#dc2626"></path>
-        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#dc2626"></path>
-        <path d="M30 22 L16 22 Q23 13 30 22Z" fill="#fff" opacity=".2"></path>
-        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"></line>
+        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#ef4444" opacity=".9"/>
+        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#dc2626"/>
+        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#dc2626"/>
+        <path d="M30 22 L16 22 Q23 13 30 22Z" fill="#fff" opacity=".2"/>
+        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     </div>
     <div class="lp-umbrella-deco" style="left:18%;animation-delay:.5s;animation-duration:3.5s">
       <svg width="48" height="65" viewBox="0 0 60 80">
-        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#3b82f6" opacity=".9"></ellipse>
-        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#2563eb"></path>
-        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#2563eb"></path>
-        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"></line>
+        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#3b82f6" opacity=".9"/>
+        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#2563eb"/>
+        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#2563eb"/>
+        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     </div>
     <div class="lp-umbrella-deco" style="right:12%;animation-delay:1s;animation-duration:2.8s">
       <svg width="55" height="72" viewBox="0 0 60 80">
-        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#f59e0b" opacity=".9"></ellipse>
-        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#d97706"></path>
-        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#d97706"></path>
-        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"></line>
+        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#f59e0b" opacity=".9"/>
+        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#d97706"/>
+        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#d97706"/>
+        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     </div>
     <div class="lp-umbrella-deco" style="right:22%;animation-delay:1.5s;animation-duration:4s">
       <svg width="42" height="58" viewBox="0 0 60 80">
-        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#10b981" opacity=".9"></ellipse>
-        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#059669"></path>
-        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#059669"></path>
-        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"></line>
+        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#10b981" opacity=".9"/>
+        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#059669"/>
+        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#059669"/>
+        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     </div>
 
@@ -546,11 +548,11 @@ tr:hover td{background:var(--sand-50)}
     <!-- HERO -->
     <div class="lp-hero" style="position:relative;z-index:10;background:rgba(3,60,100,.55);backdrop-filter:blur(2px);margin:0;padding-top:100px;padding-bottom:60px">
       <div class="lp-badge" id="lp-badge">🌊 Tecnologia para a beira-mar</div>
-      <h1><span id="lp-h1-main">Peça na praia,</span><br><span id="lp-h1-span">sem sair do lugar</span></h1>
+      <h1><span id="lp-h1-main">Peça na praia,</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
       <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
-        <button class="lp-cta-main" onclick="goToScreen(&#39;client&#39;)">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" onclick="goToScreen(&#39;kiosk&#39;)">🏪 Quero meu quiosque</button>
+        <button class="lp-cta-main" onclick="goToScreen('client')">📱 Fazer um pedido</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
       </div>
 
     </div>
@@ -587,7 +589,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- PARA O CLIENTE -->
     <div class="lp-section" style="position:relative;z-index:10">
       <div class="lp-section-tag">Para o cliente</div>
-      <div class="lp-section-title">Mais tempo curtindo,<br>menos tempo esperando</div>
+      <div class="lp-section-title">Mais tempo curtindo,<br/>menos tempo esperando</div>
       <div class="lp-section-sub">Chega de levantar do guarda-sol para pedir ou pagar. Tudo pelo celular.</div>
       <div class="lp-cards">
         <div class="lp-card">
@@ -628,7 +630,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- PARA O QUIOSQUE -->
     <div class="lp-section" style="position:relative;z-index:10">
       <div class="lp-section-tag">Para o quiosque</div>
-      <div class="lp-section-title">Venda mais com<br>menos esforço</div>
+      <div class="lp-section-title">Venda mais com<br/>menos esforço</div>
       <div class="lp-section-sub">Painel completo para gerenciar pedidos, cardápio e relatórios em tempo real.</div>
       <div class="lp-cards">
         <div class="lp-card">
@@ -669,7 +671,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.75);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Nossa missão</div>
-      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br>de praia no Brasil</div>
+      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
       <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
       <div class="lp-cards">
         <div class="lp-card">
@@ -697,19 +699,19 @@ tr:hover td{background:var(--sand-50)}
       <div class="lp-section-tag">Acesse agora</div>
       <div class="lp-section-title" id="lp-access-title">Por onde você quer entrar?</div>
       <div class="lp-access">
-        <div class="lp-access-card client" onclick="goToScreen(&#39;client&#39;)">
+        <div class="lp-access-card client" onclick="goToScreen('client')">
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
           <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
           <button class="lp-access-btn blue">Fazer pedido →</button>
         </div>
-        <div class="lp-access-card kiosk" onclick="goToScreen(&#39;kiosk&#39;)">
+        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk')">
           <div class="lp-access-icon">🏪</div>
           <div class="lp-access-title">Quiosque</div>
           <div class="lp-access-desc">Acesse o painel do seu quiosque, gerencie pedidos e cardápio.</div>
           <button class="lp-access-btn indigo">Entrar no painel →</button>
         </div>
-        <div class="lp-access-card admin" onclick="goToScreen(&#39;admin&#39;)">
+        <div class="lp-access-card admin" onclick="goToScreen('admin')">
           <div class="lp-access-icon">⚙️</div>
           <div class="lp-access-title">Admin</div>
           <div class="lp-access-desc">Área restrita para administradores da plataforma Recebaa.</div>
@@ -720,7 +722,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- FOOTER -->
     <div class="lp-footer" style="padding:20px 24px">
-      <div style="font-family:&#39;Playfair Display&#39;,serif;font-size:16px;color:rgba(255,255,255,.4);margin-bottom:4px">🌊 Recebaa</div>
+      <div style="font-family:'Playfair Display',serif;font-size:16px;color:rgba(255,255,255,.4);margin-bottom:4px">🌊 Recebaa</div>
       <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
     </div>
 
@@ -736,7 +738,7 @@ tr:hover td{background:var(--sand-50)}
       <p>Peça direto do seu guarda-sol</p>
       <div class="splash-field">
         <label class="label">☂️ Número do seu guarda-sol</label>
-        <input class="input" id="umbrella-input" type="number" min="1" max="99" placeholder="Ex: 7">
+        <input class="input" id="umbrella-input" type="number" min="1" max="99" placeholder="Ex: 7"/>
       </div>
       <button class="btn btn-ocean" id="splash-btn" onclick="goToMenu()">Ver Cardápio →</button>
     </div>
@@ -750,8 +752,8 @@ tr:hover td{background:var(--sand-50)}
         <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
       </div>
       <div class="menu-tab-row">
-        <button class="menu-tab active" id="tab-menu" onclick="clientTab(&#39;menu&#39;)">🍔 Cardápio</button>
-        <button class="menu-tab" id="tab-orders" onclick="clientTab(&#39;orders&#39;)">
+        <button class="menu-tab active" id="tab-menu" onclick="clientTab('menu')">🍔 Cardápio</button>
+        <button class="menu-tab" id="tab-orders" onclick="clientTab('orders')">
           📋 Pedidos <span class="order-badge-dot hidden" id="orders-dot">0</span>
         </button>
         <button class="menu-tab" onclick="callWaiter()">🙋 Garçom</button>
@@ -767,7 +769,7 @@ tr:hover td{background:var(--sand-50)}
     </div>
     <button class="cart-fab hidden" id="cart-fab" onclick="openCart()">
       <span class="cart-fab-count" id="cart-count">0</span>
-      Ver carrinho · <span id="cart-total-fab">R$ 0,00</span>
+      Ver carrinho &middot; <span id="cart-total-fab">R$ 0,00</span>
     </button>
   </div>
 
@@ -780,7 +782,7 @@ tr:hover td{background:var(--sand-50)}
       <div class="cart-total-row"><span>Total</span><span id="cart-total">R$ 0,00</span></div>
       <div class="field" style="margin-top:12px">
         <label class="label">Seu nome *</label>
-        <input class="input" id="customer-name" placeholder="Como você se chama?">
+        <input class="input" id="customer-name" placeholder="Como você se chama?"/>
       </div>
       <div class="field">
         <label class="label">Observações</label>
@@ -813,11 +815,11 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-logo">🌊</div>
       <div class="auth-title">Painel Recebaa</div>
       <div class="auth-sub">Entre com suas credenciais</div>
-      <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"></div>
-      <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"></div>
+      <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
+      <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
       <button class="btn btn-dark" id="login-btn" style="width:100%" onclick="doLogin()">Entrar</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:16px">
-        Não tem conta? <a class="auth-link" href="file:///C:/Users/icgio/Downloads/recebaa_89.html#" onclick="showCard(&#39;register&#39;);return false">Criar conta grátis</a>
+        Não tem conta? <a class="auth-link" href="#" onclick="showCard('register');return false">Criar conta grátis</a>
       </p>
     </div>
     <div class="auth-card wide hidden" id="card-register">
@@ -825,25 +827,25 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-title">Criar conta</div>
       <div class="auth-sub">Preencha os dados do seu quiosque</div>
       <div class="grid-2">
-        <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"></div>
-        <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 caracteres"></div>
-        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 caracteres"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
       </div>
-      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"></div>
+      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
       <div class="field" style="margin-top:12px;margin-bottom:0">
         <label class="label">CPF ou CNPJ *</label>
-        <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)">
+        <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)"/>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"></div>
-        <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"/></div>
       </div>
       <button class="btn btn-ocean" id="register-btn" style="width:100%;margin-top:20px" onclick="doRegister()">Criar conta 🚀</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:14px">
-        Já tem conta? <a class="auth-link" href="file:///C:/Users/icgio/Downloads/recebaa_89.html#" onclick="showCard(&#39;login&#39;);return false">Entrar</a>
+        Já tem conta? <a class="auth-link" href="#" onclick="showCard('login');return false">Entrar</a>
       </p>
     </div>
   </div>
@@ -855,13 +857,13 @@ tr:hover td{background:var(--sand-50)}
         <div><div class="sidebar-kname" id="dash-kname">Quiosque</div><div class="sidebar-ksub">Recebaa</div></div>
       </div>
       <nav class="sidebar-nav">
-        <button class="s-item active" onclick="kPage(&#39;overview&#39;,this)"><span class="s-icon">📊</span>Dashboard</button>
-        <button class="s-item" onclick="kPage(&#39;orders&#39;,this)"><span class="s-icon">📋</span>Ao vivo<span class="s-badge" id="live-badge">0</span></button>
-        <button class="s-item" onclick="kPage(&#39;history&#39;,this)"><span class="s-icon">🗂️</span>Histórico</button>
-        <button class="s-item" onclick="kPage(&#39;menu&#39;,this)"><span class="s-icon">🍔</span>Cardápio</button>
-        <button class="s-item" onclick="kPage(&#39;umbrellas&#39;,this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
-        <button class="s-item" onclick="kPage(&#39;contas&#39;,this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
-        <button class="s-item" onclick="kPage(&#39;reports&#39;,this)"><span class="s-icon">📈</span>Relatórios</button>
+        <button class="s-item active" onclick="kPage('overview',this)"><span class="s-icon">📊</span>Dashboard</button>
+        <button class="s-item" onclick="kPage('orders',this)"><span class="s-icon">📋</span>Ao vivo<span class="s-badge" id="live-badge">0</span></button>
+        <button class="s-item" onclick="kPage('history',this)"><span class="s-icon">🗂️</span>Histórico</button>
+        <button class="s-item" onclick="kPage('menu',this)"><span class="s-icon">🍔</span>Cardápio</button>
+        <button class="s-item" onclick="kPage('umbrellas',this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
+        <button class="s-item" onclick="kPage('contas',this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
+        <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
       </nav>
       <div class="sidebar-foot">
         <button class="s-item" id="mute-btn" onclick="toggleMute()" style="margin-bottom:4px">
@@ -902,26 +904,26 @@ tr:hover td{background:var(--sand-50)}
           <div>
             <label class="label" style="margin-bottom:4px">Período</label>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button class="hf-btn active" id="hp-today" onclick="setHistPeriod(&#39;today&#39;,this)">Hoje</button>
-              <button class="hf-btn" id="hp-week" onclick="setHistPeriod(&#39;week&#39;,this)">7 dias</button>
-              <button class="hf-btn" id="hp-month" onclick="setHistPeriod(&#39;month&#39;,this)">Este mês</button>
-              <button class="hf-btn" id="hp-custom" onclick="setHistPeriod(&#39;custom&#39;,this)">Intervalo</button>
+              <button class="hf-btn active" id="hp-today" onclick="setHistPeriod('today',this)">Hoje</button>
+              <button class="hf-btn" id="hp-week" onclick="setHistPeriod('week',this)">7 dias</button>
+              <button class="hf-btn" id="hp-month" onclick="setHistPeriod('month',this)">Este mês</button>
+              <button class="hf-btn" id="hp-custom" onclick="setHistPeriod('custom',this)">Intervalo</button>
             </div>
           </div>
           <div id="hist-custom-dates" style="display:none;gap:8px;align-items:flex-end;flex-wrap:wrap">
-            <div><label class="label">De</label><input class="input" type="date" id="hist-date-from" style="width:auto"></div>
-            <div><label class="label">Até</label><input class="input" type="date" id="hist-date-to" style="width:auto"></div>
+            <div><label class="label">De</label><input class="input" type="date" id="hist-date-from" style="width:auto"/></div>
+            <div><label class="label">Até</label><input class="input" type="date" id="hist-date-to" style="width:auto"/></div>
             <button class="btn btn-ocean btn-sm" onclick="renderHist()">Filtrar</button>
           </div>
         </div>
         <div class="hist-filters">
-          <button class="hf-btn active" onclick="histFilter(&#39;all&#39;,this)">Todos</button>
-          <button class="hf-btn" onclick="histFilter(&#39;pending&#39;,this)">⏳ Pendente</button>
-          <button class="hf-btn" onclick="histFilter(&#39;preparing&#39;,this)">👨‍🍳 Em produção</button>
-          <button class="hf-btn" onclick="histFilter(&#39;delivered&#39;,this)">✅ Entregue</button>
-          <button class="hf-btn" onclick="histFilter(&#39;billed&#39;,this)">💰 Faturado</button>
-          <button class="hf-btn" onclick="histFilter(&#39;waiter&#39;,this)">🙋 Garçom</button>
-          <button class="hf-btn" onclick="histFilter(&#39;cancelled&#39;,this)">❌ Cancelado</button>
+          <button class="hf-btn active" onclick="histFilter('all',this)">Todos</button>
+          <button class="hf-btn" onclick="histFilter('pending',this)">⏳ Pendente</button>
+          <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
+          <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
+          <button class="hf-btn" onclick="histFilter('billed',this)">💰 Faturado</button>
+          <button class="hf-btn" onclick="histFilter('waiter',this)">🙋 Garçom</button>
+          <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
         </div>
         <div class="hist-table" id="hist-table"></div>
       </div>
@@ -938,11 +940,11 @@ tr:hover td{background:var(--sand-50)}
         <!-- Formulário inline (aparece/some) -->
         <div id="umb-form-inline" class="hidden" style="background:#fff;border-radius:var(--r);border:1px solid var(--ocean-500);padding:16px;margin-bottom:16px">
           <div style="font-size:14px;font-weight:600;margin-bottom:12px" id="umb-form-title">Novo guarda-sol</div>
-          <input type="hidden" id="umb-edit-id">
+          <input type="hidden" id="umb-edit-id"/>
           <div class="grid-2" style="margin-bottom:12px">
             <div class="field" style="margin-bottom:0">
               <label class="label">Número *</label>
-              <input class="input" id="umb-number" type="number" min="1" max="999" placeholder="Ex: 7">
+              <input class="input" id="umb-number" type="number" min="1" max="999" placeholder="Ex: 7"/>
             </div>
             <div class="field" style="margin-bottom:0">
               <label class="label">Área</label>
@@ -956,7 +958,7 @@ tr:hover td{background:var(--sand-50)}
           </div>
           <div class="field">
             <label class="label">Rótulo (opcional)</label>
-            <input class="input" id="umb-label" placeholder="Ex: Guarda-sol 07">
+            <input class="input" id="umb-label" placeholder="Ex: Guarda-sol 07"/>
           </div>
           <div class="field">
             <label class="label">Status</label>
@@ -979,10 +981,10 @@ tr:hover td{background:var(--sand-50)}
           <div class="live-dot">Ao vivo</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-          <button class="hf-btn active" id="cf-all" onclick="setContasFilter(&#39;all&#39;,this)">Todas</button>
-          <button class="hf-btn" id="cf-pending" onclick="setContasFilter(&#39;pending&#39;,this)">⏳ Solicitadas</button>
-          <button class="hf-btn" id="cf-closed" onclick="setContasFilter(&#39;closed&#39;,this)">✅ Faturadas</button>
-          <button class="hf-btn" id="cf-cancelled" onclick="setContasFilter(&#39;cancelled&#39;,this)">❌ Canceladas</button>
+          <button class="hf-btn active" id="cf-all" onclick="setContasFilter('all',this)">Todas</button>
+          <button class="hf-btn" id="cf-pending" onclick="setContasFilter('pending',this)">⏳ Solicitadas</button>
+          <button class="hf-btn" id="cf-closed" onclick="setContasFilter('closed',this)">✅ Faturadas</button>
+          <button class="hf-btn" id="cf-cancelled" onclick="setContasFilter('cancelled',this)">❌ Canceladas</button>
         </div>
         <div id="contas-grid" style="display:flex;flex-direction:column;gap:12px"></div>
       </div>
@@ -1001,16 +1003,16 @@ tr:hover td{background:var(--sand-50)}
             <div>
               <label class="label">Período rápido</label>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="hf-btn active" id="rp-today" onclick="setReportPeriod(&#39;today&#39;,this)">Hoje</button>
-                <button class="hf-btn" id="rp-week" onclick="setReportPeriod(&#39;week&#39;,this)">7 dias</button>
-                <button class="hf-btn" id="rp-month" onclick="setReportPeriod(&#39;month&#39;,this)">Este mês</button>
-                <button class="hf-btn" id="rp-year" onclick="setReportPeriod(&#39;year&#39;,this)">Este ano</button>
-                <button class="hf-btn" id="rp-custom" onclick="setReportPeriod(&#39;custom&#39;,this)">Personalizado</button>
+                <button class="hf-btn active" id="rp-today" onclick="setReportPeriod('today',this)">Hoje</button>
+                <button class="hf-btn" id="rp-week" onclick="setReportPeriod('week',this)">7 dias</button>
+                <button class="hf-btn" id="rp-month" onclick="setReportPeriod('month',this)">Este mês</button>
+                <button class="hf-btn" id="rp-year" onclick="setReportPeriod('year',this)">Este ano</button>
+                <button class="hf-btn" id="rp-custom" onclick="setReportPeriod('custom',this)">Personalizado</button>
               </div>
             </div>
             <div id="custom-dates" class="hidden" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
-              <div><label class="label">De</label><input class="input" type="date" id="r-date-from" style="width:auto"></div>
-              <div><label class="label">Até</label><input class="input" type="date" id="r-date-to" style="width:auto"></div>
+              <div><label class="label">De</label><input class="input" type="date" id="r-date-from" style="width:auto"/></div>
+              <div><label class="label">Até</label><input class="input" type="date" id="r-date-to" style="width:auto"/></div>
               <button class="btn btn-ocean btn-sm" onclick="loadReports()">Filtrar</button>
             </div>
           </div>
@@ -1043,8 +1045,8 @@ tr:hover td{background:var(--sand-50)}
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
             <div class="report-title" style="margin-bottom:0">🥧 Produtos mais vendidos</div>
             <div style="display:flex;gap:6px">
-              <button class="hf-btn active" id="pie-by-qty" onclick="setPieMode(&#39;qty&#39;,this)">Por quantidade</button>
-              <button class="hf-btn" id="pie-by-rev" onclick="setPieMode(&#39;revenue&#39;,this)">Por receita</button>
+              <button class="hf-btn active" id="pie-by-qty" onclick="setPieMode('qty',this)">Por quantidade</button>
+              <button class="hf-btn" id="pie-by-rev" onclick="setPieMode('revenue',this)">Por receita</button>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center">
@@ -1058,9 +1060,9 @@ tr:hover td{background:var(--sand-50)}
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
             <div class="report-title" style="margin-bottom:0">📈 Análise de Margem por Produto</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button class="hf-btn active" id="margin-sort-margin" onclick="sortMarginTable(&#39;margin&#39;,this)">Maior margem</button>
-              <button class="hf-btn" id="margin-sort-revenue" onclick="sortMarginTable(&#39;revenue&#39;,this)">Maior receita</button>
-              <button class="hf-btn" id="margin-sort-qty" onclick="sortMarginTable(&#39;qty&#39;,this)">Mais vendidos</button>
+              <button class="hf-btn active" id="margin-sort-margin" onclick="sortMarginTable('margin',this)">Maior margem</button>
+              <button class="hf-btn" id="margin-sort-revenue" onclick="sortMarginTable('revenue',this)">Maior receita</button>
+              <button class="hf-btn" id="margin-sort-qty" onclick="sortMarginTable('qty',this)">Mais vendidos</button>
             </div>
           </div>
           <div id="r-margin-table"><div style="color:var(--sl-400);font-size:13px;padding:16px">Selecione um período para ver a análise de margem.</div></div>
@@ -1081,11 +1083,11 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-sub">Área exclusiva do administrador</div>
       <div class="field">
         <label class="label">Usuário</label>
-        <input class="input" id="admin-user" placeholder="usuário">
+        <input class="input" id="admin-user" placeholder="usuário"/>
       </div>
       <div class="field">
         <label class="label">Senha</label>
-        <input class="input" id="admin-pass" type="password" placeholder="••••••••">
+        <input class="input" id="admin-pass" type="password" placeholder="••••••••"/>
       </div>
       <button class="btn btn-dark" style="width:100%" onclick="doAdminLogin()">Entrar</button>
     </div>
@@ -1099,9 +1101,9 @@ tr:hover td{background:var(--sand-50)}
         <div><div class="sidebar-kname">Admin SaaS</div><div class="sidebar-ksub">Plataforma Recebaa</div></div>
       </div>
       <nav class="sidebar-nav">
-        <button class="s-item active" onclick="aPage(&#39;kiosks&#39;,this)"><span class="s-icon">🏪</span>Quiosques</button>
-        <button class="s-item" onclick="aPage(&#39;subs&#39;,this)"><span class="s-icon">💳</span>Assinaturas</button>
-        <button class="s-item" onclick="aPage(&#39;metrics&#39;,this)"><span class="s-icon">📊</span>Métricas</button>
+        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Quiosques</button>
+        <button class="s-item" onclick="aPage('subs',this)"><span class="s-icon">💳</span>Assinaturas</button>
+        <button class="s-item" onclick="aPage('metrics',this)"><span class="s-icon">📊</span>Métricas</button>
       </nav>
       <div class="sidebar-foot">
         <button class="s-item" onclick="doAdminLogout()"><span class="s-icon">🚪</span>Sair</button>
@@ -1131,16 +1133,16 @@ tr:hover td{background:var(--sand-50)}
             <div>
               <label class="label">Período</label>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="hf-btn active" id="am-today" onclick="setAdminPeriod(&#39;today&#39;,this)">Hoje</button>
-                <button class="hf-btn" id="am-week" onclick="setAdminPeriod(&#39;week&#39;,this)">7 dias</button>
-                <button class="hf-btn" id="am-month" onclick="setAdminPeriod(&#39;month&#39;,this)">Este mês</button>
-                <button class="hf-btn" id="am-year" onclick="setAdminPeriod(&#39;year&#39;,this)">Este ano</button>
-                <button class="hf-btn" id="am-custom" onclick="setAdminPeriod(&#39;custom&#39;,this)">Personalizado</button>
+                <button class="hf-btn active" id="am-today"  onclick="setAdminPeriod('today',this)">Hoje</button>
+                <button class="hf-btn" id="am-week"   onclick="setAdminPeriod('week',this)">7 dias</button>
+                <button class="hf-btn" id="am-month"  onclick="setAdminPeriod('month',this)">Este mês</button>
+                <button class="hf-btn" id="am-year"   onclick="setAdminPeriod('year',this)">Este ano</button>
+                <button class="hf-btn" id="am-custom" onclick="setAdminPeriod('custom',this)">Personalizado</button>
               </div>
             </div>
             <div id="am-custom-dates" class="hidden" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
-              <div><label class="label">De</label><input class="input" type="date" id="am-date-from" style="width:auto"></div>
-              <div><label class="label">Até</label><input class="input" type="date" id="am-date-to" style="width:auto"></div>
+              <div><label class="label">De</label><input class="input" type="date" id="am-date-from" style="width:auto"/></div>
+              <div><label class="label">Até</label><input class="input" type="date" id="am-date-to" style="width:auto"/></div>
               <button class="btn btn-ocean btn-sm" onclick="loadAdminMetrics()">Filtrar</button>
             </div>
           </div>
@@ -1169,15 +1171,15 @@ tr:hover td{background:var(--sand-50)}
           <div class="report-title">Detalhamento por quiosque</div>
           <div id="am-kiosk-table" style="overflow:auto;margin-top:12px"><div style="color:var(--sl-400);font-size:13px;padding:16px">Carregando...</div></div>
         </div>
-      </div>TYPE html&gt;
-
-
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+      </div>TYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Recebaa</title>
-<script src="./index56_files/supabase.min.js.download"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com/">
-<link href="./index56_files/css2" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --sand-50:#fdf8f0;--sand-100:#f5ead8;--sand-200:#e8d5b2;
@@ -1598,8 +1600,8 @@ tr:hover td{background:var(--sand-50)}
   .lp-cta-group{flex-direction:column;align-items:center}
 }
 </style>
-
-
+</head>
+<body>
 
 
 
@@ -1610,9 +1612,9 @@ tr:hover td{background:var(--sand-50)}
     Recebaa
   </div>
   <div class="lp-nav-btns">
-    <button class="lp-btn-outline" onclick="goToScreen(&#39;client&#39;)">📱 Sou cliente</button>
-    <button class="lp-btn-outline" onclick="goToScreen(&#39;kiosk&#39;)">🏪 Meu quiosque</button>
-    <button class="lp-btn-primary" onclick="goToScreen(&#39;admin&#39;)">⚙️ Admin</button>
+    <button class="lp-btn-outline" onclick="goToScreen('client')">📱 Sou cliente</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
+    <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
 
@@ -1622,9 +1624,9 @@ tr:hover td{background:var(--sand-50)}
     <span></span><span></span><span></span>
   </button>
   <div class="nav-logo" style="cursor:pointer" onclick="goToLanding()">🌊 Recebaa</div>
-  <button class="nav-btn active" id="nav-client" onclick="showScreen(&#39;client&#39;,this)">📱 Cliente</button>
-  <button class="nav-btn" id="nav-kiosk" onclick="showScreen(&#39;kiosk&#39;,this)">🏪 Quiosque</button>
-  <button class="nav-btn" id="nav-admin" onclick="showScreen(&#39;admin&#39;,this)">⚙️ Admin</button>
+  <button class="nav-btn active" id="nav-client" onclick="showScreen('client',this)">📱 Cliente</button>
+  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Quiosque</button>
+  <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="toast" id="toast"></div>
@@ -1646,48 +1648,48 @@ tr:hover td{background:var(--sand-50)}
     <!-- Mar com ondas SVG -->
     <div class="lp-sea" style="bottom:27%;height:120px">
       <svg viewBox="0 0 1440 120" preserveAspectRatio="none" style="position:absolute;bottom:0;width:100%;height:100%">
-        <path d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z" fill="rgba(14,165,233,0.6)" style="animation:wave1 6s ease-in-out infinite"></path>
-        <path d="M0,80 C200,40 400,100 600,70 C800,40 1000,90 1200,60 C1300,45 1380,70 1440,80 L1440,120 L0,120 Z" fill="rgba(7,89,133,0.5)"></path>
+        <path d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z" fill="rgba(14,165,233,0.6)" style="animation:wave1 6s ease-in-out infinite"/>
+        <path d="M0,80 C200,40 400,100 600,70 C800,40 1000,90 1200,60 C1300,45 1380,70 1440,80 L1440,120 L0,120 Z" fill="rgba(7,89,133,0.5)"/>
       </svg>
     </div>
     <div class="lp-sea" style="bottom:24%;height:80px">
       <svg viewBox="0 0 1440 80" preserveAspectRatio="none" style="position:absolute;bottom:0;width:100%;height:100%">
-        <path d="M0,40 C360,0 720,80 1080,40 C1260,20 1380,50 1440,40 L1440,80 L0,80 Z" fill="rgba(3,105,161,0.7)"></path>
+        <path d="M0,40 C360,0 720,80 1080,40 C1260,20 1380,50 1440,40 L1440,80 L0,80 Z" fill="rgba(3,105,161,0.7)"/>
       </svg>
     </div>
 
     <!-- Guarda-sóis decorativos -->
     <div class="lp-umbrella-deco" style="left:8%;animation-delay:0s">
       <svg width="60" height="80" viewBox="0 0 60 80">
-        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#ef4444" opacity=".9"></ellipse>
-        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#dc2626"></path>
-        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#dc2626"></path>
-        <path d="M30 22 L16 22 Q23 13 30 22Z" fill="#fff" opacity=".2"></path>
-        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"></line>
+        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#ef4444" opacity=".9"/>
+        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#dc2626"/>
+        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#dc2626"/>
+        <path d="M30 22 L16 22 Q23 13 30 22Z" fill="#fff" opacity=".2"/>
+        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     </div>
     <div class="lp-umbrella-deco" style="left:18%;animation-delay:.5s;animation-duration:3.5s">
       <svg width="48" height="65" viewBox="0 0 60 80">
-        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#3b82f6" opacity=".9"></ellipse>
-        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#2563eb"></path>
-        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#2563eb"></path>
-        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"></line>
+        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#3b82f6" opacity=".9"/>
+        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#2563eb"/>
+        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#2563eb"/>
+        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     </div>
     <div class="lp-umbrella-deco" style="right:12%;animation-delay:1s;animation-duration:2.8s">
       <svg width="55" height="72" viewBox="0 0 60 80">
-        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#f59e0b" opacity=".9"></ellipse>
-        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#d97706"></path>
-        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#d97706"></path>
-        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"></line>
+        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#f59e0b" opacity=".9"/>
+        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#d97706"/>
+        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#d97706"/>
+        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     </div>
     <div class="lp-umbrella-deco" style="right:22%;animation-delay:1.5s;animation-duration:4s">
       <svg width="42" height="58" viewBox="0 0 60 80">
-        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#10b981" opacity=".9"></ellipse>
-        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#059669"></path>
-        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#059669"></path>
-        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"></line>
+        <ellipse cx="30" cy="22" rx="28" ry="18" fill="#10b981" opacity=".9"/>
+        <path d="M30 22 L2 22 Q16 4 30 22Z" fill="#059669"/>
+        <path d="M30 22 L30 22 Q44 4 58 22Z" fill="#059669"/>
+        <line x1="30" y1="22" x2="30" y2="75" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
       </svg>
     </div>
 
@@ -1699,11 +1701,11 @@ tr:hover td{background:var(--sand-50)}
     <!-- HERO -->
     <div class="lp-hero">
       <div class="lp-badge" id="lp-badge">🌊 Tecnologia para a beira-mar</div>
-      <h1><span id="lp-h1-main">Peça na praia,</span><br><span id="lp-h1-span">sem sair do lugar</span></h1>
+      <h1><span id="lp-h1-main">Peça na praia,</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
       <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
-        <button class="lp-cta-main" onclick="goToScreen(&#39;client&#39;)">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" onclick="goToScreen(&#39;kiosk&#39;)">🏪 Quero meu quiosque</button>
+        <button class="lp-cta-main" onclick="goToScreen('client')">📱 Fazer um pedido</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
       </div>
 
     </div>
@@ -1740,7 +1742,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- PARA O CLIENTE -->
     <div class="lp-section" style="position:relative;z-index:10">
       <div class="lp-section-tag">Para o cliente</div>
-      <div class="lp-section-title">Mais tempo curtindo,<br>menos tempo esperando</div>
+      <div class="lp-section-title">Mais tempo curtindo,<br/>menos tempo esperando</div>
       <div class="lp-section-sub">Chega de levantar do guarda-sol para pedir ou pagar. Tudo pelo celular.</div>
       <div class="lp-cards">
         <div class="lp-card">
@@ -1781,7 +1783,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- PARA O QUIOSQUE -->
     <div class="lp-section" style="position:relative;z-index:10">
       <div class="lp-section-tag">Para o quiosque</div>
-      <div class="lp-section-title">Venda mais com<br>menos esforço</div>
+      <div class="lp-section-title">Venda mais com<br/>menos esforço</div>
       <div class="lp-section-sub">Painel completo para gerenciar pedidos, cardápio e relatórios em tempo real.</div>
       <div class="lp-cards">
         <div class="lp-card">
@@ -1822,7 +1824,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.75);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Nossa missão</div>
-      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br>de praia no Brasil</div>
+      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
       <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
       <div class="lp-cards">
         <div class="lp-card">
@@ -1850,19 +1852,19 @@ tr:hover td{background:var(--sand-50)}
       <div class="lp-section-tag">Acesse agora</div>
       <div class="lp-section-title" id="lp-access-title">Por onde você quer entrar?</div>
       <div class="lp-access">
-        <div class="lp-access-card client" onclick="goToScreen(&#39;client&#39;)">
+        <div class="lp-access-card client" onclick="goToScreen('client')">
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
           <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
           <button class="lp-access-btn blue">Fazer pedido →</button>
         </div>
-        <div class="lp-access-card kiosk" onclick="goToScreen(&#39;kiosk&#39;)">
+        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk')">
           <div class="lp-access-icon">🏪</div>
           <div class="lp-access-title">Quiosque</div>
           <div class="lp-access-desc">Acesse o painel do seu quiosque, gerencie pedidos e cardápio.</div>
           <button class="lp-access-btn indigo">Entrar no painel →</button>
         </div>
-        <div class="lp-access-card admin" onclick="goToScreen(&#39;admin&#39;)">
+        <div class="lp-access-card admin" onclick="goToScreen('admin')">
           <div class="lp-access-icon">⚙️</div>
           <div class="lp-access-title">Admin</div>
           <div class="lp-access-desc">Área restrita para administradores da plataforma Recebaa.</div>
@@ -1873,7 +1875,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- FOOTER -->
     <div class="lp-footer" style="padding:20px 24px">
-      <div style="font-family:&#39;Playfair Display&#39;,serif;font-size:16px;color:rgba(255,255,255,.4);margin-bottom:4px">🌊 Recebaa</div>
+      <div style="font-family:'Playfair Display',serif;font-size:16px;color:rgba(255,255,255,.4);margin-bottom:4px">🌊 Recebaa</div>
       <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
     </div>
 
@@ -1889,7 +1891,7 @@ tr:hover td{background:var(--sand-50)}
       <p>Peça direto do seu guarda-sol</p>
       <div class="splash-field">
         <label class="label">☂️ Número do seu guarda-sol</label>
-        <input class="input" id="umbrella-input" type="number" min="1" max="99" placeholder="Ex: 7">
+        <input class="input" id="umbrella-input" type="number" min="1" max="99" placeholder="Ex: 7"/>
       </div>
       <button class="btn btn-ocean" id="splash-btn" onclick="goToMenu()">Ver Cardápio →</button>
     </div>
@@ -1903,8 +1905,8 @@ tr:hover td{background:var(--sand-50)}
         <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
       </div>
       <div class="menu-tab-row">
-        <button class="menu-tab active" id="tab-menu" onclick="clientTab(&#39;menu&#39;)">🍔 Cardápio</button>
-        <button class="menu-tab" id="tab-orders" onclick="clientTab(&#39;orders&#39;)">
+        <button class="menu-tab active" id="tab-menu" onclick="clientTab('menu')">🍔 Cardápio</button>
+        <button class="menu-tab" id="tab-orders" onclick="clientTab('orders')">
           📋 Pedidos <span class="order-badge-dot hidden" id="orders-dot">0</span>
         </button>
         <button class="menu-tab" onclick="callWaiter()">🙋 Garçom</button>
@@ -1920,7 +1922,7 @@ tr:hover td{background:var(--sand-50)}
     </div>
     <button class="cart-fab hidden" id="cart-fab" onclick="openCart()">
       <span class="cart-fab-count" id="cart-count">0</span>
-      Ver carrinho · <span id="cart-total-fab">R$ 0,00</span>
+      Ver carrinho &middot; <span id="cart-total-fab">R$ 0,00</span>
     </button>
   </div>
 
@@ -1933,7 +1935,7 @@ tr:hover td{background:var(--sand-50)}
       <div class="cart-total-row"><span>Total</span><span id="cart-total">R$ 0,00</span></div>
       <div class="field" style="margin-top:12px">
         <label class="label">Seu nome *</label>
-        <input class="input" id="customer-name" placeholder="Como você se chama?">
+        <input class="input" id="customer-name" placeholder="Como você se chama?"/>
       </div>
       <div class="field">
         <label class="label">Observações</label>
@@ -1966,11 +1968,11 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-logo">🌊</div>
       <div class="auth-title">Painel Recebaa</div>
       <div class="auth-sub">Entre com suas credenciais</div>
-      <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"></div>
-      <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"></div>
+      <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
+      <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
       <button class="btn btn-dark" id="login-btn" style="width:100%" onclick="doLogin()">Entrar</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:16px">
-        Não tem conta? <a class="auth-link" href="file:///C:/Users/icgio/Downloads/recebaa_89.html#" onclick="showCard(&#39;register&#39;);return false">Criar conta grátis</a>
+        Não tem conta? <a class="auth-link" href="#" onclick="showCard('register');return false">Criar conta grátis</a>
       </p>
     </div>
     <div class="auth-card wide hidden" id="card-register">
@@ -1978,25 +1980,25 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-title">Criar conta</div>
       <div class="auth-sub">Preencha os dados do seu quiosque</div>
       <div class="grid-2">
-        <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"></div>
-        <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 caracteres"></div>
-        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 caracteres"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
       </div>
-      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"></div>
+      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
       <div class="field" style="margin-top:12px;margin-bottom:0">
         <label class="label">CPF ou CNPJ *</label>
-        <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)">
+        <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)"/>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"></div>
-        <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"/></div>
       </div>
       <button class="btn btn-ocean" id="register-btn" style="width:100%;margin-top:20px" onclick="doRegister()">Criar conta 🚀</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:14px">
-        Já tem conta? <a class="auth-link" href="file:///C:/Users/icgio/Downloads/recebaa_89.html#" onclick="showCard(&#39;login&#39;);return false">Entrar</a>
+        Já tem conta? <a class="auth-link" href="#" onclick="showCard('login');return false">Entrar</a>
       </p>
     </div>
   </div>
@@ -2008,13 +2010,13 @@ tr:hover td{background:var(--sand-50)}
         <div><div class="sidebar-kname" id="dash-kname">Quiosque</div><div class="sidebar-ksub">Recebaa</div></div>
       </div>
       <nav class="sidebar-nav">
-        <button class="s-item active" onclick="kPage(&#39;overview&#39;,this)"><span class="s-icon">📊</span>Dashboard</button>
-        <button class="s-item" onclick="kPage(&#39;orders&#39;,this)"><span class="s-icon">📋</span>Ao vivo<span class="s-badge" id="live-badge">0</span></button>
-        <button class="s-item" onclick="kPage(&#39;history&#39;,this)"><span class="s-icon">🗂️</span>Histórico</button>
-        <button class="s-item" onclick="kPage(&#39;menu&#39;,this)"><span class="s-icon">🍔</span>Cardápio</button>
-        <button class="s-item" onclick="kPage(&#39;umbrellas&#39;,this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
-        <button class="s-item" onclick="kPage(&#39;contas&#39;,this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
-        <button class="s-item" onclick="kPage(&#39;reports&#39;,this)"><span class="s-icon">📈</span>Relatórios</button>
+        <button class="s-item active" onclick="kPage('overview',this)"><span class="s-icon">📊</span>Dashboard</button>
+        <button class="s-item" onclick="kPage('orders',this)"><span class="s-icon">📋</span>Ao vivo<span class="s-badge" id="live-badge">0</span></button>
+        <button class="s-item" onclick="kPage('history',this)"><span class="s-icon">🗂️</span>Histórico</button>
+        <button class="s-item" onclick="kPage('menu',this)"><span class="s-icon">🍔</span>Cardápio</button>
+        <button class="s-item" onclick="kPage('umbrellas',this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
+        <button class="s-item" onclick="kPage('contas',this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
+        <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
       </nav>
       <div class="sidebar-foot">
         <button class="s-item" id="mute-btn" onclick="toggleMute()" style="margin-bottom:4px">
@@ -2055,26 +2057,26 @@ tr:hover td{background:var(--sand-50)}
           <div>
             <label class="label" style="margin-bottom:4px">Período</label>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button class="hf-btn active" id="hp-today" onclick="setHistPeriod(&#39;today&#39;,this)">Hoje</button>
-              <button class="hf-btn" id="hp-week" onclick="setHistPeriod(&#39;week&#39;,this)">7 dias</button>
-              <button class="hf-btn" id="hp-month" onclick="setHistPeriod(&#39;month&#39;,this)">Este mês</button>
-              <button class="hf-btn" id="hp-custom" onclick="setHistPeriod(&#39;custom&#39;,this)">Intervalo</button>
+              <button class="hf-btn active" id="hp-today" onclick="setHistPeriod('today',this)">Hoje</button>
+              <button class="hf-btn" id="hp-week" onclick="setHistPeriod('week',this)">7 dias</button>
+              <button class="hf-btn" id="hp-month" onclick="setHistPeriod('month',this)">Este mês</button>
+              <button class="hf-btn" id="hp-custom" onclick="setHistPeriod('custom',this)">Intervalo</button>
             </div>
           </div>
           <div id="hist-custom-dates" style="display:none;gap:8px;align-items:flex-end;flex-wrap:wrap">
-            <div><label class="label">De</label><input class="input" type="date" id="hist-date-from" style="width:auto"></div>
-            <div><label class="label">Até</label><input class="input" type="date" id="hist-date-to" style="width:auto"></div>
+            <div><label class="label">De</label><input class="input" type="date" id="hist-date-from" style="width:auto"/></div>
+            <div><label class="label">Até</label><input class="input" type="date" id="hist-date-to" style="width:auto"/></div>
             <button class="btn btn-ocean btn-sm" onclick="renderHist()">Filtrar</button>
           </div>
         </div>
         <div class="hist-filters">
-          <button class="hf-btn active" onclick="histFilter(&#39;all&#39;,this)">Todos</button>
-          <button class="hf-btn" onclick="histFilter(&#39;pending&#39;,this)">⏳ Pendente</button>
-          <button class="hf-btn" onclick="histFilter(&#39;preparing&#39;,this)">👨‍🍳 Em produção</button>
-          <button class="hf-btn" onclick="histFilter(&#39;delivered&#39;,this)">✅ Entregue</button>
-          <button class="hf-btn" onclick="histFilter(&#39;billed&#39;,this)">💰 Faturado</button>
-          <button class="hf-btn" onclick="histFilter(&#39;waiter&#39;,this)">🙋 Garçom</button>
-          <button class="hf-btn" onclick="histFilter(&#39;cancelled&#39;,this)">❌ Cancelado</button>
+          <button class="hf-btn active" onclick="histFilter('all',this)">Todos</button>
+          <button class="hf-btn" onclick="histFilter('pending',this)">⏳ Pendente</button>
+          <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
+          <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
+          <button class="hf-btn" onclick="histFilter('billed',this)">💰 Faturado</button>
+          <button class="hf-btn" onclick="histFilter('waiter',this)">🙋 Garçom</button>
+          <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
         </div>
         <div class="hist-table" id="hist-table"></div>
       </div>
@@ -2088,10 +2090,10 @@ tr:hover td{background:var(--sand-50)}
           <div class="live-dot">Ao vivo</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-          <button class="hf-btn active" id="cf-all" onclick="setContasFilter(&#39;all&#39;,this)">Todas</button>
-          <button class="hf-btn" id="cf-pending" onclick="setContasFilter(&#39;pending&#39;,this)">⏳ Solicitadas</button>
-          <button class="hf-btn" id="cf-closed" onclick="setContasFilter(&#39;closed&#39;,this)">✅ Faturadas</button>
-          <button class="hf-btn" id="cf-cancelled" onclick="setContasFilter(&#39;cancelled&#39;,this)">❌ Canceladas</button>
+          <button class="hf-btn active" id="cf-all" onclick="setContasFilter('all',this)">Todas</button>
+          <button class="hf-btn" id="cf-pending" onclick="setContasFilter('pending',this)">⏳ Solicitadas</button>
+          <button class="hf-btn" id="cf-closed" onclick="setContasFilter('closed',this)">✅ Faturadas</button>
+          <button class="hf-btn" id="cf-cancelled" onclick="setContasFilter('cancelled',this)">❌ Canceladas</button>
         </div>
         <div id="contas-grid" style="display:flex;flex-direction:column;gap:12px"></div>
       </div>
@@ -2110,16 +2112,16 @@ tr:hover td{background:var(--sand-50)}
             <div>
               <label class="label">Período rápido</label>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="hf-btn active" id="rp-today" onclick="setReportPeriod(&#39;today&#39;,this)">Hoje</button>
-                <button class="hf-btn" id="rp-week" onclick="setReportPeriod(&#39;week&#39;,this)">7 dias</button>
-                <button class="hf-btn" id="rp-month" onclick="setReportPeriod(&#39;month&#39;,this)">Este mês</button>
-                <button class="hf-btn" id="rp-year" onclick="setReportPeriod(&#39;year&#39;,this)">Este ano</button>
-                <button class="hf-btn" id="rp-custom" onclick="setReportPeriod(&#39;custom&#39;,this)">Personalizado</button>
+                <button class="hf-btn active" id="rp-today" onclick="setReportPeriod('today',this)">Hoje</button>
+                <button class="hf-btn" id="rp-week" onclick="setReportPeriod('week',this)">7 dias</button>
+                <button class="hf-btn" id="rp-month" onclick="setReportPeriod('month',this)">Este mês</button>
+                <button class="hf-btn" id="rp-year" onclick="setReportPeriod('year',this)">Este ano</button>
+                <button class="hf-btn" id="rp-custom" onclick="setReportPeriod('custom',this)">Personalizado</button>
               </div>
             </div>
             <div id="custom-dates" class="hidden" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
-              <div><label class="label">De</label><input class="input" type="date" id="r-date-from" style="width:auto"></div>
-              <div><label class="label">Até</label><input class="input" type="date" id="r-date-to" style="width:auto"></div>
+              <div><label class="label">De</label><input class="input" type="date" id="r-date-from" style="width:auto"/></div>
+              <div><label class="label">Até</label><input class="input" type="date" id="r-date-to" style="width:auto"/></div>
               <button class="btn btn-ocean btn-sm" onclick="loadReports()">Filtrar</button>
             </div>
           </div>
@@ -2162,11 +2164,11 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-sub">Área exclusiva do administrador</div>
       <div class="field">
         <label class="label">Usuário</label>
-        <input class="input" id="admin-user" placeholder="usuário">
+        <input class="input" id="admin-user" placeholder="usuário"/>
       </div>
       <div class="field">
         <label class="label">Senha</label>
-        <input class="input" id="admin-pass" type="password" placeholder="••••••••">
+        <input class="input" id="admin-pass" type="password" placeholder="••••••••"/>
       </div>
       <button class="btn btn-dark" style="width:100%" onclick="doAdminLogin()">Entrar</button>
     </div>
@@ -2180,9 +2182,9 @@ tr:hover td{background:var(--sand-50)}
         <div><div class="sidebar-kname">Admin SaaS</div><div class="sidebar-ksub">Plataforma Recebaa</div></div>
       </div>
       <nav class="sidebar-nav">
-        <button class="s-item active" onclick="aPage(&#39;kiosks&#39;,this)"><span class="s-icon">🏪</span>Quiosques</button>
-        <button class="s-item" onclick="aPage(&#39;subs&#39;,this)"><span class="s-icon">💳</span>Assinaturas</button>
-        <button class="s-item" onclick="aPage(&#39;metrics&#39;,this)"><span class="s-icon">📊</span>Métricas</button>
+        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Quiosques</button>
+        <button class="s-item" onclick="aPage('subs',this)"><span class="s-icon">💳</span>Assinaturas</button>
+        <button class="s-item" onclick="aPage('metrics',this)"><span class="s-icon">📊</span>Métricas</button>
       </nav>
       <div class="sidebar-foot">
         <button class="s-item" onclick="doAdminLogout()"><span class="s-icon">🚪</span>Sair</button>
@@ -2210,7 +2212,7 @@ tr:hover td{background:var(--sand-50)}
     </main>
   </div>
   </div><!-- /admin-dashboard -->
-</main></div>
+</div>
 
 <!-- MODAL PEDIR A CONTA -->
 <div class="modal-overlay" id="modal-bill" onclick="if(event.target===this)closeBillModal()" style="z-index:9999">
@@ -2230,19 +2232,19 @@ tr:hover td{background:var(--sand-50)}
     <div class="modal-head"><div class="modal-ttl" id="modal-prod-title">Novo produto</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
       <div class="photo-area" id="photo-area">
-        <input type="file" accept="image/*" onchange="previewPhoto(event)">
+        <input type="file" accept="image/*" onchange="previewPhoto(event)"/>
         <div id="photo-ph"><div style="font-size:30px;margin-bottom:6px">📷</div><div style="font-size:13px;font-weight:500;color:var(--sl-600)">Clique para adicionar foto</div><div style="font-size:11px;color:var(--sl-400);margin-top:3px">JPG, PNG ou WebP</div></div>
       </div>
-      <img id="photo-preview" class="photo-preview" alt="preview">
+      <img id="photo-preview" class="photo-preview" alt="preview"/>
       <div class="grid-2">
-        <div class="field" style="margin-bottom:0"><label class="label">Nome *</label><input class="input" id="prod-name" placeholder="Ex: Caipirinha"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Nome *</label><input class="input" id="prod-name" placeholder="Ex: Caipirinha"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">Categoria *</label>
           <select class="select" id="prod-cat"><option value="">Selecione...</option></select>
         </div>
       </div>
-      <div class="field" style="margin-top:12px"><label class="label">Descrição</label><input class="input" id="prod-desc" placeholder="Breve descrição"></div>
+      <div class="field" style="margin-top:12px"><label class="label">Descrição</label><input class="input" id="prod-desc" placeholder="Breve descrição"/></div>
       <div class="grid-2">
-        <div class="field" style="margin-bottom:0"><label class="label">Preço (R$) *</label><input class="input" id="prod-price" type="number" min="0" step="0.50" placeholder="0,00"></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Preço (R$) *</label><input class="input" id="prod-price" type="number" min="0" step="0.50" placeholder="0,00"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">Status</label>
           <select class="select" id="prod-status"><option value="on">✅ Disponível</option><option value="off">⏸️ Indisponível</option></select>
         </div>
@@ -5516,5 +5518,5 @@ function aPage(name,btn){
   else loadAdminData();
 }
 </script>
-
-</div></body></html>
+</body>
+</html>
