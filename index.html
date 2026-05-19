@@ -3725,7 +3725,23 @@ function renderHistTable(list){
         +'<td>'+(o.time||'—')+'</td>'
         +'<td style="color:var(--sl-500);font-size:11px">'+(isSpecial?(o.notes||'').split(' · ')[0]:(o.items||[]).map(i=>i.qty+'× '+i.name).join(', '))+'</td>'
         +'<td><b>'+fmt(o.total)+'</b></td>'
-        +'<td><span class="pill '+p.c+'">'+p.l+'</span></td>'
+        +(function(){
+          var isConta = o.customer_name==='PEDIDO DE CONTA';
+          var isAtendente = o.customer_name==='CHAMADA DE ATENDENTE';
+          var statusLabel, statusClass;
+          if(isConta && ['delivered','billed'].includes(o.status)){
+            statusLabel='💰 Faturado'; statusClass='pill-billed';
+          } else if(isConta){
+            statusLabel='🧾 Solicitada'; statusClass='pill-pending';
+          } else if(isAtendente && ['delivered','cancelled'].includes(o.status)){
+            statusLabel='✅ Resolvido'; statusClass='pill-delivered';
+          } else if(isAtendente){
+            statusLabel='🙋 Aguardando'; statusClass='pill-pending';
+          } else {
+            statusLabel=p.l; statusClass=p.c;
+          }
+          return '<td><span class="pill '+statusClass+'">'+statusLabel+'</span></td>';
+        })()
         +'<td>'+(can&&!isSpecial?'<select class="select" style="width:auto;font-size:11px;padding:4px 8px" data-oid="'+o.id+'" onchange="changeHistStatusSel(this)">'
           +'<option value="">Alterar...</option>'
           +'<option value="pending">Pendente</option>'
