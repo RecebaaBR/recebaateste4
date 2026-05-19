@@ -2559,6 +2559,36 @@ window.addEventListener('load', async function(){
     var {data} = await sb.from('kiosks').select('name').eq('id',kioskId).single();
     if(data) $('splash-kname').textContent = data.name;
   }
+
+  // ─── Restaurar sessão do cliente após refresh (pull-to-refresh, F5, etc.) ───
+  // Só restaura se NÃO houver URL params (que indicam acesso novo via QR Code)
+  if(isConfigured && !kioskId && !umbNum){
+    var savedKiosk = null, savedUmb = null;
+    try{
+      savedKiosk = sessionStorage.getItem('recebaa-client-kiosk');
+      savedUmb = sessionStorage.getItem('recebaa-client-umb');
+    }catch(e){}
+    if(savedKiosk && savedUmb){
+      // Setar kiosk salvo na URL (sem recarregar) para que goToMenu o detecte
+      try{
+        var u = new URL(window.location.href);
+        u.searchParams.set('kiosk', savedKiosk);
+        history.replaceState(null, '', u.toString());
+      }catch(e){}
+      // Preencher input, trocar para a tela do cliente e chamar goToMenu
+      $('umbrella-input').value = savedUmb;
+      showScreen('client', document.getElementById('nav-client'));
+      // goToMenu valida o quiosque e o guarda-sol; se falhar, mostra toast e fica no splash
+      try{ await goToMenu(); }catch(e){
+        // Em caso de erro inesperado, limpa sessão obsoleta
+        try{
+          sessionStorage.removeItem('recebaa-client-kiosk');
+          sessionStorage.removeItem('recebaa-client-umb');
+          sessionStorage.removeItem('recebaa-client-name');
+        }catch(e2){}
+      }
+    }
+  }
 });
 
 async function goToMenu(){
@@ -2601,6 +2631,12 @@ async function goToMenu(){
       toast(t('umb_inactive'));
       return;
     }
+
+    // Persistir sessão do cliente para sobreviver a refresh (pull-to-refresh no mobile)
+    try{
+      sessionStorage.setItem('recebaa-client-kiosk', currentKiosk.id);
+      sessionStorage.setItem('recebaa-client-umb', String(window._umb));
+    }catch(e){}
 
     if(currentKiosk){
       const {data:prods}=await sb.from('products').select('*').eq('kiosk_id',currentKiosk.id).eq('is_available',true).order('sort_order');
@@ -3051,6 +3087,8 @@ function encerrarSessaoCliente(){
   window._umb = null;
   window._allUmbOrders = [];
   try{ sessionStorage.removeItem('recebaa-client-name'); }catch(e){}
+  try{ sessionStorage.removeItem('recebaa-client-kiosk'); }catch(e){}
+  try{ sessionStorage.removeItem('recebaa-client-umb'); }catch(e){}
 
   // Mostrar mensagem de encerramento e voltar para splash
   toast('💰 Conta faturada! Obrigado pela visita. 🌊');
