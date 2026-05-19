@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+<!DOCTYPE htm
+
+        l>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -1023,6 +1025,34 @@ tr:hover td{background:var(--sand-50)}
         </div>
 
 
+
+                <!-- Gráfico de pizza -->
+        <div class="report-card" style="margin-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+            <div class="report-title" style="margin-bottom:0">🥧 Produtos mais vendidos</div>
+            <div style="display:flex;gap:6px">
+              <button class="hf-btn active" id="pie-by-qty" onclick="setPieMode('qty',this)">Por quantidade</button>
+              <button class="hf-btn" id="pie-by-rev" onclick="setPieMode('revenue',this)">Por receita</button>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center">
+            <canvas id="r-pie-chart" width="220" height="220" style="flex-shrink:0;max-width:220px"></canvas>
+            <div id="r-pie-legend" style="display:flex;flex-direction:column;gap:8px;min-width:160px"></div>
+          </div>
+        </div>
+
+<!-- Análise de margem por produto -->
+        <div class="report-card" style="margin-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <div class="report-title" style="margin-bottom:0">📈 Análise de Margem por Produto</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button class="hf-btn active" id="margin-sort-margin" onclick="sortMarginTable('margin',this)">Maior margem</button>
+              <button class="hf-btn" id="margin-sort-revenue" onclick="sortMarginTable('revenue',this)">Maior receita</button>
+              <button class="hf-btn" id="margin-sort-qty" onclick="sortMarginTable('qty',this)">Mais vendidos</button>
+            </div>
+          </div>
+          <div id="r-margin-table"><div style="color:var(--sl-400);font-size:13px;padding:16px">Selecione um período para ver a análise de margem.</div></div>
+        </div>
       </div>
     </main>
   </div>
@@ -4512,6 +4542,183 @@ function printReports(){
   win.focus();
 }
 
+var marginSortBy = 'margin';
+var pieSortBy = 'qty';
+var pieDataCache = [];
+
+function setPieMode(mode, btn){
+  pieSortBy = mode;
+  document.querySelectorAll('.hf-btn[id^="pie-by-"]').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  renderPieChart(pieDataCache);
+}
+
+function renderPieChart(data){
+  pieDataCache = data||[];
+  var canvas = document.getElementById('r-pie-chart');
+  var legendEl = document.getElementById('r-pie-legend');
+  if(!canvas) return;
+
+  if(!pieDataCache.length){
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sem dados', canvas.width/2, canvas.height/2);
+    if(legendEl) legendEl.innerHTML = '';
+    return;
+  }
+
+  // Ordenar e pegar top 8
+  var sorted = pieDataCache.slice().sort(function(a,b){
+    return pieSortBy==='revenue' ? b.revenue-a.revenue : b.qty-a.qty;
+  }).slice(0,8);
+
+  var total = sorted.reduce(function(s,p){ return s+(pieSortBy==='revenue'?p.revenue:p.qty); }, 0);
+  if(total===0) return;
+
+  var colors = ['#0ea5e9','#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899'];
+
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  var cx = canvas.width/2, cy = canvas.height/2, r = Math.min(cx,cy)-10;
+  var startAngle = -Math.PI/2;
+
+  sorted.forEach(function(p, i){
+    var val = pieSortBy==='revenue' ? p.revenue : p.qty;
+    var slice = (val/total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, startAngle+slice);
+    ctx.closePath();
+    ctx.fillStyle = colors[i%colors.length];
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label percentual dentro da fatia se > 5%
+    var pct = val/total*100;
+    if(pct > 5){
+      var midAngle = startAngle + slice/2;
+      var lx = cx + Math.cos(midAngle)*r*0.65;
+      var ly = cy + Math.sin(midAngle)*r*0.65;
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(pct.toFixed(0)+'%', lx, ly);
+    }
+    startAngle += slice;
+  });
+
+  // Círculo central (donut)
+  ctx.beginPath();
+  ctx.arc(cx, cy, r*0.45, 0, Math.PI*2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.fillStyle = '#1e293b';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(pieSortBy==='revenue'?'Receita':'Qtd', cx, cy-8);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText(pieSortBy==='revenue'?fmt(total):total+'un', cx, cy+10);
+
+  // Legenda
+  if(legendEl){
+    legendEl.innerHTML = sorted.map(function(p,i){
+      var val = pieSortBy==='revenue' ? fmt(p.revenue) : p.qty+'×';
+      var pct = ((pieSortBy==='revenue'?p.revenue:p.qty)/total*100).toFixed(1);
+      return '<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:12px;height:12px;border-radius:3px;background:'+colors[i%colors.length]+';flex-shrink:0"></div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.name+'</div>'
+        +'<div style="font-size:11px;color:var(--sl-400)">'+val+' · '+pct+'%</div>'
+        +'</div></div>';
+    }).join('');
+  }
+}
+var marginSortBy = 'margin';
+var marginTableData = [];
+
+function sortMarginTable(by, btn){
+  marginSortBy = by;
+  document.querySelectorAll('.hf-btn[id^="margin-sort-"]').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  renderMarginTable();
+
+  // Dados para o gráfico de pizza
+  var pieData = Object.keys(counts).map(function(name){
+    return {name:name, qty:counts[name], revenue:revenueByProd[name]||0};
+  });
+  renderPieChart(pieData);
+}
+
+function renderMarginTable(){
+  var el = $('r-margin-table');
+  if(!el) return;
+
+  if(!marginTableData.length){
+    el.innerHTML = '<div style="color:var(--sl-400);font-size:13px;padding:16px">Nenhum produto com custo cadastrado no período.</div>';
+    return;
+  }
+
+  // Ordenar
+  var sorted = marginTableData.slice().sort(function(a,b){
+    if(marginSortBy==='margin') return b.marginPct - a.marginPct;
+    if(marginSortBy==='revenue') return b.revenue - a.revenue;
+    if(marginSortBy==='qty') return b.qty - a.qty;
+    return 0;
+  });
+
+  var html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr>'
+    +'<th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Produto</th>'
+    +'<th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Qtd</th>'
+    +'<th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Receita</th>'
+    +'<th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Custo</th>'
+    +'<th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Lucro</th>'
+    +'<th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Margem</th>'
+    +'<th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Visualização</th>'
+    +'</tr></thead><tbody>'
+    + sorted.map(function(p, i){
+      var marginColor = p.marginPct >= 50 ? 'var(--green)' : p.marginPct >= 25 ? '#f59e0b' : 'var(--red)';
+      var barWidth = Math.max(0, Math.min(100, p.marginPct));
+      return '<tr style="border-bottom:1px solid var(--sand-50)">'
+        +'<td style="padding:10px 12px;font-size:13px;font-weight:500">'+p.name+'</td>'
+        +'<td style="padding:10px 12px;text-align:right;font-size:13px">'+p.qty+'</td>'
+        +'<td style="padding:10px 12px;text-align:right;font-size:13px">'+fmt(p.revenue)+'</td>'
+        +'<td style="padding:10px 12px;text-align:right;font-size:13px;color:var(--red)">'+fmt(p.cost)+'</td>'
+        +'<td style="padding:10px 12px;text-align:right;font-size:13px;font-weight:600;color:'+(p.profit>=0?'var(--green)':'var(--red)')+'">'+fmt(p.profit)+'</td>'
+        +'<td style="padding:10px 12px;text-align:right;font-size:13px;font-weight:700;color:'+marginColor+'">'+p.marginPct.toFixed(1)+'%</td>'
+        +'<td style="padding:10px 12px;min-width:120px">'
+        +'<div style="background:var(--sand-100);border-radius:4px;height:8px;overflow:hidden">'
+        +'<div style="background:'+marginColor+';height:100%;width:'+barWidth+'%;border-radius:4px;transition:width .3s"></div>'
+        +'</div></td>'
+        +'</tr>';
+    }).join('')
+    +'</tbody></table></div>';
+
+  // Resumo no rodapé
+  var totalRev = sorted.reduce(function(s,p){ return s+p.revenue; }, 0);
+  var totalCost = sorted.reduce(function(s,p){ return s+p.cost; }, 0);
+  var totalProfit = totalRev - totalCost;
+  var avgMargin = totalRev > 0 ? (totalProfit/totalRev*100) : 0;
+
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px;padding-top:14px;border-top:2px solid var(--sand-100)">'
+    +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Receita total</div><div style="font-size:16px;font-weight:700">'+fmt(totalRev)+'</div></div>'
+    +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Custo total</div><div style="font-size:16px;font-weight:700;color:var(--red)">'+fmt(totalCost)+'</div></div>'
+    +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Lucro total</div><div style="font-size:16px;font-weight:700;color:var(--green)">'+fmt(totalProfit)+'</div></div>'
+    +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Margem média</div><div style="font-size:16px;font-weight:700;color:'+(avgMargin>=30?'var(--green)':avgMargin>=15?'#f59e0b':'var(--red)')+'">'+avgMargin.toFixed(1)+'%</div></div>'
+    +'</div>';
+
+  el.innerHTML = html;
+}
+
 function setReportPeriod(period, btn){
   reportPeriod = period;
   document.querySelectorAll('.hf-btn[id^="rp-"]').forEach(function(b){ b.classList.remove('active'); });
@@ -4623,20 +4830,42 @@ async function loadReports(){
   });
   var top = Object.entries(counts).sort(function(a,b){ return b[1]-a[1]; }).slice(0,8);
   var maxQ = top[0] ? top[0][1] : 1;
-  // Calcular receita por produto
+  // Calcular receita, custo e quantidade por produto
   var revenueByProd = {};
   var costByProd = {};
+  var qtyByProd = {};
   delivered.forEach(function(o){
     (o.items||[]).forEach(function(item){
-      if(!revenueByProd[item.name]) revenueByProd[item.name] = 0;
-      revenueByProd[item.name] += Number(item.price||0) * Number(item.qty||1);
-      var prod = catalog.find(function(p){ return p.name===item.name; });
+      var n = item.name;
+      if(!revenueByProd[n]) revenueByProd[n] = 0;
+      if(!qtyByProd[n]) qtyByProd[n] = 0;
+      revenueByProd[n] += Number(item.price||0) * Number(item.qty||1);
+      qtyByProd[n] += Number(item.qty||1);
+      var prod = catalog.find(function(p){ return p.name===n; });
       if(prod && prod.cost_price){
-        if(!costByProd[item.name]) costByProd[item.name] = 0;
-        costByProd[item.name] += Number(prod.cost_price) * Number(item.qty||1);
+        if(!costByProd[n]) costByProd[n] = 0;
+        costByProd[n] += Number(prod.cost_price) * Number(item.qty||1);
       }
     });
   });
+
+  // Montar tabela de margem (só produtos com custo cadastrado)
+  marginTableData = Object.keys(revenueByProd)
+    .filter(function(n){ return costByProd[n] > 0; })
+    .map(function(n){
+      var rev = revenueByProd[n]||0;
+      var cost = costByProd[n]||0;
+      var profit = rev - cost;
+      var marginPct = rev > 0 ? (profit/rev*100) : 0;
+      return {name:n, qty:qtyByProd[n]||0, revenue:rev, cost:cost, profit:profit, marginPct:marginPct};
+    });
+  renderMarginTable();
+
+  // Dados para o gráfico de pizza
+  var pieData = Object.keys(counts).map(function(name){
+    return {name:name, qty:counts[name], revenue:revenueByProd[name]||0};
+  });
+  renderPieChart(pieData);
 
   var topEl = $('r-top-products');
   if(topEl){
