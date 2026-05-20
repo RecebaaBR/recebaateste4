@@ -130,6 +130,10 @@ body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webk
 
 .cart-fab{position:fixed;bottom:20px;left:16px;right:16px;z-index:100;background:var(--sl-800);color:#fff;border:none;border-radius:14px;padding:15px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 8px 28px rgba(15,23,42,.3);transition:all .2s;font-family:var(--font)}
 .cart-fab-count{background:var(--ocean-500);color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+body[data-bill-blocked="1"] .cart-fab{display:none !important}
+body[data-bill-blocked="1"] .menu-cat-tabs{opacity:.4;pointer-events:none}
+body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
+
 
 .overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:300;opacity:0;transition:opacity .25s;pointer-events:none}
 .overlay.open{opacity:1;pointer-events:all}
@@ -1306,6 +1310,10 @@ body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webk
 
 .cart-fab{position:fixed;bottom:20px;left:16px;right:16px;z-index:100;background:var(--sl-800);color:#fff;border:none;border-radius:14px;padding:15px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 8px 28px rgba(15,23,42,.3);transition:all .2s;font-family:var(--font)}
 .cart-fab-count{background:var(--ocean-500);color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+body[data-bill-blocked="1"] .cart-fab{display:none !important}
+body[data-bill-blocked="1"] .menu-cat-tabs{opacity:.4;pointer-events:none}
+body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
+
 
 .overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:300;opacity:0;transition:opacity .25s;pointer-events:none}
 .overlay.open{opacity:1;pointer-events:all}
@@ -3100,6 +3108,23 @@ async function goToMenu(){
             updateOrdersBadge();
           }
         });
+
+        // Checar se já existe PEDIDO DE CONTA ativo nesta sessão
+        var qBill = sb.from('orders')
+          .select('id,status')
+          .eq('kiosk_id', currentKiosk.id)
+          .eq('umbrella_num', String(window._umb))
+          .eq('customer_name', 'PEDIDO DE CONTA')
+          .not('status', 'eq', 'cancelled')
+          .not('status', 'eq', 'delivered')
+          .not('status', 'eq', 'billed')
+          .order('created_at', {ascending: false})
+          .limit(1);
+        if(sessionStart) qBill = qBill.gt('created_at', sessionStart);
+        qBill.then(function(rBill){
+          window._billRequested = !!(rBill.data && rBill.data.length);
+          applyBillBlock();
+        });
       });
   }
   // Iniciar escuta realtime para atualizações de pedidos deste guarda-sol
@@ -3122,6 +3147,17 @@ async function goToMenu(){
         filter:'kiosk_id=eq.'+currentKiosk.id},
         function(payload){
           var updated = payload.new;
+          // PEDIDO DE CONTA cancelado pelo quiosque → desbloquear sessão
+          if(updated.customer_name === 'PEDIDO DE CONTA' &&
+             updated.umbrella_num === String(window._umb||'?') &&
+             updated.status === 'cancelled'){
+            if(window._billRequested){
+              window._billRequested = false;
+              applyBillBlock();
+              toast('✅ Conta cancelada pelo atendente. Você já pode pedir mais.');
+            }
+            return;
+          }
           // Detectar encerramento do guarda-sol
           if(updated.customer_name === 'PEDIDO DE CONTA' &&
              updated.umbrella_num === String(window._umb||'?') &&
@@ -3153,6 +3189,17 @@ async function goToMenu(){
              payload.new.umbrella_num === String(window._umb||'?')){
             toast('💰 Mesa encerrada! Obrigado pela visita. 🌊');
             setTimeout(function(){ encerrarSessaoCliente(); }, 2000);
+          }
+          // PEDIDO DE CONTA solicitada por alguém no mesmo guarda-sol → bloquear todos
+          if(payload.new.customer_name === 'PEDIDO DE CONTA' &&
+             payload.new.umbrella_num === String(window._umb||'?') &&
+             payload.new.status !== 'cancelled' &&
+             payload.new.status !== 'delivered'){
+            if(!window._billRequested){
+              window._billRequested = true;
+              applyBillBlock();
+              toast('🧾 Conta solicitada para este guarda-sol.');
+            }
           }
         })
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',
@@ -3374,6 +3421,11 @@ function closeCart(){
 }
 
 async function placeOrder(){
+  // Proteção: sessão bloqueada por PEDIDO DE CONTA ativo
+  if(window._billRequested){
+    toast('⚠️ Conta já foi solicitada. Não é possível fazer novos pedidos.');
+    return;
+  }
   const name=$('customer-name').value.trim();
   if(!name){ toast('Informe seu nome 😊'); return; }
   try{ sessionStorage.setItem('recebaa-client-name', name); }catch(e){}
@@ -3520,6 +3572,8 @@ function encerrarSessaoCliente(){
   dbCategories = [];
   window._umb = null;
   window._allUmbOrders = [];
+  window._billRequested = false;
+  applyBillBlock();
   try{ sessionStorage.removeItem('recebaa-client-name'); }catch(e){}
   try{ sessionStorage.removeItem('recebaa-client-kiosk'); }catch(e){}
   try{ sessionStorage.removeItem('recebaa-client-umb'); }catch(e){}
@@ -3727,6 +3781,10 @@ async function requestBill(type, personName, personTotal){
     });
   }
 
+  // Bloquear novos pedidos para todos do guarda-sol
+  window._billRequested = true;
+  applyBillBlock();
+
   closeBillModal();
   toast('🧾 Conta solicitada! O garçom já foi avisado.');
 }
@@ -3737,6 +3795,37 @@ function updateOrdersBadge(){
   const dot=$('orders-dot');
   dot.textContent=active;
   dot.classList.toggle('hidden',active===0);
+}
+
+// ────────────────────────────────────────────────────────
+// Bloqueio de sessão após PEDIDO DE CONTA
+// ────────────────────────────────────────────────────────
+function applyBillBlock(){
+  var blocked = !!window._billRequested;
+  document.body.setAttribute('data-bill-blocked', blocked ? '1' : '0');
+
+  var banner = document.getElementById('bill-blocked-banner');
+
+  // Criar banner se não existir
+  if(blocked && !banner){
+    banner = document.createElement('div');
+    banner.id = 'bill-blocked-banner';
+    banner.style.cssText = 'background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;padding:14px 16px;border-radius:12px;margin:12px 14px;font-size:13px;line-height:1.4;display:flex;align-items:center;gap:10px;box-shadow:0 4px 12px rgba(59,130,246,.25)';
+    banner.innerHTML = '<div style="font-size:22px">🧾</div><div><div style="font-weight:600;margin-bottom:2px">Conta solicitada</div><div style="opacity:.92;font-size:12px">Aguardando atendente. Não é possível fazer novos pedidos.</div></div>';
+    // Inserir no topo do menu do cliente
+    var mh = document.querySelector('.menu-header');
+    if(mh && mh.parentNode) mh.parentNode.insertBefore(banner, mh.nextSibling);
+    else {
+      var cm = document.getElementById('client-menu');
+      if(cm) cm.insertBefore(banner, cm.firstChild);
+    }
+  } else if(!blocked && banner){
+    banner.remove();
+  }
+
+  // Re-render para esconder/mostrar o botão "Pedir a conta" no header de Meus pedidos
+  var vo = document.getElementById('view-orders');
+  if(vo && !vo.classList.contains('hidden')) renderMyOrders();
 }
 var PILL={
   pending:{l:'Aguardando',c:'pill-pending'},accepted:{l:'Confirmado',c:'pill-accepted'},
@@ -3784,7 +3873,9 @@ function renderMyOrders(){
     +'<div style="font-size:20px;font-weight:700">'+fmt(totalGeral)+'</div>'
     +(activeNames.length>1?'<div style="font-size:11px;opacity:.6">'+activeNames.length+' pessoas · '+fmt(totalGeral/activeNames.length)+' por pessoa</div>':'')
     +'</div>'
-    +'<button class="btn btn-ocean btn-sm" onclick="openBillModal()">🧾 Pedir a conta</button>'
+    +(window._billRequested
+      ? '<div style="font-size:12px;background:rgba(255,255,255,.15);padding:6px 10px;border-radius:8px">🧾 Aguardando atendente</div>'
+      : '<button class="btn btn-ocean btn-sm" onclick="openBillModal()">🧾 Pedir a conta</button>')
     +'</div>';
 
   names.forEach(function(name){
