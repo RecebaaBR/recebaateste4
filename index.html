@@ -457,7 +457,7 @@ tr:hover td{background:var(--sand-50)}
     <span></span><span></span><span></span>
   </button>
   <div class="nav-logo" style="cursor:pointer" onclick="goToLanding()">🌊 Recebaa</div>
-  <button class="nav-btn active" id="nav-client" onclick="showScreen('client',this)">📱 Cliente</button>
+  <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
   <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Quiosque</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
@@ -1630,7 +1630,7 @@ tr:hover td{background:var(--sand-50)}
     <span></span><span></span><span></span>
   </button>
   <div class="nav-logo" style="cursor:pointer" onclick="goToLanding()">🌊 Recebaa</div>
-  <button class="nav-btn active" id="nav-client" onclick="showScreen('client',this)">📱 Cliente</button>
+  <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
   <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Quiosque</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
@@ -2577,6 +2577,41 @@ function openQrScanner(){
   var btn = document.getElementById('qr-start-btn');
   if(btn) btn.style.display = 'block';
   goToScreen('qrscan');
+}
+
+// Botão Cliente do nav:
+// - Se já está em uma sessão ativa de cliente (kiosk conectado), vai direto
+//   pra tela do cliente com os pedidos atuais.
+// - Caso contrário, abre o scanner de QR pra conectar.
+function goToClient(btn){
+  if(currentKiosk && currentKiosk.id && window._umb){
+    // Sessão ativa em memória — vai direto
+    showScreen('client', btn || document.getElementById('nav-client'));
+    return;
+  }
+  // Checar se há sessão salva (sessionStorage) — pode estar antes da restauração
+  var savedKiosk = null, savedUmb = null;
+  try{
+    savedKiosk = sessionStorage.getItem('recebaa-client-kiosk');
+    savedUmb = sessionStorage.getItem('recebaa-client-umb');
+  }catch(e){}
+  if(savedKiosk && savedUmb){
+    // Sessão salva mas ainda não restaurada — restaurar agora
+    try{
+      var u = new URL(window.location.href);
+      u.searchParams.set('kiosk', savedKiosk);
+      history.replaceState(null, '', u.toString());
+    }catch(e){}
+    var umbInput = document.getElementById('umbrella-input');
+    if(umbInput) umbInput.value = savedUmb;
+    showScreen('client', btn || document.getElementById('nav-client'));
+    if(typeof goToMenu === 'function'){
+      try{ goToMenu(); }catch(e){}
+    }
+    return;
+  }
+  // Sem sessão — abrir scanner
+  openQrScanner();
 }
 
 // CHAMADO DIRETAMENTE PELO CLIQUE NO BOTÃO — gesto do usuário
