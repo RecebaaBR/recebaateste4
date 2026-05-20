@@ -3093,7 +3093,7 @@ async function goToMenu(){
           .not('customer_name', 'eq', 'ENCERRAMENTO')
           .not('status', 'eq', 'billed')
           .order('created_at', {ascending: false})
-          .limit(50);
+          .limit(1000);
         if(sessionStart) q = q.gt('created_at', sessionStart);
 
         q.then(function(r){
@@ -4120,7 +4120,7 @@ async function loadKioskData(){
     catalog=prods||[];
     const {data:cats}=await sb.from('categories').select('*').eq('kiosk_id',currentKiosk.id).order('sort_order');
     dbCategories=cats||[];
-    const {data:ords}=await sb.from('orders').select('*,order_items(*)').eq('kiosk_id',currentKiosk.id).order('created_at',{ascending:false}).limit(100);
+    const {data:ords}=await sb.from('orders').select('*,order_items(*)').eq('kiosk_id',currentKiosk.id).order('created_at',{ascending:false}).limit(1000);
     orders=(ords||[]).map(o=>({...o,items:(o.order_items||[]).map(i=>({name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price})),umb:o.umbrella_num,time:new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}));
   } else {
     catalog=MOCK_PRODUCTS;
@@ -4625,7 +4625,7 @@ async function renderHist(){
       .eq('kiosk_id', currentKiosk.id)
       .not('customer_name','eq','ENCERRAMENTO')
       .order('created_at',{ascending:false})
-      .limit(500);
+      .limit(1000);
 
     // Filtro de status - lógica especial para tipos de pedido
     if(histFilterVal !== 'all'){
@@ -5174,7 +5174,7 @@ async function renderContas(){
       .eq('kiosk_id', currentKiosk.id)
       .eq('customer_name', 'PEDIDO DE CONTA')
       .order('created_at', {ascending: false})
-      .limit(50);
+      .limit(1000);
     if(data && data.length){
       // Mesclar com orders em memória
       data.forEach(function(o){
@@ -6149,7 +6149,8 @@ async function loadAdminMetrics(){
     .select('*,kiosks(name),order_items(*)')
     .gte('created_at', dates.from)
     .lte('created_at', dates.to)
-    .order('created_at', {ascending:false});
+    .order('created_at', {ascending:false})
+    .limit(1000);
 
   allOrders = allOrders || [];
 
