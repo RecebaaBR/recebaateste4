@@ -2863,6 +2863,14 @@ function esc(s){
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+// Parser de preços tolerante: aceita vírgula OU ponto como decimal.
+// Ex: "12,50" -> 12.5 ; "12.50" -> 12.5 ; "R$ 12,50" -> 12.5 ; "" -> 0
+function parsePrice(v){
+  if(v == null) return 0;
+  var s = String(v).replace(/[^\d,.\-]/g, '').replace(',', '.');
+  var n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
 function setLoading(btnId, loading, text){
   const b=$(btnId); if(!b) return;
   b.disabled=loading;
@@ -4931,8 +4939,8 @@ async function saveEditProd(){
   var name=(document.getElementById('epname').value||'').trim();
   var catId=(document.getElementById('epcat').value||'').trim();
   var desc=(document.getElementById('epdesc').value||'').trim();
-  var price=parseFloat(document.getElementById('epprice').value||'0');
-  var cost=parseFloat(document.getElementById('epcost') ? document.getElementById('epcost').value||'0' : '0');
+  var price=parsePrice(document.getElementById('epprice').value||'0');
+  var cost=parsePrice(document.getElementById('epcost') ? document.getElementById('epcost').value||'0' : '0');
   var available=(document.getElementById('epstatus').value||'on')==='on';
 
   if(!name){toast('Informe o nome');return;}
@@ -5092,8 +5100,8 @@ async function saveDynProduct(){
   var name = (document.getElementById('dyn-prod-name').value||'').trim();
   var catId = (document.getElementById('dyn-prod-cat').value||'').trim();
   var desc = (document.getElementById('dyn-prod-desc').value||'').trim();
-  var price = parseFloat(document.getElementById('dyn-prod-price').value||'0');
-  var cost = parseFloat(document.getElementById('dyn-prod-cost') ? document.getElementById('dyn-prod-cost').value||'0' : '0');
+  var price = parsePrice(document.getElementById('dyn-prod-price').value||'0');
+  var cost = parsePrice(document.getElementById('dyn-prod-cost') ? document.getElementById('dyn-prod-cost').value||'0' : '0');
   var available = (document.getElementById('dyn-prod-status').value||'on') === 'on';
 
   if(!name){ toast('Informe o nome'); return; }
@@ -5156,7 +5164,7 @@ async function saveProduct(){
   const name=($('prod-name').value||'').trim();
   const catId=($('prod-cat').value||'').trim();
   const desc=($('prod-desc').value||'').trim();
-  const price=parseFloat($('prod-price').value||'0');
+  const price=parsePrice($('prod-price').value||'0');
   const available=($('prod-status').value||'on')==='on';
   if(!name){toast('Informe o nome');return;}
   if(!catId){toast('Selecione a categoria');return;}
