@@ -56,8 +56,8 @@ body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webk
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
 /* TOAST */
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--sl-800);color:#fff;padding:11px 20px;border-radius:99px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast{position:fixed;bottom:28px;left:16px;right:16px;max-width:420px;margin:0 auto;background:var(--sl-800);color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;font-weight:500;line-height:1.4;z-index:9999;opacity:0;transform:translateY(16px);transition:all .3s;pointer-events:none;text-align:center;box-shadow:0 8px 28px rgba(15,23,42,.35)}
+.toast.show{opacity:1;transform:translateY(0)}
 
 /* LOADING */
 .loader{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
@@ -1236,8 +1236,8 @@ body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webk
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
 /* TOAST */
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--sl-800);color:#fff;padding:11px 20px;border-radius:99px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast{position:fixed;bottom:28px;left:16px;right:16px;max-width:420px;margin:0 auto;background:var(--sl-800);color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;font-weight:500;line-height:1.4;z-index:9999;opacity:0;transform:translateY(16px);transition:all .3s;pointer-events:none;text-align:center;box-shadow:0 8px 28px rgba(15,23,42,.35)}
+.toast.show{opacity:1;transform:translateY(0)}
 
 /* LOADING */
 .loader{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
@@ -3945,14 +3945,25 @@ function renderMyOrders(){
   var names = Object.keys(byName); // continua mostrando todos os grupos na lista
   var totalGeral=myOrders.filter(function(o){return o.status!=='cancelled';}).reduce(function(s,o){return s+Number(o.total);},0);
 
-  var html='<div style="background:var(--sl-800);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
-    +'<div><div style="font-size:12px;opacity:.7;margin-bottom:2px">Total do guarda-sol</div>'
+  // Calcular total proporcional por pessoa (só não-cancelados)
+  var byNameTotal = {};
+  activeNames.forEach(function(n){
+    byNameTotal[n] = byName[n]
+      .filter(function(o){ return o.status !== 'cancelled'; })
+      .reduce(function(s,o){ return s + Number(o.total); }, 0);
+  });
+  // Ordenar do maior pro menor consumo
+  var propList = activeNames.slice().sort(function(a,b){ return byNameTotal[b]-byNameTotal[a]; });
+
+  var html='<div style="background:var(--sl-800);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;color:#fff;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">'
+    +'<div style="flex:1;min-width:0"><div style="font-size:12px;opacity:.7;margin-bottom:2px">Total do guarda-sol</div>'
     +'<div style="font-size:20px;font-weight:700">'+fmt(totalGeral)+'</div>'
-    +(activeNames.length>1?'<div style="font-size:11px;opacity:.6">'+activeNames.length+' pessoas · '+fmt(totalGeral/activeNames.length)+' por pessoa</div>':'')
+    +(activeNames.length>1?'<div style="font-size:11px;opacity:.6;margin-top:2px">'+activeNames.length+' pessoas · '+fmt(totalGeral/activeNames.length)+' cada (divisão igual)</div>':'')
+    +(activeNames.length>1?'<div style="font-size:11px;opacity:.75;margin-top:6px;line-height:1.5;border-top:1px solid rgba(255,255,255,.1);padding-top:6px"><span style="opacity:.7">Proporcional ao consumo:</span><br/>'+propList.map(function(n){return esc(n)+' '+fmt(byNameTotal[n]);}).join(' · ')+'</div>':'')
     +'</div>'
     +(window._billRequested
-      ? '<div style="font-size:12px;background:rgba(255,255,255,.15);padding:6px 10px;border-radius:8px">🧾 Aguardando atendente</div>'
-      : '<button class="btn btn-ocean btn-sm" onclick="openBillModal()">🧾 Pedir a conta</button>')
+      ? '<div style="font-size:12px;background:rgba(255,255,255,.15);padding:6px 10px;border-radius:8px;white-space:nowrap">🧾 Aguardando atendente</div>'
+      : '<button class="btn btn-ocean btn-sm" onclick="openBillModal()" style="white-space:nowrap">🧾 Pedir a conta</button>')
     +'</div>';
 
   names.forEach(function(name){
