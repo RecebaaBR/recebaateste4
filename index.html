@@ -673,36 +673,49 @@ tr:hover td{background:var(--sand-50)}
 
 <!-- SCANNER QR -->
 <div id="screen-qrscan" class="screen" style="display:none">
-  <div style="min-height:100vh;background:#0a0e1a;color:#fff;padding:16px 16px 32px;display:flex;flex-direction:column">
+  <div style="min-height:100vh;background:linear-gradient(180deg,#0a1628 0%,#0a0e1a 100%);color:#fff;padding:16px 16px 32px;display:flex;flex-direction:column">
     <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <button onclick="closeQrScanner()" style="background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:99px;padding:8px 14px;font-size:13px;cursor:pointer">← Voltar</button>
-      <div style="font-size:15px;font-weight:600">📷 Escanear QR</div>
+      <div style="font-size:15px;font-weight:600">Escanear QR Code</div>
       <div style="width:80px"></div>
     </div>
-    <!-- Instrução -->
-    <div style="text-align:center;font-size:13px;color:rgba(255,255,255,.75);margin-bottom:14px;line-height:1.5">
-      Aponte sua câmera para o QR Code do seu guarda-sol
-    </div>
-    <!-- Área do scanner -->
-    <div id="qr-reader-wrap" style="position:relative;width:100%;max-width:380px;margin:0 auto;border-radius:16px;overflow:hidden;background:#000;height:340px">
-      <video id="qr-video" playsinline webkit-playsinline autoplay muted style="width:100%;height:100%;object-fit:cover;display:block;background:#000"></video>
-      <canvas id="qr-canvas" style="display:none"></canvas>
-      <div id="qr-reader-placeholder" style="position:absolute;top:0;right:0;bottom:0;left:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;pointer-events:none;background:rgba(0,0,0,.6);text-align:center;padding:16px">Inicializando câmera…</div>
-      <div id="qr-target-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60%;height:60%;border:3px solid rgba(255,255,255,.85);border-radius:14px;pointer-events:none;display:none;box-shadow:0 0 0 9999px rgba(0,0,0,.15)"></div>
-    </div>
-    <div id="qr-reader-error" style="margin-top:14px;max-width:380px;margin-left:auto;margin-right:auto;font-size:12px;color:#fca5a5;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:10px;padding:10px 12px;line-height:1.4;display:none"></div>
-    <!-- Alternativa: câmera nativa -->
-    <div style="margin-top:24px;max-width:380px;margin-left:auto;margin-right:auto">
-      <div style="display:flex;align-items:center;gap:10px;margin:0 0 14px">
+
+    <!-- Conteúdo principal -->
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;max-width:400px;margin:0 auto;width:100%">
+
+      <!-- Cartão com ícone -->
+      <div style="background:linear-gradient(135deg,#3b82f6,#6366f1);border-radius:24px;padding:36px 24px;text-align:center;width:100%;margin-bottom:24px;box-shadow:0 12px 40px rgba(59,130,246,.3)">
+        <div style="font-size:64px;line-height:1;margin-bottom:14px">📷</div>
+        <div style="font-size:18px;font-weight:600;margin-bottom:8px">Escaneie o QR Code</div>
+        <div style="font-size:13px;opacity:.9;line-height:1.5">Toque no botão abaixo para abrir sua câmera e tirar uma foto do QR Code do guarda-sol.</div>
+      </div>
+
+      <!-- Input invisível que dispara a câmera nativa -->
+      <input type="file" id="qr-camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleQrPhoto(event)"/>
+
+      <!-- Botão principal -->
+      <button onclick="document.getElementById('qr-camera-input').click()" style="width:100%;background:#fff;color:#0a1628;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+        📸 Abrir câmera
+      </button>
+
+      <!-- Status / erro -->
+      <div id="qr-reader-error" style="margin-top:14px;width:100%;font-size:12px;color:#fca5a5;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);border-radius:10px;padding:10px 12px;line-height:1.4;display:none"></div>
+      <div id="qr-reader-status" style="margin-top:14px;width:100%;font-size:12px;color:#86efac;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);border-radius:10px;padding:10px 12px;line-height:1.4;display:none"></div>
+
+      <!-- Divisor -->
+      <div style="display:flex;align-items:center;gap:10px;margin:28px 0 14px;width:100%">
         <div style="flex:1;height:1px;background:rgba(255,255,255,.15)"></div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em">ou</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em">Alternativa</div>
         <div style="flex:1;height:1px;background:rgba(255,255,255,.15)"></div>
       </div>
-      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px 14px;font-size:12px;color:rgba(255,255,255,.75);line-height:1.5">
-        <div style="font-weight:600;margin-bottom:4px;color:#fff">📸 Usar a câmera do celular</div>
-        Abra o app de câmera nativo do seu celular e aponte para o QR Code. O link abrirá automaticamente.
+
+      <!-- Instrução alternativa -->
+      <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px 16px;font-size:12px;color:rgba(255,255,255,.75);line-height:1.5;width:100%">
+        <div style="font-weight:600;margin-bottom:4px;color:#fff">📲 Usar câmera fora do app</div>
+        Se preferir, abra o app de câmera do seu celular fora deste navegador e aponte para o QR Code — o link abrirá automaticamente.
       </div>
+
     </div>
   </div>
 </div>
@@ -2497,10 +2510,8 @@ var MOCK_PRODUCTS = [
 ];
 
 // ══════════════════════════════════════════════════════
-// SCANNER QR — getUserMedia + jsQR
+// SCANNER QR — input file + jsQR (compatível 100% iOS/Android)
 // ══════════════════════════════════════════════════════
-var _qrStream = null;
-var _qrLoopActive = false;
 var _qrLibLoaded = false;
 var _qrLibLoadPromise = null;
 
@@ -2524,127 +2535,79 @@ if(document.readyState === 'loading'){
   loadQrLib().catch(function(){});
 }
 
-function showQrPlaceholder(text){
-  var ph = document.getElementById('qr-reader-placeholder');
-  if(ph){ ph.style.display = 'flex'; ph.textContent = text; }
-}
-function hideQrPlaceholder(){
-  var ph = document.getElementById('qr-reader-placeholder');
-  if(ph) ph.style.display = 'none';
-}
 function showQrError(text){
-  var errEl = document.getElementById('qr-reader-error');
-  if(errEl){ errEl.style.display = 'block'; errEl.textContent = text; }
+  var el = document.getElementById('qr-reader-error');
+  if(el){ el.style.display = 'block'; el.textContent = text; }
+  var st = document.getElementById('qr-reader-status');
+  if(st) st.style.display = 'none';
+}
+function showQrStatus(text){
+  var el = document.getElementById('qr-reader-status');
+  if(el){ el.style.display = 'block'; el.textContent = text; }
+  var er = document.getElementById('qr-reader-error');
+  if(er) er.style.display = 'none';
+}
+function clearQrMessages(){
+  var el = document.getElementById('qr-reader-error');
+  if(el){ el.style.display = 'none'; el.textContent=''; }
+  var st = document.getElementById('qr-reader-status');
+  if(st){ st.style.display = 'none'; st.textContent=''; }
 }
 
-async function openQrScanner(){
-  // Navegar para a screen-qrscan usando o mesmo mecanismo das outras telas
+function openQrScanner(){
+  // Limpar input para que onchange dispare mesmo se o usuário escolher a mesma foto
+  var input = document.getElementById('qr-camera-input');
+  if(input) input.value = '';
+  clearQrMessages();
   goToScreen('qrscan');
-  var errEl = document.getElementById('qr-reader-error');
-  if(errEl){ errEl.style.display='none'; errEl.textContent=''; }
-  showQrPlaceholder('Inicializando câmera…');
-
-  // Checar suporte
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    showQrPlaceholder('Câmera indisponível neste navegador');
-    showQrError('⚠️ Este navegador não suporta acesso à câmera. Use a câmera nativa do celular (abaixo).');
-    return;
-  }
-
-  // Pedir stream da câmera traseira
-  try{
-    _qrStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' } },
-      audio: false
-    });
-  }catch(e){
-    var name = e && e.name ? e.name : '';
-    if(name === 'NotAllowedError' || /permission|denied/i.test(e.message||'')){
-      showQrError('⚠️ Permissão da câmera negada. Use a câmera nativa do celular (abaixo).');
-    } else if(name === 'NotFoundError'){
-      showQrError('⚠️ Câmera não encontrada. Use a câmera nativa do celular (abaixo).');
-    } else {
-      showQrError('⚠️ Não foi possível abrir a câmera. Use a câmera nativa (abaixo).');
-    }
-    showQrPlaceholder('Câmera indisponível');
-    return;
-  }
-
-  var video = document.getElementById('qr-video');
-  if(!video){ showQrError('Erro interno: vídeo não encontrado.'); return; }
-  video.srcObject = _qrStream;
-  // iOS exige todos esses atributos
-  video.setAttribute('playsinline', 'true');
-  video.setAttribute('webkit-playsinline', 'true');
-  video.muted = true;
-  video.playsInline = true;
-
-  // play() pode retornar promise; tratar ambos os casos
-  try{
-    var p = video.play();
-    if(p && p.catch) p.catch(function(err){
-      showQrError('⚠️ Não foi possível iniciar o vídeo. Toque na tela para tentar.');
-    });
-  }catch(e){}
-
-  // Quando o vídeo começar a tocar, esconder placeholder e mostrar caixa de mira
-  video.onplaying = function(){
-    hideQrPlaceholder();
-    var box = document.getElementById('qr-target-box');
-    if(box) box.style.display = 'block';
-  };
-
-  // Tenta carregar a biblioteca de decodificação (já pré-carregada idealmente)
-  try{ await loadQrLib(); }catch(e){
-    showQrError('⚠️ Leitor de QR indisponível. Use a câmera nativa (abaixo).');
-    return;
-  }
-
-  // Loop de decodificação
-  _qrLoopActive = true;
-  var canvas = document.getElementById('qr-canvas');
-  var ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-  function tick(){
-    if(!_qrLoopActive) return;
-    if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      try{
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        var code = window.jsQR && window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-        if(code && code.data){
-          handleQrDecoded(code.data);
-          return; // closeQrScanner irá parar o loop
-        }
-      }catch(e){}
-    }
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
 }
 
-function stopQrCamera(){
-  _qrLoopActive = false;
-  if(_qrStream){
-    try{
-      _qrStream.getTracks().forEach(function(t){ try{ t.stop(); }catch(e){} });
-    }catch(e){}
-    _qrStream = null;
-  }
-  var video = document.getElementById('qr-video');
-  if(video){
-    try{ video.pause(); }catch(e){}
-    try{ video.srcObject = null; }catch(e){}
-  }
-  var box = document.getElementById('qr-target-box');
-  if(box) box.style.display = 'none';
-}
-
-async function closeQrScanner(){
-  stopQrCamera();
+function closeQrScanner(){
   if(typeof goToLanding === 'function') goToLanding();
+}
+
+// Quando o usuário tira a foto, decodificar o QR
+async function handleQrPhoto(event){
+  var file = event.target.files && event.target.files[0];
+  if(!file){ return; }
+  showQrStatus('🔍 Processando imagem…');
+
+  try{ await loadQrLib(); }catch(e){
+    showQrError('⚠️ Não foi possível carregar o leitor de QR. Tente novamente em alguns segundos.');
+    return;
+  }
+
+  // Carregar a imagem em um elemento Image
+  var imgUrl = URL.createObjectURL(file);
+  var img = new Image();
+  img.onload = function(){
+    try{
+      // Limitar tamanho para performance (máx 1200px no maior lado)
+      var maxDim = 1200;
+      var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      var w = Math.round(img.width * scale);
+      var h = Math.round(img.height * scale);
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      var imageData = ctx.getImageData(0, 0, w, h);
+      var code = window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+      URL.revokeObjectURL(imgUrl);
+      if(code && code.data){
+        handleQrDecoded(code.data);
+      } else {
+        showQrError('⚠️ QR Code não detectado na foto. Tente novamente com mais luz e foco no QR Code.');
+      }
+    }catch(e){
+      showQrError('⚠️ Erro ao processar imagem: '+(e.message||'falha desconhecida'));
+    }
+  };
+  img.onerror = function(){
+    URL.revokeObjectURL(imgUrl);
+    showQrError('⚠️ Não foi possível carregar a foto. Tente novamente.');
+  };
+  img.src = imgUrl;
 }
 
 function handleQrDecoded(decodedText){
@@ -2654,7 +2617,6 @@ function handleQrDecoded(decodedText){
     var url = new URL(decodedText);
     kioskId = url.searchParams.get('kiosk');
   }catch(e){
-    // Não é URL — tenta tratar como UUID puro
     if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedText.trim())){
       kioskId = decodedText.trim();
     }
@@ -2665,7 +2627,6 @@ function handleQrDecoded(decodedText){
     return;
   }
 
-  stopQrCamera();
   try{
     var u = new URL(window.location.href);
     u.searchParams.set('kiosk', kioskId);
@@ -2681,6 +2642,7 @@ function handleQrDecoded(decodedText){
   }
   showScreen('client', document.getElementById('nav-client'));
 }
+
 
 
 // ══════════════════════════════════════════════════════
@@ -3612,6 +3574,7 @@ function renderMyOrders(){
         +'<div class="my-order-items-txt">'+(o.items||[]).map(function(i){return i.qty+'x '+i.name;}).join(' · ')+'</div>'
         +(o.notes?'<div style="font-size:11px;color:var(--sl-400);font-style:italic;margin-bottom:4px">📝 '+o.notes+'</div>':'')
         +'<div class="my-order-foot"><div class="my-order-total">'+fmt(o.total)+'</div><div class="my-order-time">🕐 '+(o.time||'')+'</div></div>'
+        +(o.status==='pending'?'<button class="btn btn-sm" style="width:100%;margin-top:8px;background:#fef2f2;color:var(--red);border:1px solid #fecaca" data-oid="'+o.id+'" onclick="clientCancelOrder(this.dataset.oid)">❌ Cancelar pedido</button>':'')
         +(o.status==='delivered'?'<button class="btn btn-dark btn-sm" style="width:100%;margin-top:8px" data-tab="menu" onclick="clientTab(this.dataset.tab)">Pedir novamente 🔄</button>':'')
         +'</div>';
     });
@@ -3621,6 +3584,44 @@ function renderMyOrders(){
   el.innerHTML=html;
 }
 
+async function clientCancelOrder(orderId){
+  if(!orderId) return;
+  if(!confirm('Tem certeza que deseja cancelar este pedido?\n\nAtenção: só é possível cancelar pedidos que ainda não foram aceitos pelo quiosque.')) return;
+
+  // Localizar pedido em memória para checar status atual
+  var mo = myOrders.find(function(x){ return x.id === orderId; });
+  if(mo && mo.status !== 'pending'){
+    toast('⚠️ Este pedido já foi confirmado pelo quiosque e não pode mais ser cancelado.');
+    return;
+  }
+
+  if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
+    // Atualizar no banco, mas só se ainda estiver pending (proteção contra corrida com o quiosque)
+    var {data, error} = await sb.from('orders')
+      .update({status: 'cancelled'})
+      .eq('id', orderId)
+      .eq('status', 'pending')
+      .select();
+    if(error){
+      toast('Erro ao cancelar: '+(error.message||'tente novamente'));
+      return;
+    }
+    if(!data || !data.length){
+      // O quiosque aceitou entre a checagem local e a atualização
+      toast('⚠️ Pedido já foi aceito pelo quiosque. Não é mais possível cancelar.');
+      return;
+    }
+  }
+
+  // Atualizar em memória
+  if(mo) mo.status = 'cancelled';
+  var liveOrder = orders.find(function(x){ return x.id === orderId; });
+  if(liveOrder) liveOrder.status = 'cancelled';
+
+  renderMyOrders();
+  updateOrdersBadge();
+  toast('❌ Pedido cancelado.');
+}
 
 // ══════════════════════════════════════════════════════
 // QUIOSQUE — AUTH
