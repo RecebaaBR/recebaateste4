@@ -2535,9 +2535,14 @@ function showQrError(text){
 }
 
 async function openQrScanner(){
+  alert('PASSO 1: openQrScanner foi chamada');
   var modal = document.getElementById('modal-qrscan');
+  alert('PASSO 2: modal encontrado? ' + (modal ? 'SIM' : 'NÃO'));
   if(!modal) return;
   modal.classList.add('open');
+  // Verificar se o modal está realmente visível
+  var computed = window.getComputedStyle(modal);
+  alert('PASSO 3: display do modal = ' + computed.display + ', z-index = ' + computed.zIndex + ', position = ' + computed.position);
   var errEl = document.getElementById('qr-reader-error');
   if(errEl){ errEl.style.display='none'; errEl.textContent=''; }
   showQrPlaceholder('Inicializando câmera…');
