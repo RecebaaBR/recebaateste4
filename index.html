@@ -445,7 +445,7 @@ tr:hover td{background:var(--sand-50)}
     Recebaa
   </div>
   <div class="lp-nav-btns">
-    <button class="lp-btn-outline" onclick="goToScreen('client')">📱 Sou cliente</button>
+    <button class="lp-btn-outline" onclick="openQrScanner()">📱 Sou cliente</button>
     <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
@@ -493,7 +493,7 @@ tr:hover td{background:var(--sand-50)}
       <h1><span id="lp-h1-main">Peça na praia,</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
       <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
-        <button class="lp-cta-main" onclick="goToScreen('client')">📱 Fazer um pedido</button>
+        <button class="lp-cta-main" onclick="openQrScanner()">📱 Fazer um pedido</button>
         <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
       </div>
 
@@ -641,7 +641,7 @@ tr:hover td{background:var(--sand-50)}
       <div class="lp-section-tag">Acesse agora</div>
       <div class="lp-section-title" id="lp-access-title">Por onde você quer entrar?</div>
       <div class="lp-access">
-        <div class="lp-access-card client" onclick="goToScreen('client')">
+        <div class="lp-access-card client" onclick="openQrScanner()">
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
           <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
@@ -1566,7 +1566,7 @@ tr:hover td{background:var(--sand-50)}
     Recebaa
   </div>
   <div class="lp-nav-btns">
-    <button class="lp-btn-outline" onclick="goToScreen('client')">📱 Sou cliente</button>
+    <button class="lp-btn-outline" onclick="openQrScanner()">📱 Sou cliente</button>
     <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
@@ -1658,7 +1658,7 @@ tr:hover td{background:var(--sand-50)}
       <h1><span id="lp-h1-main">Peça na praia,</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
       <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
-        <button class="lp-cta-main" onclick="goToScreen('client')">📱 Fazer um pedido</button>
+        <button class="lp-cta-main" onclick="openQrScanner()">📱 Fazer um pedido</button>
         <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
       </div>
 
@@ -1806,7 +1806,7 @@ tr:hover td{background:var(--sand-50)}
       <div class="lp-section-tag">Acesse agora</div>
       <div class="lp-section-title" id="lp-access-title">Por onde você quer entrar?</div>
       <div class="lp-access">
-        <div class="lp-access-card client" onclick="goToScreen('client')">
+        <div class="lp-access-card client" onclick="openQrScanner()">
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
           <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
@@ -2219,6 +2219,37 @@ tr:hover td{background:var(--sand-50)}
   </div>
 </div>
 
+<!-- MODAL SCANNER QR -->
+<div class="modal-overlay" id="modal-qrscan" onclick="if(event.target===this)closeQrScanner()" style="z-index:9999">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-head">
+      <div class="modal-ttl">📷 Escaneie o QR Code</div>
+      <button class="modal-close" onclick="closeQrScanner()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--sl-600);margin-bottom:12px;line-height:1.5">
+        Aponte sua câmera para o QR Code do seu guarda-sol para começar.
+      </div>
+      <!-- Área do scanner embutido -->
+      <div id="qr-reader" style="width:100%;border-radius:12px;overflow:hidden;background:#000;min-height:240px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">
+        <div id="qr-reader-placeholder">Inicializando câmera…</div>
+      </div>
+      <div id="qr-reader-error" style="margin-top:10px;font-size:12px;color:var(--red);display:none"></div>
+      <!-- Divisor -->
+      <div style="display:flex;align-items:center;gap:10px;margin:18px 0 14px">
+        <div style="flex:1;height:1px;background:var(--sand-100)"></div>
+        <div style="font-size:11px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em">ou</div>
+        <div style="flex:1;height:1px;background:var(--sand-100)"></div>
+      </div>
+      <!-- Instrução para câmera nativa -->
+      <div style="background:var(--sand-50);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--sl-600);line-height:1.5">
+        <div style="font-weight:600;margin-bottom:4px;color:var(--sl-800)">📸 Usar a câmera do celular</div>
+        Abra o app de câmera nativo do seu celular e aponte para o QR Code. O link abrirá automaticamente.
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 
 // ══════════════════════════════════════════════════════
@@ -2457,6 +2488,118 @@ var MOCK_PRODUCTS = [
   {id:'p13',cat:'sob',name:'Açaí 400ml',description:'Com granola e banana',price:22,emoji:'🫐',is_available:true},
   {id:'p14',cat:'sob',name:'Picolé artesanal',description:'Sabores do dia',price:8,emoji:'🍦',is_available:true},
 ];
+
+// ══════════════════════════════════════════════════════
+// SCANNER QR — abre câmera para escanear QR Code do quiosque
+// ══════════════════════════════════════════════════════
+var _qrScannerInstance = null;
+var _qrLibLoaded = false;
+
+function loadQrLib(){
+  return new Promise(function(resolve, reject){
+    if(_qrLibLoaded || window.Html5Qrcode){ _qrLibLoaded = true; return resolve(); }
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js';
+    s.onload = function(){ _qrLibLoaded = true; resolve(); };
+    s.onerror = function(){ reject(new Error('Falha ao carregar leitor de QR.')); };
+    document.head.appendChild(s);
+  });
+}
+
+async function openQrScanner(){
+  var modal = document.getElementById('modal-qrscan');
+  if(!modal) return;
+  modal.classList.add('open');
+  var errEl = document.getElementById('qr-reader-error');
+  if(errEl){ errEl.style.display='none'; errEl.textContent=''; }
+  var ph = document.getElementById('qr-reader-placeholder');
+  if(ph) ph.textContent = 'Carregando leitor…';
+
+  try{
+    await loadQrLib();
+  }catch(e){
+    if(errEl){ errEl.style.display='block'; errEl.textContent = '⚠️ Não foi possível carregar o leitor. Use a câmera nativa do celular (abaixo).'; }
+    if(ph) ph.textContent = 'Leitor indisponível';
+    return;
+  }
+
+  if(ph) ph.textContent = 'Inicializando câmera…';
+
+  try{
+    _qrScannerInstance = new Html5Qrcode('qr-reader');
+    await _qrScannerInstance.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      function onSuccess(decodedText){ handleQrDecoded(decodedText); },
+      function onError(){ /* leituras falhas ignoradas */ }
+    );
+  }catch(e){
+    if(errEl){
+      errEl.style.display='block';
+      var msg = e && e.message ? e.message : String(e);
+      if(/permission/i.test(msg) || /denied/i.test(msg) || /NotAllowed/i.test(msg)){
+        errEl.textContent = '⚠️ Permissão da câmera negada. Use a câmera nativa do celular (abaixo).';
+      } else if(/NotFound/i.test(msg) || /no camera/i.test(msg)){
+        errEl.textContent = '⚠️ Câmera não encontrada. Use a câmera nativa do celular (abaixo).';
+      } else {
+        errEl.textContent = '⚠️ Não foi possível abrir a câmera. Use a câmera nativa (abaixo).';
+      }
+    }
+    if(ph) ph.textContent = 'Câmera indisponível';
+  }
+}
+
+async function closeQrScanner(){
+  var modal = document.getElementById('modal-qrscan');
+  if(modal) modal.classList.remove('open');
+  if(_qrScannerInstance){
+    try{ await _qrScannerInstance.stop(); }catch(e){}
+    try{ _qrScannerInstance.clear(); }catch(e){}
+    _qrScannerInstance = null;
+  }
+}
+
+function handleQrDecoded(decodedText){
+  // Aceita URLs do próprio app (com ?kiosk=...) e UUIDs puros
+  var kioskId = null;
+  try{
+    var url = new URL(decodedText);
+    kioskId = url.searchParams.get('kiosk');
+  }catch(e){
+    // Não é URL — tenta tratar como UUID puro
+    if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedText.trim())){
+      kioskId = decodedText.trim();
+    }
+  }
+
+  if(!kioskId){
+    var errEl = document.getElementById('qr-reader-error');
+    if(errEl){
+      errEl.style.display='block';
+      errEl.textContent = '⚠️ QR Code não reconhecido. Use um QR Code de quiosque Recebaa.';
+    }
+    return;
+  }
+
+  // Fecha scanner e abre tela do cliente já com o kiosk certo na URL
+  closeQrScanner();
+  try{
+    var u = new URL(window.location.href);
+    u.searchParams.set('kiosk', kioskId);
+    history.replaceState(null, '', u.toString());
+  }catch(e){}
+  // Atualizar nome do quiosque na splash, se possível
+  if(isConfigured){
+    sb.from('kiosks').select('name').eq('id', kioskId).single().then(function(r){
+      if(r.data){
+        var el = document.getElementById('splash-kname');
+        if(el) el.textContent = r.data.name;
+      }
+    });
+  }
+  // Trocar para tela do cliente
+  showScreen('client', document.getElementById('nav-client'));
+}
 
 // ══════════════════════════════════════════════════════
 // UTILITÁRIOS
