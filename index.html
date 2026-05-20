@@ -3105,7 +3105,19 @@ async function goToMenu(){
   // Iniciar escuta realtime para atualizações de pedidos deste guarda-sol
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     var chName = 'client-'+currentKiosk.id+'-'+String(window._umb||'0');
-    sb.channel(chName)
+
+    // CANCELAR subscrições anteriores (evita listeners duplicados se goToMenu
+    // for chamado mais de uma vez: restauração de sessão + clique no nav, etc.)
+    if(window._clientRealtimeChannel){
+      try{ sb.removeChannel(window._clientRealtimeChannel); }catch(e){}
+      window._clientRealtimeChannel = null;
+    }
+    if(window._clientProductsChannel){
+      try{ sb.removeChannel(window._clientProductsChannel); }catch(e){}
+      window._clientProductsChannel = null;
+    }
+
+    window._clientRealtimeChannel = sb.channel(chName)
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',
         filter:'kiosk_id=eq.'+currentKiosk.id},
         function(payload){
@@ -3197,7 +3209,7 @@ async function goToMenu(){
 
   // Escutar mudanças no cardápio (produtos) em tempo real
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-    sb.channel('client-products-'+currentKiosk.id)
+    window._clientProductsChannel = sb.channel('client-products-'+currentKiosk.id)
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'products',
         filter:'kiosk_id=eq.'+currentKiosk.id},
         function(payload){
@@ -3735,6 +3747,17 @@ var PILL={
 function renderMyOrders(){
   var el=$('my-orders-list');
   if(!el) return;
+
+  // Deduplicar por ID (defensivo, evita pedidos aparecerem 2x se o array
+  // foi populado por múltiplos caminhos: query inicial + realtime + placeOrder).
+  var seen = {};
+  myOrders = myOrders.filter(function(o){
+    if(!o || !o.id) return true;
+    if(seen[o.id]) return false;
+    seen[o.id] = true;
+    return true;
+  });
+
   myOrders.forEach(function(mo){ var live=orders.find(function(o){return o.id===mo.id;}); if(live) mo.status=live.status; });
 
   if(!myOrders.length){
