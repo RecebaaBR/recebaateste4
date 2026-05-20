@@ -1124,7 +1124,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="report-title">Detalhamento por quiosque</div>
           <div id="am-kiosk-table" style="overflow:auto;margin-top:12px"><div style="color:var(--sl-400);font-size:13px;padding:16px">Carregando...</div></div>
         </div>
-      </div>TYPE html>
+      </div>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -5604,8 +5604,8 @@ async function loadAdminMetrics(){
     // Incluir quiosques sem pedidos também
     var allKioskData = kiosks.map(function(k){
       var kr = byKiosk[k.name] || {name:k.name,revenue:0,orders:0};
-      var total_orders = allOrders.filter(function(o){ return o.kiosk_id===k.id && o.customer_name!=='CHAMADA DE ATENDENTE'; }).length;
-      var cancelled_k = allOrders.filter(function(o){ return o.kiosk_id===k.id && o.status==='cancelled'; }).length;
+      var total_orders = realAllOrders.filter(function(o){ return o.kiosk_id===k.id; }).length;
+      var cancelled_k = realAllOrders.filter(function(o){ return o.kiosk_id===k.id && o.status==='cancelled'; }).length;
       return {name:k.name,revenue:kr.revenue,delivered:kr.orders,total:total_orders,cancelled:cancelled_k,active:k.is_active};
     }).sort(function(a,b){ return b.revenue-a.revenue; });
 
