@@ -2568,52 +2568,52 @@ function closeQrScanner(){
 
 // Quando o usuário tira a foto, decodificar o QR
 async function handleQrPhoto(event){
-  alert('PASSO A: handleQrPhoto foi chamada');
   var file = event.target.files && event.target.files[0];
-  alert('PASSO B: file existe? ' + (file ? 'SIM, tamanho=' + file.size + ' bytes, tipo=' + file.type : 'NÃO'));
   if(!file){ return; }
   showQrStatus('🔍 Processando imagem…');
-  alert('PASSO C: showQrStatus chamado, vai carregar lib jsQR');
 
   try{ await loadQrLib(); }catch(e){
-    alert('PASSO D-ERRO: falha ao carregar lib: ' + (e.message||e));
     showQrError('⚠️ Não foi possível carregar o leitor de QR. Tente novamente em alguns segundos.');
     return;
   }
-  alert('PASSO D: lib jsQR carregada, window.jsQR existe? ' + (window.jsQR ? 'SIM' : 'NÃO'));
 
   // Carregar a imagem em um elemento Image
   var imgUrl = URL.createObjectURL(file);
   var img = new Image();
   img.onload = function(){
-    alert('PASSO E: imagem carregada, dimensões=' + img.width + 'x' + img.height);
     try{
-      // Limitar tamanho para performance (máx 1200px no maior lado)
-      var maxDim = 1200;
-      var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-      var w = Math.round(img.width * scale);
-      var h = Math.round(img.height * scale);
       var canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
       var ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-      var imageData = ctx.getImageData(0, 0, w, h);
-      alert('PASSO F: canvas pronto ' + w + 'x' + h + ', vai chamar jsQR');
-      var code = window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
-      alert('PASSO G: jsQR retornou ' + (code ? 'código: ' + code.data : 'NULO'));
+
+      // Tentar várias escalas (a ideia: QR pode estar pequeno na foto, então
+      // não vale reduzir demais; mas imagens muito grandes consomem memória).
+      // Ordem: tenta resoluções maiores primeiro, depois cai pra menores.
+      var maxDims = [2400, 1800, 1200, 900];
+      var code = null;
+
+      for(var i = 0; i < maxDims.length; i++){
+        var maxDim = maxDims[i];
+        var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        var w = Math.round(img.width * scale);
+        var h = Math.round(img.height * scale);
+        canvas.width = w; canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        var imageData = ctx.getImageData(0, 0, w, h);
+        code = window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        if(code && code.data) break;
+      }
+
       URL.revokeObjectURL(imgUrl);
       if(code && code.data){
         handleQrDecoded(code.data);
       } else {
-        showQrError('⚠️ QR Code não detectado na foto. Tente novamente com mais luz e foco no QR Code.');
+        showQrError('⚠️ QR Code não detectado na foto. Aproxime mais o QR Code, garanta boa iluminação e tente novamente.');
       }
     }catch(e){
-      alert('PASSO F-ERRO: ' + (e.message||e));
       showQrError('⚠️ Erro ao processar imagem: '+(e.message||'falha desconhecida'));
     }
   };
-  img.onerror = function(e){
-    alert('PASSO E-ERRO: img.onerror disparou');
+  img.onerror = function(){
     URL.revokeObjectURL(imgUrl);
     showQrError('⚠️ Não foi possível carregar a foto. Tente novamente.');
   };
