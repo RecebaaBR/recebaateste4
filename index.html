@@ -3772,13 +3772,17 @@ function renderMyOrders(){
     byName[name].push(o);
   });
 
-  var names=Object.keys(byName);
+  // Contar apenas pessoas com algum pedido NÃO cancelado (para divisão por pessoa)
+  var activeNames = Object.keys(byName).filter(function(n){
+    return byName[n].some(function(o){ return o.status !== 'cancelled'; });
+  });
+  var names = Object.keys(byName); // continua mostrando todos os grupos na lista
   var totalGeral=myOrders.filter(function(o){return o.status!=='cancelled';}).reduce(function(s,o){return s+Number(o.total);},0);
 
   var html='<div style="background:var(--sl-800);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
     +'<div><div style="font-size:12px;opacity:.7;margin-bottom:2px">Total do guarda-sol</div>'
     +'<div style="font-size:20px;font-weight:700">'+fmt(totalGeral)+'</div>'
-    +(names.length>1?'<div style="font-size:11px;opacity:.6">'+names.length+' pessoas · '+fmt(totalGeral/names.length)+' por pessoa</div>':'')
+    +(activeNames.length>1?'<div style="font-size:11px;opacity:.6">'+activeNames.length+' pessoas · '+fmt(totalGeral/activeNames.length)+' por pessoa</div>':'')
     +'</div>'
     +'<button class="btn btn-ocean btn-sm" onclick="openBillModal()">🧾 Pedir a conta</button>'
     +'</div>';
