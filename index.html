@@ -5537,9 +5537,9 @@ async function loadAdminMetrics(){
   var dates = getAdminDates();
   if(!dates) return;
 
-  // Buscar todos os pedidos do período
+  // Buscar todos os pedidos do período (com itens para calcular custo)
   var {data:allOrders} = await sb.from('orders')
-    .select('*,kiosks(name)')
+    .select('*,kiosks(name),order_items(*)')
     .gte('created_at', dates.from)
     .lte('created_at', dates.to)
     .order('created_at', {ascending:false});
@@ -5577,9 +5577,15 @@ async function loadAdminMetrics(){
   var byKiosk = {};
   delivered.forEach(function(o){
     var kname = o.kiosks ? o.kiosks.name : (o.kiosk_id||'?');
-    if(!byKiosk[kname]) byKiosk[kname] = {name:kname,revenue:0,orders:0,kiosk_id:o.kiosk_id};
+    if(!byKiosk[kname]) byKiosk[kname] = {name:kname,revenue:0,cost:0,orders:0,kiosk_id:o.kiosk_id};
     byKiosk[kname].revenue += Number(o.total);
     byKiosk[kname].orders++;
+    // Somar custo dos itens (cost_price fixado no momento da venda)
+    (o.order_items||[]).forEach(function(item){
+      if(item.cost_price != null && Number(item.cost_price) > 0){
+        byKiosk[kname].cost += Number(item.cost_price) * Number(item.quantity||1);
+      }
+    });
   });
 
   var ranking = Object.values(byKiosk).sort(function(a,b){ return b.revenue-a.revenue; });
@@ -5603,20 +5609,26 @@ async function loadAdminMetrics(){
   if(tableEl){
     // Incluir quiosques sem pedidos também
     var allKioskData = kiosks.map(function(k){
-      var kr = byKiosk[k.name] || {name:k.name,revenue:0,orders:0};
+      var kr = byKiosk[k.name] || {name:k.name,revenue:0,cost:0,orders:0};
       var total_orders = realAllOrders.filter(function(o){ return o.kiosk_id===k.id; }).length;
       var cancelled_k = realAllOrders.filter(function(o){ return o.kiosk_id===k.id && o.status==='cancelled'; }).length;
-      return {name:k.name,revenue:kr.revenue,delivered:kr.orders,total:total_orders,cancelled:cancelled_k,active:k.is_active};
+      return {name:k.name,revenue:kr.revenue,cost:kr.cost,delivered:kr.orders,total:total_orders,cancelled:cancelled_k,active:k.is_active};
     }).sort(function(a,b){ return b.revenue-a.revenue; });
 
     tableEl.innerHTML = '<table><thead><tr>'
-      +'<th>Quiosque</th><th>Faturamento</th><th>Pedidos</th><th>Entregues</th><th>Cancelamentos</th><th>Ticket médio</th><th>Status</th>'
+      +'<th>Quiosque</th><th>Faturamento</th><th>Custo</th><th>Lucro</th><th>Margem</th><th>Pedidos</th><th>Entregues</th><th>Cancelamentos</th><th>Ticket médio</th><th>Status</th>'
       +'</tr></thead><tbody>'
       +allKioskData.map(function(k){
         var avg = k.delivered ? k.revenue/k.delivered : 0;
+        var profit = k.revenue - k.cost;
+        var margin = k.revenue > 0 ? Math.round(profit/k.revenue*100) : 0;
+        var marginColor = margin >= 50 ? 'var(--green)' : margin >= 20 ? 'var(--amber)' : 'var(--red)';
         return '<tr>'
           +'<td><b>'+k.name+'</b></td>'
           +'<td><b style="color:var(--green)">'+fmt(k.revenue)+'</b></td>'
+          +'<td style="color:var(--red)">'+fmt(k.cost)+'</td>'
+          +'<td><b>'+fmt(profit)+'</b></td>'
+          +'<td><b style="color:'+marginColor+'">'+margin+'%</b></td>'
           +'<td>'+k.total+'</td>'
           +'<td>'+k.delivered+'</td>'
           +'<td>'+k.cancelled+'</td>'
