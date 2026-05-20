@@ -3800,14 +3800,21 @@ function kPage(name,btn){
 // QUIOSQUE — DASHBOARD
 // ══════════════════════════════════════════════════════
 function updateDashMetrics(){
-  const active=orders.filter(o=>!['delivered','cancelled'].includes(o.status));
-  const delivered=orders.filter(o=>o.status==='delivered');
+  // Pedidos "especiais" não contam como vendas reais
+  var isSpecial = function(o){
+    return o.customer_name==='PEDIDO DE CONTA'
+      || o.customer_name==='ENCERRAMENTO'
+      || o.customer_name==='CHAMADA DE ATENDENTE';
+  };
+  var realOrders = orders.filter(function(o){ return !isSpecial(o); });
+  const active=realOrders.filter(o=>!['delivered','cancelled'].includes(o.status));
+  const delivered=realOrders.filter(o=>o.status==='delivered');
   const rev=delivered.reduce((s,o)=>s+Number(o.total),0);
   const ticket=delivered.length?rev/delivered.length:0;
-  const cancelled=orders.filter(o=>o.status==='cancelled');
+  const cancelled=realOrders.filter(o=>o.status==='cancelled');
   const m=x=>$(x);
   if(m('m-revenue')) m('m-revenue').textContent=fmt(rev);
-  if(m('m-total')) m('m-total').textContent=orders.length;
+  if(m('m-total')) m('m-total').textContent=realOrders.length;
   if(m('m-ticket')) m('m-ticket').textContent=fmt(ticket);
   if(m('metric-active')) m('metric-active').textContent=active.length;
   if(m('m-products')) m('m-products').textContent=catalog.filter(p=>p.is_available!==false).length;
@@ -3818,7 +3825,7 @@ function updateDashMetrics(){
   var contasBadge = $('contas-badge');
   if(contasBadge) contasBadge.textContent = contasPend.length;
   const counts={};
-  orders.forEach(o=>(o.items||[]).forEach(i=>{counts[i.name]=(counts[i.name]||0)+i.qty;}));
+  realOrders.forEach(o=>(o.items||[]).forEach(i=>{counts[i.name]=(counts[i.name]||0)+i.qty;}));
   const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const max=top[0]?top[0][1]:1;
   const ch=$('top-products-chart');
@@ -5156,9 +5163,17 @@ async function loadReports(){
     });
   }
 
+  // Pedidos "especiais" não contam como vendas reais
+  var isSpecialReport = function(o){
+    return o.customer_name==='PEDIDO DE CONTA'
+      || o.customer_name==='ENCERRAMENTO'
+      || o.customer_name==='CHAMADA DE ATENDENTE';
+  };
+  var realOrdersReport = filteredOrders.filter(function(o){ return !isSpecialReport(o); });
+
   // Métricas
-  var delivered = filteredOrders.filter(function(o){ return o.status==='delivered'; });
-  var cancelled = filteredOrders.filter(function(o){ return o.status==='cancelled'; });
+  var delivered = realOrdersReport.filter(function(o){ return o.status==='delivered'; });
+  var cancelled = realOrdersReport.filter(function(o){ return o.status==='cancelled'; });
   var rev = delivered.reduce(function(s,o){ return s+Number(o.total); }, 0);
   var ticket = delivered.length ? rev/delivered.length : 0;
 
@@ -5179,7 +5194,7 @@ async function loadReports(){
   set('r-rev', fmt(rev));
   set('r-cost', fmt(totalCost));
   set('r-profit', fmt(profit));
-  set('r-orders', filteredOrders.length);
+  set('r-orders', realOrdersReport.length);
   set('r-ticket', fmt(ticket));
   set('r-cancel', cancelled.length);
   var marginEl = $('r-margin');
@@ -5187,7 +5202,7 @@ async function loadReports(){
 
   // Top produtos
   var counts = {};
-  filteredOrders.forEach(function(o){
+  realOrdersReport.forEach(function(o){
     (o.items||[]).forEach(function(i){
       counts[i.name] = (counts[i.name]||0) + i.qty;
     });
@@ -5243,7 +5258,7 @@ async function loadReports(){
 
   // Por status
   var statusCounts = {pending:0,accepted:0,preparing:0,delivering:0,delivered:0,cancelled:0};
-  filteredOrders.forEach(function(o){ if(statusCounts[o.status]!==undefined) statusCounts[o.status]++; });
+  realOrdersReport.forEach(function(o){ if(statusCounts[o.status]!==undefined) statusCounts[o.status]++; });
   var statusLabels = {pending:'Aguardando',accepted:'Confirmado',preparing:'Em preparo',delivering:'A caminho',delivered:'Entregue',cancelled:'Cancelado'};
   var statusColors = {pending:'var(--amber)',accepted:'var(--blue)',preparing:'var(--purple)',delivering:'var(--cyan)',delivered:'var(--green)',cancelled:'var(--red)'};
   var maxS = Math.max.apply(null, Object.values(statusCounts)) || 1;
@@ -5518,16 +5533,24 @@ async function loadAdminMetrics(){
   var {data:kiosks} = await sb.from('kiosks').select('id,name,is_active').order('name');
   kiosks = kiosks || [];
 
+  // Pedidos "especiais" não contam como vendas reais
+  var isSpecialAdmin = function(o){
+    return o.customer_name==='PEDIDO DE CONTA'
+      || o.customer_name==='ENCERRAMENTO'
+      || o.customer_name==='CHAMADA DE ATENDENTE';
+  };
+  var realAllOrders = allOrders.filter(function(o){ return !isSpecialAdmin(o); });
+
   // Métricas globais
-  var delivered = allOrders.filter(function(o){ return o.status==='delivered' && o.customer_name!=='CHAMADA DE ATENDENTE'; });
-  var cancelled = allOrders.filter(function(o){ return o.status==='cancelled'; });
+  var delivered = realAllOrders.filter(function(o){ return o.status==='delivered'; });
+  var cancelled = realAllOrders.filter(function(o){ return o.status==='cancelled'; });
   var gmv = delivered.reduce(function(s,o){ return s+Number(o.total); },0);
   var ticket = delivered.length ? gmv/delivered.length : 0;
   var activeKiosks = kiosks.filter(function(k){ return k.is_active; }).length;
 
   var set = function(id,v){ var el=$(id); if(el) el.textContent=v; };
   set('am-gmv', fmt(gmv));
-  set('am-orders', allOrders.filter(function(o){ return o.customer_name!=='CHAMADA DE ATENDENTE'; }).length);
+  set('am-orders', realAllOrders.length);
   set('am-ticket', fmt(ticket));
   set('am-active-kiosks', activeKiosks);
   set('am-delivered', delivered.length);
