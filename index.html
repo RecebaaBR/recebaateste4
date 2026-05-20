@@ -3167,12 +3167,19 @@ async function goToMenu(){
               if(r.data) newOrder.items = r.data.map(function(i){
                 return {name:i.product_name, qty:i.quantity, price:i.unit_price};
               });
-              // Verificar se é pedido desta sessão
-              var sessionName = '';
-              try{ sessionName = sessionStorage.getItem('recebaa-client-name')||''; }catch(e){}
-              window._allUmbOrders.unshift(newOrder);
-              // Todos veem todos os pedidos da mesa
-              myOrders.unshift(newOrder);
+              // Evitar duplicação: se este pedido já está em myOrders (porque o próprio
+              // cliente o criou e placeOrder já adicionou), apenas atualizar os itens.
+              var existing = myOrders.find(function(x){ return x.id === newOrder.id; });
+              if(existing){
+                if(newOrder.items && newOrder.items.length) existing.items = newOrder.items;
+              } else {
+                myOrders.unshift(newOrder);
+              }
+              // Mesma proteção para o array de toda a mesa
+              var existingAll = window._allUmbOrders && window._allUmbOrders.find(function(x){ return x.id === newOrder.id; });
+              if(!existingAll && window._allUmbOrders){
+                window._allUmbOrders.unshift(newOrder);
+              }
               updateOrdersBadge();
               var vo = $('view-orders');
               if(vo && !vo.classList.contains('hidden')) renderMyOrders();
