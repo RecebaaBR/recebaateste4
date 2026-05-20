@@ -3045,7 +3045,10 @@ async function goToMenu(){
     }catch(e){}
 
     if(currentKiosk){
-      const {data:prods}=await sb.from('products').select('*').eq('kiosk_id',currentKiosk.id).eq('is_available',true).order('sort_order');
+      // Trazer TODOS os produtos (não só is_available=true): a filtragem
+      // visual fica por conta do buildMenu. Isso garante que quando o quiosque
+      // reativa um produto antes indisponível, o realtime ache ele no catalog.
+      const {data:prods}=await sb.from('products').select('*').eq('kiosk_id',currentKiosk.id).order('sort_order');
       catalog=prods||[];
       const {data:cats}=await sb.from('categories').select('*').eq('kiosk_id',currentKiosk.id).order('sort_order');
       dbCategories=cats||[];
@@ -3261,9 +3264,10 @@ async function goToMenu(){
         filter:'kiosk_id=eq.'+currentKiosk.id},
         function(payload){
           var updated = payload.new;
-          // Atualizar produto no catalog
+          // Atualizar produto no catalog (ou inserir se não existia)
           var idx = catalog.findIndex(function(p){ return p.id===updated.id; });
           if(idx > -1){
+            // Mesclar mantendo campos antigos que possam não vir no payload
             catalog[idx] = Object.assign({}, catalog[idx], updated);
           } else {
             catalog.push(updated);
@@ -3271,12 +3275,19 @@ async function goToMenu(){
           // Rerender cardápio se estiver visível
           var vm = $('view-menu');
           if(vm && !vm.classList.contains('hidden')) buildMenu();
+          // Atualizar também o card aberto, se for esse produto
+          var openCard = document.getElementById('pc-'+updated.id);
+          if(openCard && typeof refreshCard === 'function'){
+            try{ refreshCard(updated.id); }catch(e){}
+          }
         })
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'products',
         filter:'kiosk_id=eq.'+currentKiosk.id},
         function(payload){
           var p = payload.new;
-          if(p.is_available !== false) catalog.push(p);
+          // Adicionar produto independente do is_available — buildMenu filtra na exibição
+          var exists = catalog.find(function(x){ return x.id === p.id; });
+          if(!exists) catalog.push(p);
           var vm = $('view-menu');
           if(vm && !vm.classList.contains('hidden')) buildMenu();
         })
@@ -3431,6 +3442,15 @@ async function placeOrder(){
   try{ sessionStorage.setItem('recebaa-client-name', name); }catch(e){}
   const items=Object.values(cart);
   if(!items.length){ toast('Adicione itens ao carrinho'); return; }
+  // Validar que todos os itens do carrinho ainda estão disponíveis
+  var unavailable = items.filter(function(i){
+    var prod = catalog.find(function(p){ return p.id === i.id || p.name === i.name; });
+    return prod && prod.is_available === false;
+  });
+  if(unavailable.length){
+    toast('⚠️ "'+unavailable[0].name+'" ficou indisponível. Remova do carrinho.');
+    return;
+  }
   const total=items.reduce((s,i)=>s+i.price*i.qty,0);
   setLoading('place-order-btn',true,'Enviando...');
 
@@ -3634,6 +3654,7 @@ function clientTab(tab){
   $('view-orders').classList.toggle('hidden',isMenu);
   $('tab-menu').classList.toggle('active',isMenu);
   $('tab-orders').classList.toggle('active',!isMenu);
+  if(isMenu) buildMenu(); // refletir mudanças que vieram via realtime enquanto em outra aba
   if(!isMenu) renderMyOrders();
 }
 function openBillModal(){
