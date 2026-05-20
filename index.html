@@ -3637,6 +3637,19 @@ function clientTab(tab){
   if(!isMenu) renderMyOrders();
 }
 function openBillModal(){
+  // Bloqueio: se a conta já foi solicitada, não abrir o modal de novo
+  if(window._billRequested){
+    toast('⚠️ A conta já foi solicitada. Aguarde o atendente.');
+    return;
+  }
+  // Bloqueio: não permite pedir conta com consumo zero
+  var totalCheck = (window._allUmbOrders || myOrders)
+    .filter(function(o){ return o.status!=='cancelled' && o.status!=='billed'; })
+    .reduce(function(s,o){ return s + Number(o.total||0); }, 0);
+  if(totalCheck <= 0){
+    toast('⚠️ Não há consumo neste guarda-sol. Faça um pedido antes de pedir a conta.');
+    return;
+  }
   var old = document.getElementById('dynamic-bill-modal');
   if(old) old.remove();
 
@@ -3727,6 +3740,25 @@ function requestBillBtn(btn){
 }
 
 async function requestBill(type, personName, personTotal){
+  // Bloqueio defensivo: não permite inserir PEDIDO DE CONTA duplicado
+  if(window._billRequested){
+    toast('⚠️ A conta já foi solicitada. Aguarde o atendente.');
+    closeBillModal();
+    return;
+  }
+  // Bloqueio defensivo: não permite pedir conta com consumo zero
+  var totalGuard = (window._allUmbOrders || myOrders)
+    .filter(function(o){ return o.status!=='cancelled' && o.status!=='billed'; })
+    .reduce(function(s,o){ return s + Number(o.total||0); }, 0);
+  if(totalGuard <= 0){
+    toast('⚠️ Não há consumo neste guarda-sol.');
+    closeBillModal();
+    return;
+  }
+  // Bloquear IMEDIATAMENTE para impedir cliques duplos durante o await
+  window._billRequested = true;
+  applyBillBlock();
+
   var allOrders = (window._allUmbOrders || myOrders).filter(function(o){
     return o.status!=='cancelled' && o.status!=='billed';
   });
@@ -3770,7 +3802,7 @@ async function requestBill(type, personName, personTotal){
   var notasCompletas = msg+' · '+detalhes+' · ☂️ '+(window._umb||'?');
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-    await sb.from('orders').insert({
+    var insertRes = await sb.from('orders').insert({
       kiosk_id: currentKiosk.id,
       umbrella_num: String(window._umb||'?'),
       order_number: 0,
@@ -3779,11 +3811,14 @@ async function requestBill(type, personName, personTotal){
       status: 'pending',
       total: billTotal
     });
+    // Se o insert falhar, desfaz o bloqueio para o cliente poder tentar de novo
+    if(insertRes && insertRes.error){
+      window._billRequested = false;
+      applyBillBlock();
+      toast('Erro ao solicitar conta: '+(insertRes.error.message||'tente novamente'));
+      return;
+    }
   }
-
-  // Bloquear novos pedidos para todos do guarda-sol
-  window._billRequested = true;
-  applyBillBlock();
 
   closeBillModal();
   toast('🧾 Conta solicitada! O garçom já foi avisado.');
