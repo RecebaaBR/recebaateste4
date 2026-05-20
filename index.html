@@ -4053,9 +4053,14 @@ async function doLogin(){
     const {data:kiosks,error}=await sb.from('kiosks').select('*').eq('owner_email',email).limit(1);
     if(error||!kiosks||!kiosks.length){ toast('E-mail não encontrado. Verifique suas credenciais.'); setLoading('login-btn',false,'Entrar'); return; }
     const k = kiosks[0];
-    // Verificar senha
+    // Verificar senha — se o banco não tem senha cadastrada, rejeita
     const storedPass = k.password || k.owner_password || '';
-    if(storedPass && storedPass !== pass){
+    if(!storedPass){
+      toast('⚠️ Conta sem senha cadastrada. Entre em contato com o suporte para redefinir.');
+      setLoading('login-btn',false,'Entrar');
+      return;
+    }
+    if(storedPass !== pass){
       toast('❌ Senha incorreta. Tente novamente.'); setLoading('login-btn',false,'Entrar'); return;
     }
 
@@ -4099,7 +4104,7 @@ async function doRegister(){
     const {data,error}=await sb.from('kiosks').insert({
       name:kname, owner_email:email, owner_name:owner, phone,
       city:$('reg-city').value.trim(), beach:$('reg-beach').value.trim(),
-      is_active:true, owner_doc:doc
+      is_active:true, owner_doc:doc, password:pass
     }).select().single();
     if(error){ toast('Erro ao criar conta: '+(error.message)); setLoading('register-btn',false,'Criar conta 🚀'); return; }
     currentKiosk=data;
