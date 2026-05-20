@@ -3619,17 +3619,28 @@ function encerrarSessaoCliente(){
   try{ sessionStorage.removeItem('recebaa-client-kiosk'); }catch(e){}
   try{ sessionStorage.removeItem('recebaa-client-umb'); }catch(e){}
 
-  // Mostrar mensagem de encerramento e voltar para splash
+  // Mostrar mensagem de encerramento e voltar para a landing
   toast('💰 Conta faturada! Obrigado pela visita. 🌊');
 
   setTimeout(function(){
-    // Voltar para splash
-    $('client-status').classList.add('hidden');
-    $('client-menu').classList.add('hidden');
-    $('client-splash').classList.remove('hidden');
-    $('umbrella-input').value = '';
-    $('splash-kname').textContent = 'Recebaa';
+    // Limpar splash interna do client (caso o usuário volte a clicar em "Cliente")
+    var splashKname = $('splash-kname');
+    if(splashKname) splashKname.textContent = 'Recebaa';
+    var umbInput = $('umbrella-input');
+    if(umbInput) umbInput.value = '';
+    var cs = $('client-status'); if(cs) cs.classList.add('hidden');
+    var cm = $('client-menu'); if(cm) cm.classList.add('hidden');
+    var csp = $('client-splash'); if(csp) csp.classList.remove('hidden');
     updateOrdersBadge();
+    // Tirar parâmetro ?kiosk da URL pra não restaurar a sessão no próximo refresh
+    try{
+      var u = new URL(window.location.href);
+      u.searchParams.delete('kiosk');
+      u.searchParams.delete('umbrella');
+      history.replaceState(null, '', u.pathname + (u.search || '') + (u.hash || ''));
+    }catch(e){}
+    // Levar o cliente para a landing page
+    if(typeof goToLanding === 'function') goToLanding();
   }, 2000);
 }
 
