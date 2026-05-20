@@ -2675,34 +2675,51 @@ async function goToMenu(){
   $('client-menu').classList.remove('hidden');
   buildCatTabs();
   buildMenu();
-  // Carregar pedidos existentes do guarda-sol do banco
+  // Carregar pedidos existentes do guarda-sol do banco (sessão atual)
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo' && window._umb){
+    // Primeiro: descobrir quando começou a sessão atual desse guarda-sol
+    // (created_at do último ENCERRAMENTO). Tudo antes pertence a sessões anteriores.
     sb.from('orders')
-      .select('*,order_items(*)')
+      .select('created_at')
       .eq('kiosk_id', currentKiosk.id)
       .eq('umbrella_num', String(window._umb))
-      .not('customer_name', 'eq', 'CHAMADA DE ATENDENTE')
-      .not('customer_name', 'eq', 'PEDIDO DE CONTA')
-      .not('customer_name', 'eq', 'ENCERRAMENTO')
-      .not('status', 'in', '("delivered","cancelled","billed")')
+      .eq('customer_name', 'ENCERRAMENTO')
       .order('created_at', {ascending: false})
-      .limit(50)
-      .then(function(r){
-        if(r.data && r.data.length){
-          var sessionName = '';
-          try{ sessionName = sessionStorage.getItem('recebaa-client-name')||''; }catch(e){}
-          var allOrders = r.data.map(function(o){
-            return Object.assign({}, o, {
-              items: (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; }),
-              umb: o.umbrella_num,
-              time: new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+      .limit(1)
+      .then(function(rEnc){
+        var sessionStart = (rEnc.data && rEnc.data[0]) ? rEnc.data[0].created_at : null;
+
+        // Agora busca os pedidos da sessão atual.
+        // Inclui TODOS os status normais (pending, accepted, preparing,
+        // delivering, delivered) + cancelados, para o cliente ver o histórico
+        // completo da sessão. Exclui apenas billed e pedidos especiais.
+        var q = sb.from('orders')
+          .select('*,order_items(*)')
+          .eq('kiosk_id', currentKiosk.id)
+          .eq('umbrella_num', String(window._umb))
+          .not('customer_name', 'eq', 'CHAMADA DE ATENDENTE')
+          .not('customer_name', 'eq', 'PEDIDO DE CONTA')
+          .not('customer_name', 'eq', 'ENCERRAMENTO')
+          .not('status', 'eq', 'billed')
+          .order('created_at', {ascending: false})
+          .limit(50);
+        if(sessionStart) q = q.gt('created_at', sessionStart);
+
+        q.then(function(r){
+          if(r.data && r.data.length){
+            var allOrders = r.data.map(function(o){
+              return Object.assign({}, o, {
+                items: (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; }),
+                umb: o.umbrella_num,
+                time: new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+              });
             });
-          });
-          // Todos os pedidos do guarda-sol visíveis para todos
-          window._allUmbOrders = allOrders;
-          myOrders = allOrders;
-          updateOrdersBadge();
-        }
+            // Todos os pedidos do guarda-sol visíveis para todos
+            window._allUmbOrders = allOrders;
+            myOrders = allOrders;
+            updateOrdersBadge();
+          }
+        });
       });
   }
   // Iniciar escuta realtime para atualizações de pedidos deste guarda-sol
