@@ -3771,7 +3771,14 @@ function renderMyOrders(){
       var p=PILL[o.status]||{l:o.status,c:''};
       html+='<div class="my-order-card" data-s="'+o.status+'" style="border-radius:0;border:none;border-bottom:1px solid var(--sand-50);margin-bottom:0">'
         +'<div class="my-order-head"><div class="my-order-num">Pedido #'+o.order_number+'</div><span class="pill '+p.c+'">'+p.l+'</span></div>'
-        +'<div class="my-order-items-txt">'+(o.items||[]).map(function(i){return i.qty+'x '+i.name;}).join(' · ')+'</div>'
+        +'<div class="my-order-items-txt">'+(o.items||[]).map(function(i){
+          var line = '• '+i.qty+'x '+i.name;
+          if(i.price != null){
+            var total = Number(i.price) * Number(i.qty || 1);
+            line += ' — '+fmt(total);
+          }
+          return line;
+        }).join('<br/>')+'</div>'
         +(o.notes?'<div style="font-size:11px;color:var(--sl-400);font-style:italic;margin-bottom:4px">📝 '+o.notes+'</div>':'')
         +'<div class="my-order-foot"><div class="my-order-total">'+fmt(o.total)+'</div><div class="my-order-time">🕐 '+(o.time||'')+'</div></div>'
         +(o.status==='pending'?'<button class="btn btn-sm" style="width:100%;margin-top:8px;background:#fef2f2;color:var(--red);border:1px solid #fecaca" data-oid="'+o.id+'" onclick="clientCancelOrder(this.dataset.oid)">❌ Cancelar pedido</button>':'')
