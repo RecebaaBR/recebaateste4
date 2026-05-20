@@ -3547,6 +3547,8 @@ async function closeUmbrellaSession(umbNum){
 
     // 2) Calcular total somado (pedidos não cancelados)
     var totalConta = pedidos.reduce(function(s,o){ return s + (Number(o.total)||0); }, 0);
+    console.log('[encerrar] guarda-sol='+umbNum+' pedidos='+pedidos.length+' total='+totalConta);
+    console.log('[encerrar] detalhe pedidos:', pedidos.map(function(o){ return {n:o.order_number, c:o.customer_name, s:o.status, t:o.total}; }));
 
     // 3) Marcar todos os pedidos ativos como delivered
     if(pedidos.length){
@@ -3557,7 +3559,15 @@ async function closeUmbrellaSession(umbNum){
       if(eUpd) console.log('Erro ao atualizar pedidos:', eUpd.message);
     }
 
-    // 4) Tratar PEDIDO DE CONTA
+    // 4) Calcular resumo dos pedidos do guarda-sol (usado nos dois ramos)
+    var resumo = pedidos.length
+      ? pedidos.map(function(o){
+          var qtdItens = (o.order_items||[]).reduce(function(s,i){ return s + (i.quantity||0); }, 0);
+          return '#'+(o.order_number||'?')+' ('+qtdItens+' itens) '+fmt(Number(o.total)||0);
+        }).join(' · ')
+      : 'Encerramento sem pedidos';
+
+    // 5) Tratar PEDIDO DE CONTA — sempre recalcular total com a soma dos pedidos
     var {data: contasExist} = await sb.from('orders')
       .select('id, total, notes')
       .eq('kiosk_id', kid)
@@ -3567,19 +3577,18 @@ async function closeUmbrellaSession(umbNum){
       .limit(1);
 
     if(contasExist && contasExist.length){
-      // Já existia pedido de conta: marca como delivered (faturado)
+      console.log('[encerrar] ramo: PEDIDO DE CONTA existia (id='+contasExist[0].id+', total antigo='+contasExist[0].total+', novo total='+totalConta+')');
+      // Já existia pedido de conta: marca como delivered E recalcula o total.
+      // O total original pode estar desatualizado (cliente pediu a conta antes de
+      // todos os pedidos, ou ficou 0 por bug anterior). Sempre usa a soma real.
+      var newNotes = (contasExist[0].notes ? contasExist[0].notes + ' · ' : '')
+        + 'FATURADO pelo quiosque · ' + resumo;
       await sb.from('orders')
-        .update({status:'delivered', notes: (contasExist[0].notes||'') + ' · FATURADO'})
+        .update({status:'delivered', total: totalConta, notes: newNotes})
         .eq('id', contasExist[0].id);
     } else {
+      console.log('[encerrar] ramo: criar PEDIDO DE CONTA retroativo, total='+totalConta);
       // Não existia: criar pedido de conta retroativo
-      // Resumo dos pedidos para o notes
-      var resumo = pedidos.length
-        ? pedidos.map(function(o){
-            var qtdItens = (o.order_items||[]).reduce(function(s,i){ return s + (i.quantity||0); }, 0);
-            return '#'+(o.order_number||'?')+' ('+qtdItens+' itens) '+fmt(Number(o.total)||0);
-          }).join(' · ')
-        : 'Encerramento sem pedidos';
       var notes = 'Encerrado pelo quiosque · ' + resumo + ' · FATURADO';
 
       // Pegar próximo order_number
