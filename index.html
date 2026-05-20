@@ -688,8 +688,10 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- Área do vídeo -->
     <div id="qr-reader-wrap" style="position:relative;width:100%;max-width:380px;margin:0 auto;border-radius:16px;overflow:hidden;background:#000;height:340px">
-      <video id="qr-video" playsinline webkit-playsinline autoplay muted style="width:100%;height:100%;object-fit:cover;display:block;background:#000"></video>
-      <canvas id="qr-canvas" style="display:none"></canvas>
+      <!-- Video fica invisível mas continua produzindo o stream (iOS Safari não renderiza video em alguns casos) -->
+      <video id="qr-video" playsinline webkit-playsinline autoplay muted style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;left:0;top:0"></video>
+      <!-- Canvas visível que recebe os frames do vídeo desenhados (funciona em qualquer iOS) -->
+      <canvas id="qr-canvas" style="width:100%;height:100%;display:block;object-fit:cover"></canvas>
       <div id="qr-reader-placeholder" style="position:absolute;top:0;right:0;bottom:0;left:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;pointer-events:none;background:rgba(0,0,0,.6);text-align:center;padding:16px">Toque em "Iniciar câmera"</div>
       <!-- Caixa de mira -->
       <div id="qr-target-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60%;height:60%;border:3px solid rgba(255,255,255,.85);border-radius:14px;pointer-events:none;display:none;box-shadow:0 0 0 9999px rgba(0,0,0,.15)"></div>
@@ -2579,7 +2581,6 @@ function openQrScanner(){
 // CHAMADO DIRETAMENTE PELO CLIQUE NO BOTÃO — gesto do usuário
 // (iOS Safari só libera câmera com gesto direto)
 async function startQrCamera(){
-  alert('PASSO 1: startQrCamera chamada');
   var btn = document.getElementById('qr-start-btn');
   if(btn) btn.style.display = 'none';
   clearQrMessages();
@@ -2587,13 +2588,11 @@ async function startQrCamera(){
 
   // Checar suporte
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    alert('PASSO 2-ERRO: getUserMedia não suportado');
     showQrPlaceholder('Câmera indisponível');
     showQrError('⚠️ Seu navegador não suporta acesso à câmera. Use a foto abaixo.');
     if(btn) btn.style.display = 'block';
     return;
   }
-  alert('PASSO 2: getUserMedia suportado');
 
   // Pedir stream — IMPORTANTE: chamar diretamente sem await antes
   try{
@@ -2601,9 +2600,7 @@ async function startQrCamera(){
       video: { facingMode: { ideal: 'environment' } },
       audio: false
     });
-    alert('PASSO 3: stream obtido com sucesso');
   }catch(e){
-    alert('PASSO 3-ERRO: ' + (e.name||'') + ' / ' + (e.message||e));
     var name = e && e.name ? e.name : '';
     if(name === 'NotAllowedError'){
       showQrError('⚠️ Permissão da câmera negada. Use a foto abaixo.');
@@ -2619,12 +2616,10 @@ async function startQrCamera(){
 
   var video = document.getElementById('qr-video');
   if(!video){
-    alert('PASSO 4-ERRO: video element não encontrado');
     showQrError('Erro interno: vídeo não encontrado.');
     if(btn) btn.style.display = 'block';
     return;
   }
-  alert('PASSO 4: video element ok, vai setar srcObject');
 
   video.srcObject = _qrStream;
   video.setAttribute('playsinline', 'true');
@@ -2636,24 +2631,40 @@ async function startQrCamera(){
   try{
     var p = video.play();
     if(p && p.then){
-      p.then(function(){ alert('PASSO 5: video.play() resolveu OK'); })
-       .catch(function(err){
-         alert('PASSO 5-ERRO play(): ' + (err.message||err));
-         showQrError('⚠️ Não foi possível iniciar o vídeo: '+(err.message||'erro'));
-       });
-    } else {
-      alert('PASSO 5: video.play() chamado (sem promise)');
+      p.catch(function(err){
+        showQrError('⚠️ Não foi possível iniciar o vídeo: '+(err.message||'erro'));
+      });
     }
-  }catch(e){
-    alert('PASSO 5-EXCECAO: ' + (e.message||e));
-  }
+  }catch(e){}
 
-  // Quando o vídeo começar a tocar, esconder placeholder
+  // Quando o vídeo começar a tocar, esconder placeholder e FORÇAR redimensionamento
+  // (workaround iOS Safari: o video às vezes inicia com dimensões 0 ou layout incorreto)
   video.onplaying = function(){
-    alert('PASSO 6: video.onplaying disparou! dimensões=' + video.videoWidth + 'x' + video.videoHeight);
     hideQrPlaceholder();
     var box = document.getElementById('qr-target-box');
     if(box) box.style.display = 'block';
+    // Forçar reflow: mexe no estilo e re-aplica
+    var wrap = document.getElementById('qr-reader-wrap');
+    if(wrap){
+      var w = wrap.offsetWidth;
+      var h = wrap.offsetHeight;
+      video.style.width = w + 'px';
+      video.style.height = h + 'px';
+    }
+  };
+
+  // Listener extra: 'loadedmetadata' às vezes dispara antes de 'playing' no iOS
+  video.onloadedmetadata = function(){
+    hideQrPlaceholder();
+    var wrap = document.getElementById('qr-reader-wrap');
+    if(wrap){
+      var w = wrap.offsetWidth;
+      var h = wrap.offsetHeight;
+      video.style.width = w + 'px';
+      video.style.height = h + 'px';
+    }
+    // Tentar play de novo (caso o primeiro tenha falhado silenciosamente)
+    try{ video.play().catch(function(){}); }catch(e){}
   };
 
   // Carregar lib (já deve estar carregada)
