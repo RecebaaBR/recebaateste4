@@ -3574,7 +3574,6 @@ function renderMyOrders(){
         +'<div class="my-order-items-txt">'+(o.items||[]).map(function(i){return i.qty+'x '+i.name;}).join(' · ')+'</div>'
         +(o.notes?'<div style="font-size:11px;color:var(--sl-400);font-style:italic;margin-bottom:4px">📝 '+o.notes+'</div>':'')
         +'<div class="my-order-foot"><div class="my-order-total">'+fmt(o.total)+'</div><div class="my-order-time">🕐 '+(o.time||'')+'</div></div>'
-        +(o.status==='pending'?'<button class="btn btn-sm" style="width:100%;margin-top:8px;background:#fef2f2;color:var(--red);border:1px solid #fecaca" data-oid="'+o.id+'" onclick="clientCancelOrder(this.dataset.oid)">❌ Cancelar pedido</button>':'')
         +(o.status==='delivered'?'<button class="btn btn-dark btn-sm" style="width:100%;margin-top:8px" data-tab="menu" onclick="clientTab(this.dataset.tab)">Pedir novamente 🔄</button>':'')
         +'</div>';
     });
@@ -3584,44 +3583,6 @@ function renderMyOrders(){
   el.innerHTML=html;
 }
 
-async function clientCancelOrder(orderId){
-  if(!orderId) return;
-  if(!confirm('Tem certeza que deseja cancelar este pedido?\n\nAtenção: só é possível cancelar pedidos que ainda não foram aceitos pelo quiosque.')) return;
-
-  // Localizar pedido em memória para checar status atual
-  var mo = myOrders.find(function(x){ return x.id === orderId; });
-  if(mo && mo.status !== 'pending'){
-    toast('⚠️ Este pedido já foi confirmado pelo quiosque e não pode mais ser cancelado.');
-    return;
-  }
-
-  if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
-    // Atualizar no banco, mas só se ainda estiver pending (proteção contra corrida com o quiosque)
-    var {data, error} = await sb.from('orders')
-      .update({status: 'cancelled'})
-      .eq('id', orderId)
-      .eq('status', 'pending')
-      .select();
-    if(error){
-      toast('Erro ao cancelar: '+(error.message||'tente novamente'));
-      return;
-    }
-    if(!data || !data.length){
-      // O quiosque aceitou entre a checagem local e a atualização
-      toast('⚠️ Pedido já foi aceito pelo quiosque. Não é mais possível cancelar.');
-      return;
-    }
-  }
-
-  // Atualizar em memória
-  if(mo) mo.status = 'cancelled';
-  var liveOrder = orders.find(function(x){ return x.id === orderId; });
-  if(liveOrder) liveOrder.status = 'cancelled';
-
-  renderMyOrders();
-  updateOrdersBadge();
-  toast('❌ Pedido cancelado.');
-}
 
 // ══════════════════════════════════════════════════════
 // QUIOSQUE — AUTH
