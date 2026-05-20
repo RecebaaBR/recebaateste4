@@ -2232,14 +2232,12 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <!-- Área do scanner embutido -->
       <div id="qr-reader-wrap" style="position:relative;width:100%;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:1/1;max-height:340px">
-        <div id="qr-reader" style="width:100%;height:100%"></div>
-        <div id="qr-reader-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;pointer-events:none">Inicializando câmera…</div>
+        <video id="qr-video" playsinline webkit-playsinline autoplay muted style="width:100%;height:100%;object-fit:cover;display:block;background:#000"></video>
+        <canvas id="qr-canvas" style="display:none"></canvas>
+        <div id="qr-reader-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;pointer-events:none;background:rgba(0,0,0,.6);text-align:center;padding:16px">Inicializando câmera…</div>
+        <!-- Caixa visual indicando área de foco -->
+        <div id="qr-target-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60%;aspect-ratio:1/1;border:3px solid rgba(255,255,255,.85);border-radius:14px;pointer-events:none;display:none;box-shadow:0 0 0 9999px rgba(0,0,0,.15)"></div>
       </div>
-      <style>
-        /* Garantir que o vídeo injetado pela lib preencha o container */
-        #qr-reader video, #qr-reader canvas { width:100% !important; height:100% !important; object-fit:cover !important; display:block !important; }
-        #qr-reader { position:relative; }
-      </style>
       <div id="qr-reader-error" style="margin-top:10px;font-size:12px;color:var(--red);display:none"></div>
       <!-- Divisor -->
       <div style="display:flex;align-items:center;gap:10px;margin:18px 0 14px">
@@ -2496,18 +2494,19 @@ var MOCK_PRODUCTS = [
 ];
 
 // ══════════════════════════════════════════════════════
-// SCANNER QR — abre câmera para escanear QR Code do quiosque
+// SCANNER QR — getUserMedia + jsQR
 // ══════════════════════════════════════════════════════
-var _qrScannerInstance = null;
+var _qrStream = null;
+var _qrLoopActive = false;
 var _qrLibLoaded = false;
 var _qrLibLoadPromise = null;
 
 function loadQrLib(){
-  if(_qrLibLoaded || window.Html5Qrcode){ _qrLibLoaded = true; return Promise.resolve(); }
+  if(_qrLibLoaded || window.jsQR){ _qrLibLoaded = true; return Promise.resolve(); }
   if(_qrLibLoadPromise) return _qrLibLoadPromise;
   _qrLibLoadPromise = new Promise(function(resolve, reject){
     var s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js';
+    s.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
     s.onload = function(){ _qrLibLoaded = true; resolve(); };
     s.onerror = function(){ _qrLibLoadPromise = null; reject(new Error('Falha ao carregar leitor de QR.')); };
     document.head.appendChild(s);
@@ -2515,13 +2514,24 @@ function loadQrLib(){
   return _qrLibLoadPromise;
 }
 
-// Pré-carregar a biblioteca assim que a página carregar — assim quando o
-// usuário clicar em "Fazer pedido", o getUserMedia roda no mesmo gesto
-// (importante para iOS Safari).
+// Pré-carregar a biblioteca assim que a página carregar
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', function(){ loadQrLib().catch(function(){}); });
 } else {
   loadQrLib().catch(function(){});
+}
+
+function showQrPlaceholder(text){
+  var ph = document.getElementById('qr-reader-placeholder');
+  if(ph){ ph.style.display = 'flex'; ph.textContent = text; }
+}
+function hideQrPlaceholder(){
+  var ph = document.getElementById('qr-reader-placeholder');
+  if(ph) ph.style.display = 'none';
+}
+function showQrError(text){
+  var errEl = document.getElementById('qr-reader-error');
+  if(errEl){ errEl.style.display = 'block'; errEl.textContent = text; }
 }
 
 async function openQrScanner(){
@@ -2530,69 +2540,107 @@ async function openQrScanner(){
   modal.classList.add('open');
   var errEl = document.getElementById('qr-reader-error');
   if(errEl){ errEl.style.display='none'; errEl.textContent=''; }
-  var ph = document.getElementById('qr-reader-placeholder');
-  if(ph){ ph.style.display = 'flex'; ph.textContent = 'Carregando leitor…'; }
+  showQrPlaceholder('Inicializando câmera…');
 
-  try{
-    await loadQrLib();
-  }catch(e){
-    if(errEl){ errEl.style.display='block'; errEl.textContent = '⚠️ Não foi possível carregar o leitor. Use a câmera nativa do celular (abaixo).'; }
-    if(ph) ph.textContent = 'Leitor indisponível';
+  // Checar suporte
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    showQrPlaceholder('Câmera indisponível neste navegador');
+    showQrError('⚠️ Este navegador não suporta acesso à câmera. Use a câmera nativa do celular (abaixo).');
     return;
   }
 
-  if(ph) ph.textContent = 'Inicializando câmera…';
-
+  // Pedir stream da câmera traseira
   try{
-    _qrScannerInstance = new Html5Qrcode('qr-reader');
-    await _qrScannerInstance.start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 220, height: 220 } },
-      function onSuccess(decodedText){ handleQrDecoded(decodedText); },
-      function onError(){ /* leituras falhas ignoradas */ }
-    );
-    // Câmera iniciada: esconder placeholder
-    var phOk = document.getElementById('qr-reader-placeholder');
-    if(phOk) phOk.style.display = 'none';
-    // iOS Safari: o vídeo precisa de playsinline + autoplay + muted, e play() explícito
-    setTimeout(function(){
-      var v = document.querySelector('#qr-reader video');
-      if(v){
-        v.setAttribute('playsinline', 'true');
-        v.setAttribute('webkit-playsinline', 'true');
-        v.setAttribute('autoplay', 'true');
-        v.muted = true;
-        v.playsInline = true;
-        try{
-          var p = v.play();
-          if(p && p.catch) p.catch(function(){});
-        }catch(e){}
-      }
-    }, 100);
+    _qrStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } },
+      audio: false
+    });
   }catch(e){
-    if(errEl){
-      errEl.style.display='block';
-      var msg = e && e.message ? e.message : String(e);
-      if(/permission/i.test(msg) || /denied/i.test(msg) || /NotAllowed/i.test(msg)){
-        errEl.textContent = '⚠️ Permissão da câmera negada. Use a câmera nativa do celular (abaixo).';
-      } else if(/NotFound/i.test(msg) || /no camera/i.test(msg)){
-        errEl.textContent = '⚠️ Câmera não encontrada. Use a câmera nativa do celular (abaixo).';
-      } else {
-        errEl.textContent = '⚠️ Não foi possível abrir a câmera. Use a câmera nativa (abaixo).';
-      }
+    var name = e && e.name ? e.name : '';
+    if(name === 'NotAllowedError' || /permission|denied/i.test(e.message||'')){
+      showQrError('⚠️ Permissão da câmera negada. Use a câmera nativa do celular (abaixo).');
+    } else if(name === 'NotFoundError'){
+      showQrError('⚠️ Câmera não encontrada. Use a câmera nativa do celular (abaixo).');
+    } else {
+      showQrError('⚠️ Não foi possível abrir a câmera. Use a câmera nativa (abaixo).');
     }
-    if(ph) ph.textContent = 'Câmera indisponível';
+    showQrPlaceholder('Câmera indisponível');
+    return;
   }
+
+  var video = document.getElementById('qr-video');
+  if(!video){ showQrError('Erro interno: vídeo não encontrado.'); return; }
+  video.srcObject = _qrStream;
+  // iOS exige todos esses atributos
+  video.setAttribute('playsinline', 'true');
+  video.setAttribute('webkit-playsinline', 'true');
+  video.muted = true;
+  video.playsInline = true;
+
+  // play() pode retornar promise; tratar ambos os casos
+  try{
+    var p = video.play();
+    if(p && p.catch) p.catch(function(err){
+      showQrError('⚠️ Não foi possível iniciar o vídeo. Toque na tela para tentar.');
+    });
+  }catch(e){}
+
+  // Quando o vídeo começar a tocar, esconder placeholder e mostrar caixa de mira
+  video.onplaying = function(){
+    hideQrPlaceholder();
+    var box = document.getElementById('qr-target-box');
+    if(box) box.style.display = 'block';
+  };
+
+  // Tenta carregar a biblioteca de decodificação (já pré-carregada idealmente)
+  try{ await loadQrLib(); }catch(e){
+    showQrError('⚠️ Leitor de QR indisponível. Use a câmera nativa (abaixo).');
+    return;
+  }
+
+  // Loop de decodificação
+  _qrLoopActive = true;
+  var canvas = document.getElementById('qr-canvas');
+  var ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  function tick(){
+    if(!_qrLoopActive) return;
+    if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0){
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      try{
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var code = window.jsQR && window.jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+        if(code && code.data){
+          handleQrDecoded(code.data);
+          return; // closeQrScanner irá parar o loop
+        }
+      }catch(e){}
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 async function closeQrScanner(){
+  _qrLoopActive = false;
   var modal = document.getElementById('modal-qrscan');
   if(modal) modal.classList.remove('open');
-  if(_qrScannerInstance){
-    try{ await _qrScannerInstance.stop(); }catch(e){}
-    try{ _qrScannerInstance.clear(); }catch(e){}
-    _qrScannerInstance = null;
+  // Parar todas as tracks do stream
+  if(_qrStream){
+    try{
+      _qrStream.getTracks().forEach(function(t){ try{ t.stop(); }catch(e){} });
+    }catch(e){}
+    _qrStream = null;
   }
+  var video = document.getElementById('qr-video');
+  if(video){
+    try{ video.pause(); }catch(e){}
+    try{ video.srcObject = null; }catch(e){}
+  }
+  var box = document.getElementById('qr-target-box');
+  if(box) box.style.display = 'none';
 }
 
 function handleQrDecoded(decodedText){
@@ -2609,22 +2657,16 @@ function handleQrDecoded(decodedText){
   }
 
   if(!kioskId){
-    var errEl = document.getElementById('qr-reader-error');
-    if(errEl){
-      errEl.style.display='block';
-      errEl.textContent = '⚠️ QR Code não reconhecido. Use um QR Code de quiosque Recebaa.';
-    }
+    showQrError('⚠️ QR Code não reconhecido. Use um QR Code de quiosque Recebaa.');
     return;
   }
 
-  // Fecha scanner e abre tela do cliente já com o kiosk certo na URL
   closeQrScanner();
   try{
     var u = new URL(window.location.href);
     u.searchParams.set('kiosk', kioskId);
     history.replaceState(null, '', u.toString());
   }catch(e){}
-  // Atualizar nome do quiosque na splash, se possível
   if(isConfigured){
     sb.from('kiosks').select('name').eq('id', kioskId).single().then(function(r){
       if(r.data){
@@ -2633,9 +2675,9 @@ function handleQrDecoded(decodedText){
       }
     });
   }
-  // Trocar para tela do cliente
   showScreen('client', document.getElementById('nav-client'));
 }
+
 
 // ══════════════════════════════════════════════════════
 // UTILITÁRIOS
