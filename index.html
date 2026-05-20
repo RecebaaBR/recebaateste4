@@ -2220,7 +2220,7 @@ tr:hover td{background:var(--sand-50)}
 </div>
 
 <!-- MODAL SCANNER QR -->
-<div class="modal-overlay" id="modal-qrscan" onclick="if(event.target===this)closeQrScanner()" style="z-index:9999">
+<div class="modal-overlay" id="modal-qrscan" onclick="if(event.target===this)closeQrScanner()" style="z-index:9999;top:0;right:0;bottom:0;left:0;position:fixed;width:100vw;height:100vh">
   <div class="modal-box" style="max-width:420px">
     <div class="modal-head">
       <div class="modal-ttl">📷 Escaneie o QR Code</div>
@@ -2234,7 +2234,7 @@ tr:hover td{background:var(--sand-50)}
       <div id="qr-reader-wrap" style="position:relative;width:100%;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:1/1;max-height:340px">
         <video id="qr-video" playsinline webkit-playsinline autoplay muted style="width:100%;height:100%;object-fit:cover;display:block;background:#000"></video>
         <canvas id="qr-canvas" style="display:none"></canvas>
-        <div id="qr-reader-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;pointer-events:none;background:rgba(0,0,0,.6);text-align:center;padding:16px">Inicializando câmera…</div>
+        <div id="qr-reader-placeholder" style="position:absolute;top:0;right:0;bottom:0;left:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;pointer-events:none;background:rgba(0,0,0,.6);text-align:center;padding:16px">Inicializando câmera…</div>
         <!-- Caixa visual indicando área de foco -->
         <div id="qr-target-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60%;aspect-ratio:1/1;border:3px solid rgba(255,255,255,.85);border-radius:14px;pointer-events:none;display:none;box-shadow:0 0 0 9999px rgba(0,0,0,.15)"></div>
       </div>
@@ -2535,14 +2535,9 @@ function showQrError(text){
 }
 
 async function openQrScanner(){
-  alert('PASSO 1: openQrScanner foi chamada');
   var modal = document.getElementById('modal-qrscan');
-  alert('PASSO 2: modal encontrado? ' + (modal ? 'SIM' : 'NÃO'));
   if(!modal) return;
   modal.classList.add('open');
-  // Verificar se o modal está realmente visível
-  var computed = window.getComputedStyle(modal);
-  alert('PASSO 3: display do modal = ' + computed.display + ', z-index = ' + computed.zIndex + ', position = ' + computed.position);
   var errEl = document.getElementById('qr-reader-error');
   if(errEl){ errEl.style.display='none'; errEl.textContent=''; }
   showQrPlaceholder('Inicializando câmera…');
