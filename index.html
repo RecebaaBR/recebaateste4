@@ -250,6 +250,8 @@ body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
 .hf-btn{padding:5px 13px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--sl-200);background:transparent;cursor:pointer;color:var(--sl-600);transition:all .15s}
 .hf-btn.active{background:var(--sl-800);color:#fff;border-color:var(--sl-800)}
 .hist-table{background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);overflow:auto}
+.hist-filter-row th{background:#f8fafc !important;border-bottom:1px solid var(--sand-100)}
+.hist-table thead tr:first-child th:hover{background:#f1f5f9}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:10px 14px;font-size:11px;font-weight:500;color:var(--sl-400);text-transform:uppercase;letter-spacing:.04em;background:var(--sl-50);border-bottom:1px solid var(--sand-100)}
 td{padding:11px 14px;border-bottom:1px solid var(--sand-50);color:var(--sl-700);vertical-align:middle}
@@ -1430,6 +1432,8 @@ body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
 .hf-btn{padding:5px 13px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--sl-200);background:transparent;cursor:pointer;color:var(--sl-600);transition:all .15s}
 .hf-btn.active{background:var(--sl-800);color:#fff;border-color:var(--sl-800)}
 .hist-table{background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);overflow:auto}
+.hist-filter-row th{background:#f8fafc !important;border-bottom:1px solid var(--sand-100)}
+.hist-table thead tr:first-child th:hover{background:#f1f5f9}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:10px 14px;font-size:11px;font-weight:500;color:var(--sl-400);text-transform:uppercase;letter-spacing:.04em;background:var(--sl-50);border-bottom:1px solid var(--sand-100)}
 td{padding:11px 14px;border-bottom:1px solid var(--sand-50);color:var(--sl-700);vertical-align:middle}
@@ -4844,8 +4848,8 @@ async function renderHist(){
         if(existing) Object.assign(existing, o);
         else orders.push(o);
       });
-      var list = data;
-      renderHistTable(list);
+      window._histRawList = data;
+      renderHistTable(data);
       return;
     }
   }
@@ -4863,16 +4867,112 @@ async function renderHist(){
   } else {
     list2 = orders.filter(function(o){ return o.status===histFilterVal && o.customer_name!=='ENCERRAMENTO'; });
   }
+  window._histRawList = list2;
   renderHistTable(list2);
 }
 
-function renderHistTable(list){
+// Filtros e ordenação da tabela de histórico
+window._histColFilters = { num:'', umb:'', cliente:'', itens:'' };
+window._histSortBy = null; // 'num'|'umb'|'cliente'|'hora'|'total'|null
+window._histSortDir = 'desc'; // 'asc'|'desc'
+
+function setHistColFilter(col, val){
+  window._histColFilters[col] = String(val||'').toLowerCase();
+  window._histLastFocus = col;
+  applyHistColFilters();
+}
+function clearHistColFilters(){
+  window._histColFilters = { num:'', umb:'', cliente:'', itens:'' };
+  window._histSortBy = null;
+  applyHistColFilters();
+}
+function setHistSort(col){
+  if(window._histSortBy === col){
+    window._histSortDir = window._histSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    window._histSortBy = col;
+    window._histSortDir = 'asc';
+  }
+  applyHistColFilters();
+}
+function applyHistColFilters(){
+  var raw = window._histRawList || [];
+  var f = window._histColFilters;
+  var filtered = raw.filter(function(o){
+    if(f.num && String(o.order_number||'').toLowerCase().indexOf(f.num) === -1) return false;
+    if(f.umb && String(o.umb||o.umbrella_num||'').toLowerCase().indexOf(f.umb) === -1) return false;
+    if(f.cliente && String(o.customer_name||'').toLowerCase().indexOf(f.cliente) === -1) return false;
+    if(f.itens){
+      var isSpecial = o.customer_name==='PEDIDO DE CONTA'||o.customer_name==='CHAMADA DE ATENDENTE';
+      var itensText = isSpecial ? String(o.notes||'') : (o.items||[]).map(function(i){return i.qty+'x '+i.name;}).join(', ');
+      if(itensText.toLowerCase().indexOf(f.itens) === -1) return false;
+    }
+    return true;
+  });
+  // Ordenação
+  if(window._histSortBy){
+    var dir = window._histSortDir === 'asc' ? 1 : -1;
+    filtered.sort(function(a,b){
+      var va, vb;
+      switch(window._histSortBy){
+        case 'num': va = Number(a.order_number||0); vb = Number(b.order_number||0); break;
+        case 'umb': va = String(a.umb||a.umbrella_num||''); vb = String(b.umb||b.umbrella_num||''); break;
+        case 'cliente': va = String(a.customer_name||'').toLowerCase(); vb = String(b.customer_name||'').toLowerCase(); break;
+        case 'hora': va = a.created_at||''; vb = b.created_at||''; break;
+        case 'total': va = Number(a.total||0); vb = Number(b.total||0); break;
+        default: return 0;
+      }
+      if(va < vb) return -1*dir;
+      if(va > vb) return 1*dir;
+      return 0;
+    });
+  }
+  renderHistTable(filtered, true);
+}
+
+function histSortIcon(col){
+  if(window._histSortBy !== col) return '<span style="opacity:.3;font-size:9px">⇅</span>';
+  return window._histSortDir === 'asc' ? '<span style="font-size:10px">▲</span>' : '<span style="font-size:10px">▼</span>';
+}
+
+function renderHistTable(list, skipFilterSetup){
   const el=$('hist-table'); if(!el) return;
-  if(!list.length){
+  if(!list.length && !skipFilterSetup){
     el.innerHTML='<div style="padding:32px;text-align:center;color:var(--sl-400)">Nenhum pedido encontrado.</div>';
     return;
   }
-  el.innerHTML='<table><thead><tr><th>#</th><th>Guarda-sol</th><th>Cliente</th><th>Hora</th><th>Itens</th><th>Total</th><th>Status</th><th>Ação</th></tr></thead><tbody>'
+  var f = window._histColFilters || { num:'', umb:'', cliente:'', itens:'' };
+  // Cabeçalho clicável + linha de filtros
+  var thead = '<thead>'
+    +'<tr>'
+      +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'num\')"># '+histSortIcon('num')+'</th>'
+      +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'umb\')">Guarda-sol '+histSortIcon('umb')+'</th>'
+      +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'cliente\')">Cliente '+histSortIcon('cliente')+'</th>'
+      +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'hora\')">Hora '+histSortIcon('hora')+'</th>'
+      +'<th>Itens</th>'
+      +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'total\')">Total '+histSortIcon('total')+'</th>'
+      +'<th>Status</th>'
+      +'<th>Ação</th>'
+    +'</tr>'
+    +'<tr class="hist-filter-row">'
+      +'<th style="padding:4px"><input type="text" placeholder="Filtrar..." value="'+esc(f.num)+'" oninput="setHistColFilter(\'num\',this.value)" style="width:100%;padding:4px 6px;font-size:11px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></th>'
+      +'<th style="padding:4px"><input type="text" placeholder="Filtrar..." value="'+esc(f.umb)+'" oninput="setHistColFilter(\'umb\',this.value)" style="width:100%;padding:4px 6px;font-size:11px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></th>'
+      +'<th style="padding:4px"><input type="text" placeholder="Filtrar..." value="'+esc(f.cliente)+'" oninput="setHistColFilter(\'cliente\',this.value)" style="width:100%;padding:4px 6px;font-size:11px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></th>'
+      +'<th></th>'
+      +'<th style="padding:4px"><input type="text" placeholder="Filtrar..." value="'+esc(f.itens)+'" oninput="setHistColFilter(\'itens\',this.value)" style="width:100%;padding:4px 6px;font-size:11px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></th>'
+      +'<th></th>'
+      +'<th></th>'
+      +'<th style="padding:4px"><button class="btn btn-sm" style="font-size:10px;padding:3px 6px;width:100%" onclick="clearHistColFilters()">Limpar</button></th>'
+    +'</tr>'
+    +'</thead>';
+
+  if(!list.length){
+    el.innerHTML='<table>'+thead+'<tbody><tr><td colspan="8" style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum pedido com esses filtros.</td></tr></tbody></table>';
+    setTimeout(function(){ var inp = el.querySelector('input[oninput*="\''+window._histLastFocus+'\'"]'); if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } }, 0);
+    return;
+  }
+
+  el.innerHTML='<table>'+thead+'<tbody>'
     +list.map(function(o){
       const p=PILL[o.status]||{l:o.status,c:''};
       const can=!['delivered','cancelled','billed'].includes(o.status);
@@ -4910,6 +5010,18 @@ function renderHistTable(list){
           +'</select>':'—')+'</td>'
         +'</tr>';
     }).join('')+'</tbody></table>';
+
+  // Restaurar foco no input que estava sendo digitado
+  if(window._histLastFocus){
+    setTimeout(function(){
+      var col = window._histLastFocus;
+      var inp = el.querySelector('input[oninput*="\''+col+'\'"]');
+      if(inp){
+        inp.focus();
+        try{ inp.setSelectionRange(inp.value.length, inp.value.length); }catch(e){}
+      }
+    }, 0);
+  }
 }
 
 
@@ -5366,7 +5478,68 @@ async function renderContas(){
     }
   }
 
-  // Aplicar filtro
+  // Guardar dados brutos para filtros
+  window._contasRawList = contasOrders;
+  applyContasFilters();
+}
+
+window._contasColFilters = { umb:'', valor:'', texto:'' };
+window._contasSortBy = null; // 'umb'|'hora'|'valor'
+window._contasSortDir = 'desc';
+window._contasLastFocus = null;
+
+function setContasColFilter(col, val){
+  window._contasColFilters[col] = String(val||'').toLowerCase();
+  window._contasLastFocus = col;
+  applyContasFilters();
+}
+function clearContasFilters(){
+  window._contasColFilters = { umb:'', valor:'', texto:'' };
+  window._contasSortBy = null;
+  applyContasFilters();
+}
+function setContasSort(col){
+  if(window._contasSortBy === col){
+    window._contasSortDir = window._contasSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    window._contasSortBy = col;
+    window._contasSortDir = 'asc';
+  }
+  applyContasFilters();
+}
+function contasSortIcon(col){
+  if(window._contasSortBy !== col) return '<span style="opacity:.3;font-size:9px">⇅</span>';
+  return window._contasSortDir === 'asc' ? '<span style="font-size:10px">▲</span>' : '<span style="font-size:10px">▼</span>';
+}
+
+function applyContasFilters(){
+  var grid = $('contas-grid');
+  if(!grid) return;
+  var raw = window._contasRawList || [];
+  var f = window._contasColFilters;
+  var contasOrders = raw.filter(function(o){
+    if(f.umb && String(o.umbrella_num||o.umb||'').toLowerCase().indexOf(f.umb) === -1) return false;
+    if(f.valor && String(o.total||'').toLowerCase().indexOf(f.valor) === -1) return false;
+    if(f.texto && String(o.notes||'').toLowerCase().indexOf(f.texto) === -1) return false;
+    return true;
+  });
+  if(window._contasSortBy){
+    var dir = window._contasSortDir === 'asc' ? 1 : -1;
+    contasOrders.sort(function(a,b){
+      var va, vb;
+      switch(window._contasSortBy){
+        case 'umb': va = String(a.umbrella_num||a.umb||''); vb = String(b.umbrella_num||b.umb||''); break;
+        case 'hora': va = a.created_at||''; vb = b.created_at||''; break;
+        case 'valor': va = Number(a.total||0); vb = Number(b.total||0); break;
+        default: return 0;
+      }
+      if(va < vb) return -1*dir;
+      if(va > vb) return 1*dir;
+      return 0;
+    });
+  }
+
+  // Aplicar filtro de status (topo)
   var contasAtivas, contasFechadas;
   if(contasFilter === 'pending'){
     contasAtivas = contasOrders.filter(function(o){ return !['delivered','cancelled','billed'].includes(o.status); });
@@ -5382,29 +5555,45 @@ async function renderContas(){
     contasFechadas = contasOrders.filter(function(o){ return ['delivered','cancelled','billed'].includes(o.status); });
   }
 
-  // Atualizar badge
+  // Atualizar badge (sempre baseado em raw, não filtrado)
   var badge = $('contas-badge');
-  if(badge) badge.textContent = contasAtivas.length;
+  if(badge) badge.textContent = (window._contasRawList||[]).filter(function(o){ return !['delivered','cancelled','billed'].includes(o.status); }).length;
+
+  // Barra de filtros das colunas
+  var f2 = window._contasColFilters;
+  var filterBar = '<div style="background:#fff;border:1px solid var(--sand-100);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end">'
+    +'<div><label style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px">Guarda-sol</label><input type="text" placeholder="ex: 7" value="'+esc(f2.umb)+'" oninput="setContasColFilter(\'umb\',this.value)" style="width:100%;padding:5px 8px;font-size:12px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></div>'
+    +'<div><label style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px">Valor</label><input type="text" placeholder="ex: 100" value="'+esc(f2.valor)+'" oninput="setContasColFilter(\'valor\',this.value)" style="width:100%;padding:5px 8px;font-size:12px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></div>'
+    +'<div><label style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px">Texto na nota</label><input type="text" placeholder="ex: dividir" value="'+esc(f2.texto)+'" oninput="setContasColFilter(\'texto\',this.value)" style="width:100%;padding:5px 8px;font-size:12px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></div>'
+    +'<button class="btn btn-sm" style="font-size:11px;padding:6px 10px" onclick="clearContasFilters()">Limpar</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:10px;font-size:11px;color:var(--sl-400)">'
+    +'<span>Ordenar:</span>'
+    +'<button type="button" onclick="setContasSort(\'umb\')" style="background:none;border:none;cursor:pointer;color:inherit;font-size:11px">Guarda-sol '+contasSortIcon('umb')+'</button>'
+    +'<button type="button" onclick="setContasSort(\'hora\')" style="background:none;border:none;cursor:pointer;color:inherit;font-size:11px">Hora '+contasSortIcon('hora')+'</button>'
+    +'<button type="button" onclick="setContasSort(\'valor\')" style="background:none;border:none;cursor:pointer;color:inherit;font-size:11px">Valor '+contasSortIcon('valor')+'</button>'
+    +'</div>';
 
   if(!contasAtivas.length && !contasFechadas.length){
-    grid.innerHTML = '<div style="padding:48px;text-align:center;color:var(--sl-400)"><div style="font-size:40px;margin-bottom:12px">🧾</div><div>Nenhuma solicitação de conta.</div></div>';
+    grid.innerHTML = filterBar + '<div style="padding:48px;text-align:center;color:var(--sl-400)"><div style="font-size:40px;margin-bottom:12px">🧾</div><div>Nenhuma solicitação de conta com esses filtros.</div></div>';
+    restoreContasFocus();
     return;
   }
 
-  var html = '';
+  var html = filterBar;
 
   // Contas pendentes
   if(contasAtivas.length){
     html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--sl-400);margin-bottom:8px">Aguardando pagamento ('+contasAtivas.length+')</div>';
     html += contasAtivas.map(function(o){
       var detalhes = (o.notes||'').split(' · ');
-      return '<div style="background:#fff;border-radius:var(--r);border:2px solid #8b5cf6;padding:16px;position:relative">'
+      return '<div style="background:#fff;border-radius:var(--r);border:2px solid #8b5cf6;padding:16px;position:relative;margin-bottom:10px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">'
-        +'<div style="font-size:14px;font-weight:700;color:#6d28d9">🧾 ☂️ Guarda-sol '+(o.umbrella_num||o.umb||'?')+'</div>'
+        +'<div style="font-size:14px;font-weight:700;color:#6d28d9">🧾 ☂️ Guarda-sol '+esc(o.umbrella_num||o.umb||'?')+'</div>'
         +'<div style="font-size:12px;color:var(--sl-400)">🕐 '+(o.time||'')+'</div>'
         +'</div>'
         +'<div style="background:#f5f3ff;border-radius:8px;padding:10px 12px;margin-bottom:12px">'
-        +detalhes.map(function(d){ return '<div style="font-size:12px;color:#5b21b6;padding:2px 0">'+d+'</div>'; }).join('')
+        +detalhes.map(function(d){ return '<div style="font-size:12px;color:#5b21b6;padding:2px 0">'+esc(d)+'</div>'; }).join('')
         +'</div>'
         +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
         +'<div style="font-size:22px;font-weight:700;color:#6d28d9">💰 '+fmt(o.total)+'</div>'
@@ -5420,10 +5609,10 @@ async function renderContas(){
   if(contasFechadas.length){
     html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--sl-400);margin:16px 0 8px">Fechadas hoje ('+contasFechadas.length+')</div>';
     html += contasFechadas.map(function(o){
-      return '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:14px;opacity:.7;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+      return '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:14px;opacity:.7;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">'
         +'<div>'
-        +'<div style="font-size:13px;font-weight:600">☂️ Guarda-sol '+(o.umbrella_num||o.umb||'?')+'</div>'
-        +'<div style="font-size:11px;color:var(--sl-400);margin-top:2px">'+(o.notes||'').split(' · ')[0]+'</div>'
+        +'<div style="font-size:13px;font-weight:600">☂️ Guarda-sol '+esc(o.umbrella_num||o.umb||'?')+'</div>'
+        +'<div style="font-size:11px;color:var(--sl-400);margin-top:2px">'+esc((o.notes||'').split(' · ')[0])+'</div>'
         +'</div>'
         +'<div style="text-align:right">'
         +'<div style="font-size:14px;font-weight:700">'+fmt(o.total)+'</div>'
@@ -5434,6 +5623,23 @@ async function renderContas(){
   }
 
   grid.innerHTML = html;
+  restoreContasFocus();
+}
+
+function restoreContasFocus(){
+  if(window._contasLastFocus){
+    setTimeout(function(){
+      var col = window._contasLastFocus;
+      var grid = $('contas-grid');
+      if(grid){
+        var inp = grid.querySelector('input[oninput*="\''+col+'\'"]');
+        if(inp){
+          inp.focus();
+          try{ inp.setSelectionRange(inp.value.length, inp.value.length); }catch(e){}
+        }
+      }
+    }, 0);
+  }
 }
 
 function getKioskUrl(){
