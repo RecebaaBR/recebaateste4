@@ -3203,6 +3203,10 @@ async function goToMenu(){
               if(sn && sn.textContent==String(updated.order_number)) renderStatusSteps(updated.status);
             }
           }
+          // Se um pedido foi cancelado e a conta já está pedida, verificar se ainda há algo a faturar
+          if(updated.status === 'cancelled' && window._billRequested){
+            checkBillStillNeeded();
+          }
         })
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',
         filter:'kiosk_id=eq.'+currentKiosk.id},
@@ -3713,6 +3717,16 @@ function openBillModal(){
     toast('⚠️ Não há consumo neste guarda-sol. Faça um pedido antes de pedir a conta.');
     return;
   }
+  // Bloqueio: só permite pedir conta se houver pelo menos 1 pedido ACEITO (não pending nem cancelado)
+  // Status que liberam: accepted, preparing, delivering, delivered, billed
+  var ACCEPTED_STATUSES = ['accepted','preparing','delivering','delivered','billed'];
+  var hasAccepted = (window._allUmbOrders || myOrders).some(function(o){
+    return ACCEPTED_STATUSES.indexOf(o.status) > -1;
+  });
+  if(!hasAccepted){
+    toast('⚠️ Aguarde o quiosque aceitar seu pedido antes de pedir a conta.');
+    return;
+  }
   var old = document.getElementById('dynamic-bill-modal');
   if(old) old.remove();
 
@@ -3818,6 +3832,16 @@ async function requestBill(type, personName, personTotal){
     closeBillModal();
     return;
   }
+  // Bloqueio defensivo: só permite pedir conta se houver pelo menos 1 pedido ACEITO
+  var ACCEPTED_STATUSES_RB = ['accepted','preparing','delivering','delivered','billed'];
+  var hasAcceptedRB = (window._allUmbOrders || myOrders).some(function(o){
+    return ACCEPTED_STATUSES_RB.indexOf(o.status) > -1;
+  });
+  if(!hasAcceptedRB){
+    toast('⚠️ Aguarde o quiosque aceitar seu pedido antes de pedir a conta.');
+    closeBillModal();
+    return;
+  }
   // Bloquear IMEDIATAMENTE para impedir cliques duplos durante o await
   window._billRequested = true;
   applyBillBlock();
@@ -3898,6 +3922,35 @@ function updateOrdersBadge(){
 // ────────────────────────────────────────────────────────
 // Bloqueio de sessão após PEDIDO DE CONTA
 // ────────────────────────────────────────────────────────
+
+// Se a conta foi pedida e todos os pedidos foram cancelados depois,
+// cancela automaticamente o PEDIDO DE CONTA pendente para o quiosque não ficar
+// com um "fantasma" sem nada pra cobrar.
+async function checkBillStillNeeded(){
+  if(!window._billRequested) return;
+  if(!isConfigured || !currentKiosk || currentKiosk.id === 'demo') return;
+  // Verificar se ainda há pedidos não cancelados (excluindo o próprio PEDIDO DE CONTA)
+  var validOrders = (window._allUmbOrders || myOrders).filter(function(o){
+    return o.status !== 'cancelled'
+        && o.status !== 'billed'
+        && o.customer_name !== 'PEDIDO DE CONTA'
+        && o.customer_name !== 'ENCERRAMENTO'
+        && o.customer_name !== 'CHAMADA DE ATENDENTE';
+  });
+  if(validOrders.length > 0) return; // ainda tem pedido válido → mantém a conta
+  // Não há mais pedidos válidos → cancelar PEDIDO DE CONTA pendente desta sessão
+  try{
+    await sb.from('orders').update({status:'cancelled'})
+      .eq('kiosk_id', currentKiosk.id)
+      .eq('umbrella_num', String(window._umb||'?'))
+      .eq('customer_name', 'PEDIDO DE CONTA')
+      .eq('status','pending');
+    window._billRequested = false;
+    applyBillBlock();
+    toast('ℹ️ Conta cancelada automaticamente (todos os pedidos foram cancelados).');
+  }catch(e){}
+}
+
 function applyBillBlock(){
   var blocked = !!window._billRequested;
   document.body.setAttribute('data-bill-blocked', blocked ? '1' : '0');
