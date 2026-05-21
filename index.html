@@ -4502,27 +4502,27 @@ var ALERT_SOUND_DATA = "data:audio/mpeg;base64,SUQzBAAAAAAGAVRYWFgAAAASAAADbWFqb
 var _alertAudio = null;
 var _audioUnlocked = false;
 
+// MP3 silencioso curtinho (data URI) usado APENAS para destravar permissão de áudio
+// no iOS Safari sem fazer barulho. Esse trick é necessário porque navegadores
+// móveis bloqueiam play() até o usuário interagir.
+var SILENT_AUDIO = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOFiBhHv/7UsQbg8gISUJsYSCBKQko1YwwkAIAh4//+r//5/+OEAaWv///+5//tSxBOACAhJSwxlYIEMCSjVjDAQAAAAJAAAAAAAAAAAAAAA';
+
 // Destrava o áudio na primeira interação do usuário (toque/clique).
-// Necessário porque navegadores móveis (iOS Safari, Android Chrome) bloqueiam
-// reprodução automática até que o usuário interaja explicitamente com a página.
 function unlockAudio(){
   if(_audioUnlocked) return;
   try{
-    // Cria e carrega o áudio em modo silencioso para "destravar" permissão
-    if(!_alertAudio){
-      _alertAudio = new Audio(ALERT_SOUND_DATA);
-      _alertAudio.preload = 'auto';
-      _alertAudio.load();
-    }
-    var originalVolume = _alertAudio.volume;
-    _alertAudio.volume = 0;
-    var p = _alertAudio.play();
+    var silent = new Audio(SILENT_AUDIO);
+    silent.volume = 0;
+    var p = silent.play();
     if(p && p.then){
       p.then(function(){
-        _alertAudio.pause();
-        _alertAudio.currentTime = 0;
-        _alertAudio.volume = originalVolume;
         _audioUnlocked = true;
+        // Pré-carregar o MP3 real (sem tocar) para reduzir latência depois
+        if(!_alertAudio){
+          _alertAudio = new Audio(ALERT_SOUND_DATA);
+          _alertAudio.preload = 'auto';
+          try{ _alertAudio.load(); }catch(e){}
+        }
       }).catch(function(){});
     }
   }catch(e){}
@@ -4533,7 +4533,6 @@ document.addEventListener('touchstart', unlockAudio, { once: false, passive: tru
 document.addEventListener('click', unlockAudio, { once: false, passive: true });
 
 // playAlertClient: toca o MP3 customizado quando o quiosque encerra a conta.
-// Recria o objeto Audio se necessário para evitar problemas de cache em iOS Safari.
 function playAlertClient(){
   if(isMuted) return;
   try{
