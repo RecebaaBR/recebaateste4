@@ -4502,28 +4502,30 @@ var ALERT_SOUND_DATA = "data:audio/mpeg;base64,SUQzBAAAAAAGAVRYWFgAAAASAAADbWFqb
 var _alertAudio = null;
 var _audioUnlocked = false;
 
-// MP3 silencioso curtinho (data URI) usado APENAS para destravar permissão de áudio
-// no iOS Safari sem fazer barulho. Esse trick é necessário porque navegadores
-// móveis bloqueiam play() até o usuário interagir.
-var SILENT_AUDIO = 'data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOFiBhHv/7UsQbg8gISUJsYSCBKQko1YwwkAIAh4//+r//5/+OEAaWv///+5//tSxBOACAhJSwxlYIEMCSjVjDAQAAAAJAAAAAAAAAAAAAAA';
-
 // Destrava o áudio na primeira interação do usuário (toque/clique).
+// Usa `muted=true` em vez de `volume=0` porque iOS Safari processa o muted
+// antes do som chegar nas caixas — sem risco de vazar nem 1ms de áudio.
 function unlockAudio(){
   if(_audioUnlocked) return;
   try{
-    var silent = new Audio(SILENT_AUDIO);
-    silent.volume = 0;
-    var p = silent.play();
+    if(!_alertAudio){
+      _alertAudio = new Audio(ALERT_SOUND_DATA);
+      _alertAudio.preload = 'auto';
+    }
+    _alertAudio.muted = true;
+    _alertAudio.currentTime = 0;
+    var p = _alertAudio.play();
     if(p && p.then){
       p.then(function(){
+        _alertAudio.pause();
+        _alertAudio.currentTime = 0;
+        _alertAudio.muted = false;
         _audioUnlocked = true;
-        // Pré-carregar o MP3 real (sem tocar) para reduzir latência depois
-        if(!_alertAudio){
-          _alertAudio = new Audio(ALERT_SOUND_DATA);
-          _alertAudio.preload = 'auto';
-          try{ _alertAudio.load(); }catch(e){}
-        }
-      }).catch(function(){});
+      }).catch(function(){
+        // Se nem o muted destravou, marca como unlocked mesmo assim
+        // para que o playAlertClient tente direto quando precisar
+        _audioUnlocked = true;
+      });
     }
   }catch(e){}
 }
@@ -4536,24 +4538,33 @@ document.addEventListener('click', unlockAudio, { once: false, passive: true });
 function playAlertClient(){
   if(isMuted) return;
   try{
-    // Sempre criar novo objeto Audio para garantir reprodução
-    var audio = new Audio(ALERT_SOUND_DATA);
-    audio.preload = 'auto';
-    audio.volume = 1.0;
-    var p = audio.play();
-    if(p && p.catch){
-      p.catch(function(err){
-        // Fallback: tentar via objeto destravado
-        if(_alertAudio){
-          try{
-            _alertAudio.currentTime = 0;
-            _alertAudio.volume = 1.0;
-            _alertAudio.play().catch(function(){});
-          }catch(e){}
-        }
-      });
+    // Estratégia 1: usar o objeto destravado (mais confiável no iOS)
+    if(_alertAudio && _audioUnlocked){
+      _alertAudio.muted = false;
+      _alertAudio.volume = 1.0;
+      _alertAudio.currentTime = 0;
+      var pa = _alertAudio.play();
+      if(pa && pa.catch){
+        pa.catch(function(){
+          // Estratégia 2: criar novo Audio (fallback)
+          tryNewAudio();
+        });
+      }
+      return;
     }
+    // Estratégia 2 direta: criar novo Audio
+    tryNewAudio();
   }catch(e){}
+
+  function tryNewAudio(){
+    try{
+      var audio = new Audio(ALERT_SOUND_DATA);
+      audio.preload = 'auto';
+      audio.volume = 1.0;
+      var p = audio.play();
+      if(p && p.catch) p.catch(function(){});
+    }catch(e){}
+  }
 }
 // playAlert: beep original via Web Audio API — usado no painel do quiosque para novos pedidos.
 function playAlert(){
