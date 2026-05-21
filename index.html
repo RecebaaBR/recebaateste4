@@ -892,13 +892,19 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="kpage" id="kpage-orders">
         <div class="page-header"><div class="page-title">Pedidos ao vivo</div><div class="live-dot">Ao vivo</div></div>
-        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
           <button class="hf-btn active" onclick="liveFilter('all',this)">Todos</button>
           <button class="hf-btn" onclick="liveFilter('pending',this)">📋 Recebido</button>
           <button class="hf-btn" onclick="liveFilter('accepted',this)">✅ Confirmado</button>
           <button class="hf-btn" onclick="liveFilter('preparing',this)">👨‍🍳 Em preparo</button>
           <button class="hf-btn" onclick="liveFilter('delivering',this)">🏃 A caminho</button>
           <button class="hf-btn" onclick="liveFilter('delivered',this)">🎉 Entregue</button>
+        </div>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em;margin-right:4px">Tipo:</span>
+          <button class="hf-btn lt-btn active" onclick="liveTypeFilter('all',this)">Todos</button>
+          <button class="hf-btn lt-btn" onclick="liveTypeFilter('drinks',this)" style="border-left:3px solid #0ea5e9">🍹 Bebidas</button>
+          <button class="hf-btn lt-btn" onclick="liveTypeFilter('foods',this)" style="border-left:3px solid #f59e0b">🍽️ Comida/Outros</button>
         </div>
         <div class="orders-grid" id="live-orders-grid"></div>
       </div>
@@ -2063,13 +2069,19 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="kpage" id="kpage-orders">
         <div class="page-header"><div class="page-title">Pedidos ao vivo</div><div class="live-dot">Ao vivo</div></div>
-        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap">
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
           <button class="hf-btn active" onclick="liveFilter('all',this)">Todos</button>
           <button class="hf-btn" onclick="liveFilter('pending',this)">📋 Recebido</button>
           <button class="hf-btn" onclick="liveFilter('accepted',this)">✅ Confirmado</button>
           <button class="hf-btn" onclick="liveFilter('preparing',this)">👨‍🍳 Em preparo</button>
           <button class="hf-btn" onclick="liveFilter('delivering',this)">🏃 A caminho</button>
           <button class="hf-btn" onclick="liveFilter('delivered',this)">🎉 Entregue</button>
+        </div>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em;margin-right:4px">Tipo:</span>
+          <button class="hf-btn lt-btn active" onclick="liveTypeFilter('all',this)">Todos</button>
+          <button class="hf-btn lt-btn" onclick="liveTypeFilter('drinks',this)" style="border-left:3px solid #0ea5e9">🍹 Bebidas</button>
+          <button class="hf-btn lt-btn" onclick="liveTypeFilter('foods',this)" style="border-left:3px solid #f59e0b">🍽️ Comida/Outros</button>
         </div>
         <div class="orders-grid" id="live-orders-grid"></div>
       </div>
@@ -2496,6 +2508,7 @@ var myOrders = [];         // pedidos feitos nesta sessão (cliente)
 var cart = {};
 var histFilterVal = 'all';
 var liveFilterVal = 'all';
+var liveTypeFilterVal = 'all'; // 'all' | 'drinks' | 'foods'
 var histPeriod = 'today';
 var realtimeChannel = null;
 var photoFile = null;      // arquivo de foto selecionado
@@ -3475,7 +3488,7 @@ function isDrink(item){
 }
 
 // Marca de versão para confirmar visualmente que o código novo está rodando
-window._APP_VERSION = 'v126-split-orders';
+window._APP_VERSION = 'v129-umb-filters';
 console.log('[Recebaa] Versão:', window._APP_VERSION);
 setTimeout(function(){
   // Inserir badge de versão num canto da tela
@@ -4590,32 +4603,45 @@ var ALERT_SOUND_DATA = "data:audio/mpeg;base64,SUQzBAAAAAAGAVRYWFgAAAASAAADbWFqb
 var _alertAudio = null;
 var _audioUnlocked = false;
 
-// Destrava o áudio na primeira interação do usuário (toque/clique).
-// Usa `muted=true` em vez de `volume=0` porque iOS Safari processa o muted
-// antes do som chegar nas caixas — sem risco de vazar nem 1ms de áudio.
+// Destrava o áudio na primeira interação do usuário usando WebAudio API.
+// WebAudio é mais confiável que <audio>.play() porque o iOS Safari aceita
+// um AudioContext.resume() como gesto de unlock, sem precisar tocar nenhum
+// arquivo de áudio (zero risco de vazar som).
 function unlockAudio(){
   if(_audioUnlocked) return;
   try{
+    // Pré-criar o <audio> SEM tocar ainda, só pra ele estar pronto
     if(!_alertAudio){
       _alertAudio = new Audio(ALERT_SOUND_DATA);
       _alertAudio.preload = 'auto';
+      try{ _alertAudio.load(); }catch(e){}
     }
-    _alertAudio.muted = true;
-    _alertAudio.currentTime = 0;
-    var p = _alertAudio.play();
-    if(p && p.then){
-      p.then(function(){
-        _alertAudio.pause();
-        _alertAudio.currentTime = 0;
-        _alertAudio.muted = false;
-        _audioUnlocked = true;
-      }).catch(function(){
-        // Se nem o muted destravou, marca como unlocked mesmo assim
-        // para que o playAlertClient tente direto quando precisar
-        _audioUnlocked = true;
-      });
+
+    // Criar e resumir um AudioContext — isso é o que destrava a permissão
+    // de áudio do iOS, sem tocar nada audível.
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(AC){
+      if(!window._unlockCtx){
+        window._unlockCtx = new AC();
+      }
+      var ctx = window._unlockCtx;
+      // Resume retorna uma Promise mas é seguro chamar mesmo sem await
+      if(ctx.state === 'suspended'){
+        try{ ctx.resume(); }catch(e){}
+      }
+      // Tocar um buffer silencioso de 1 amostra (literalmente 0 segundos audíveis)
+      try{
+        var buffer = ctx.createBuffer(1, 1, 22050);
+        var source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+      }catch(e){}
     }
-  }catch(e){}
+    _audioUnlocked = true;
+  }catch(e){
+    _audioUnlocked = true;
+  }
 }
 
 // Registra unlock no primeiro toque/clique da página
@@ -4626,33 +4652,25 @@ document.addEventListener('click', unlockAudio, { once: false, passive: true });
 function playAlertClient(){
   if(isMuted) return;
   try{
-    // Estratégia 1: usar o objeto destravado (mais confiável no iOS)
-    if(_alertAudio && _audioUnlocked){
-      _alertAudio.muted = false;
-      _alertAudio.volume = 1.0;
-      _alertAudio.currentTime = 0;
-      var pa = _alertAudio.play();
-      if(pa && pa.catch){
-        pa.catch(function(){
-          // Estratégia 2: criar novo Audio (fallback)
-          tryNewAudio();
-        });
-      }
-      return;
+    // Cria novo objeto Audio a cada chamada (mais confiável em iOS Safari)
+    var audio = new Audio(ALERT_SOUND_DATA);
+    audio.preload = 'auto';
+    audio.volume = 1.0;
+    var p = audio.play();
+    if(p && p.catch){
+      p.catch(function(){
+        // Fallback: tentar pelo objeto _alertAudio pré-carregado
+        if(_alertAudio){
+          try{
+            _alertAudio.muted = false;
+            _alertAudio.volume = 1.0;
+            _alertAudio.currentTime = 0;
+            _alertAudio.play().catch(function(){});
+          }catch(e){}
+        }
+      });
     }
-    // Estratégia 2 direta: criar novo Audio
-    tryNewAudio();
   }catch(e){}
-
-  function tryNewAudio(){
-    try{
-      var audio = new Audio(ALERT_SOUND_DATA);
-      audio.preload = 'auto';
-      audio.volume = 1.0;
-      var p = audio.play();
-      if(p && p.catch) p.catch(function(){});
-    }catch(e){}
-  }
 }
 // playAlert: beep original via Web Audio API — usado no painel do quiosque para novos pedidos.
 function playAlert(){
@@ -4738,10 +4756,36 @@ function liveFilter(f, btn){
   // Atualizar visual dos botões: pega só os que invocam liveFilter
   document.querySelectorAll('button.hf-btn').forEach(function(b){
     var oc = b.getAttribute('onclick') || '';
-    if(oc.indexOf('liveFilter') > -1) b.classList.remove('active');
+    if(oc.indexOf('liveFilter(') > -1) b.classList.remove('active');
   });
   if(btn) btn.classList.add('active');
   renderLiveOrders();
+}
+
+function liveTypeFilter(f, btn){
+  liveTypeFilterVal = f;
+  // Atualizar visual dos botões da linha de tipo
+  document.querySelectorAll('button.lt-btn').forEach(function(b){
+    b.classList.remove('active');
+  });
+  if(btn) btn.classList.add('active');
+  renderLiveOrders();
+}
+
+// Detecta se um pedido pertence ao grupo 'drinks' (bebidas) ou 'foods' (comida)
+// com base na tag [BEBIDAS]/[COMIDA] nas notes ou, em fallback, nas categorias dos itens
+function orderTypeOf(o){
+  var notes = String(o.notes || '');
+  if(/\[BEBIDAS\]/.test(notes)) return 'drinks';
+  if(/\[COMIDA\]/.test(notes)) return 'foods';
+  // Fallback: olhar itens
+  var items = o.items || [];
+  if(!items.length) return 'foods';
+  var allDrinks = items.every(function(i){ return isDrink(i); });
+  if(allDrinks) return 'drinks';
+  var anyDrink = items.some(function(i){ return isDrink(i); });
+  if(anyDrink) return 'mixed';
+  return 'foods';
 }
 
 function renderLiveOrders(){
@@ -4758,10 +4802,18 @@ function renderLiveOrders(){
     if(isSpecial) return false;
     // Aplicar filtro de status
     if(liveFilterVal !== 'all'){
-      return o.status === liveFilterVal;
+      if(o.status !== liveFilterVal) return false;
+    } else {
+      // Sem filtro: comportamento original (só ativos)
+      if(['delivered','cancelled','billed'].includes(o.status)) return false;
     }
-    // Sem filtro: comportamento original (só ativos)
-    return !['delivered','cancelled','billed'].includes(o.status);
+    // Aplicar filtro de tipo (bebidas/comida)
+    if(liveTypeFilterVal !== 'all'){
+      var t = orderTypeOf(o);
+      if(liveTypeFilterVal === 'drinks' && t !== 'drinks') return false;
+      if(liveTypeFilterVal === 'foods'  && t !== 'foods') return false;
+    }
+    return true;
   });
 
   // Alertas de chamada de atendente (sem contas)
@@ -5754,6 +5806,13 @@ function getKioskUrl(){
   return window.location.origin + window.location.pathname;
 }
 
+// Filtro da aba Guarda-sóis: 'all' | 'open' | 'free'
+window._umbStatusFilter = window._umbStatusFilter || 'all';
+function setUmbStatusFilter(val){
+  window._umbStatusFilter = val;
+  renderUmbrellas();
+}
+
 async function renderUmbrellas(){
   var grid=$('umb-grid'); if(!grid) return;
   var umbs=[];
@@ -5765,6 +5824,62 @@ async function renderUmbrellas(){
     var areas=['Frente mar','Frente mar','VIP','Frente mar','VIP','Standard'];
     umbs=Array.from({length:20},function(_,i){return {id:'u'+(i+1),number:i+1,label:'Guarda-sol '+String(i+1).padStart(2,'0'),area:areas[i%areas.length],is_active:true};});
   }
+
+  // Buscar pedidos ativos por guarda-sol (após o último ENCERRAMENTO de cada um)
+  var openByUmb = {}; // { '7': { total: 220.50, count: 3, hasBill: true } }
+  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    // Último ENCERRAMENTO de cada guarda-sol
+    var {data:encs} = await sb.from('orders')
+      .select('umbrella_num,created_at')
+      .eq('kiosk_id', currentKiosk.id)
+      .eq('customer_name', 'ENCERRAMENTO')
+      .order('created_at', {ascending:false})
+      .limit(1000);
+    var lastEncByUmb = {};
+    (encs||[]).forEach(function(e){
+      if(!lastEncByUmb[e.umbrella_num]) lastEncByUmb[e.umbrella_num] = e.created_at;
+    });
+    // Pedidos não-encerrados nem cancelados
+    var {data:active} = await sb.from('orders')
+      .select('umbrella_num,total,status,customer_name,created_at')
+      .eq('kiosk_id', currentKiosk.id)
+      .not('customer_name','eq','ENCERRAMENTO')
+      .not('status','eq','cancelled')
+      .not('status','eq','billed')
+      .order('created_at',{ascending:false})
+      .limit(1000);
+    (active||[]).forEach(function(o){
+      // Pular se for de sessão antiga (anterior ao último ENCERRAMENTO)
+      var lastEnc = lastEncByUmb[o.umbrella_num];
+      if(lastEnc && o.created_at <= lastEnc) return;
+      var key = String(o.umbrella_num||'');
+      if(!openByUmb[key]) openByUmb[key] = { total:0, count:0, hasBill:false };
+      // Não somar especiais (PEDIDO DE CONTA e CHAMADA DE ATENDENTE não somam ao total)
+      if(o.customer_name === 'PEDIDO DE CONTA') openByUmb[key].hasBill = true;
+      if(o.customer_name !== 'PEDIDO DE CONTA' && o.customer_name !== 'CHAMADA DE ATENDENTE'){
+        openByUmb[key].total += Number(o.total||0);
+        openByUmb[key].count += 1;
+      }
+    });
+  }
+
+  // Contadores para os botões
+  var totOpen = 0, totFree = 0;
+  umbs.forEach(function(u){
+    var info = openByUmb[String(u.number)];
+    if(info && (info.count > 0 || info.hasBill)) totOpen++;
+    else totFree++;
+  });
+
+  // Aplicar filtro
+  var filterVal = window._umbStatusFilter;
+  var filtered = umbs.filter(function(u){
+    var info = openByUmb[String(u.number)];
+    var isOpen = info && (info.count > 0 || info.hasBill);
+    if(filterVal === 'open') return isOpen;
+    if(filterVal === 'free') return !isOpen;
+    return true;
+  });
 
   var baseUrl = getKioskUrl();
   var kioskId = currentKiosk ? currentKiosk.id : '';
@@ -5781,22 +5896,50 @@ async function renderUmbrellas(){
     + '<button class="btn btn-dark btn-sm" style="margin:4px" id="print-qr-btn">🖨️ Ver QR grande</button>'
     + '</div>';
 
-  var umbHtml = umbs.map(function(u){
+  // Botões de filtro
+  var filterBar = '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;grid-column:1/-1">'
+    +'<button class="hf-btn umb-fbtn '+(filterVal==='all'?'active':'')+'" onclick="setUmbStatusFilter(\'all\')">Todos ('+umbs.length+')</button>'
+    +'<button class="hf-btn umb-fbtn '+(filterVal==='open'?'active':'')+'" onclick="setUmbStatusFilter(\'open\')" style="border-left:3px solid #ef4444">🔴 Com conta aberta ('+totOpen+')</button>'
+    +'<button class="hf-btn umb-fbtn '+(filterVal==='free'?'active':'')+'" onclick="setUmbStatusFilter(\'free\')" style="border-left:3px solid #10b981">🟢 Livres ('+totFree+')</button>'
+    +'</div>';
+
+  var umbHtml = filtered.map(function(u){
     var isActive = u.is_active !== false;
-    return '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:14px;text-align:center;position:relative;opacity:'+(isActive?'1':'0.5')+'">'
-      +'<div style="position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:'+(isActive?'var(--green)':'var(--sl-300)')+'"></div>'
+    var info = openByUmb[String(u.number)];
+    var isOpen = info && (info.count > 0 || info.hasBill);
+    // Visual diferente para guarda-sol com conta aberta
+    var cardBorder = isOpen ? '2px solid #ef4444' : '1px solid var(--sand-100)';
+    var cardBg = isOpen ? 'linear-gradient(180deg,#fff 0%,#fef2f2 100%)' : '#fff';
+    var statusDot = isActive ? (isOpen ? '#ef4444' : '#10b981') : 'var(--sl-300)';
+    var statusBadge = '';
+    if(isOpen){
+      statusBadge = '<div style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;display:inline-block;margin:6px 0 4px">🔴 OCUPADO</div>'
+        +'<div style="font-size:11px;color:var(--sl-500);margin-bottom:4px">'+info.count+' pedido(s) · '+fmt(info.total)+'</div>'
+        +(info.hasBill?'<div style="font-size:10px;color:#8b5cf6;font-weight:600;margin-bottom:4px">🧾 Conta solicitada</div>':'');
+    } else {
+      statusBadge = '<div style="background:#10b981;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;display:inline-block;margin:6px 0 4px">🟢 LIVRE</div>';
+    }
+    return '<div style="background:'+cardBg+';border-radius:var(--r);border:'+cardBorder+';padding:14px;text-align:center;position:relative;opacity:'+(isActive?'1':'0.5')+'">'
+      +'<div style="position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:'+statusDot+'"></div>'
       +'<div style="font-size:28px;margin-bottom:6px">☂️</div>'
       +'<div style="font-family:var(--font-d);font-size:18px;color:var(--sl-800)">Nº '+String(u.number).padStart(2,'0')+'</div>'
-      +'<div style="font-size:11px;color:var(--sl-400);margin-bottom:8px">'+(u.area||'')+'</div>'
-      +'<div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap">'
+      +'<div style="font-size:11px;color:var(--sl-400);margin-bottom:4px">'+esc(u.area||'')+'</div>'
+      +statusBadge
+      +'<div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:6px">'
       +'<button class="btn btn-ghost btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" data-area="'+(u.area||'')+'" data-label="'+(u.label||'')+'" data-active="'+isActive+'" onclick="editUmbFromBtn(this)">✏️ Editar</button>'
       +'<button class="btn btn-danger btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" onclick="delUmbFromBtn(this)">🗑️</button>'
       +'</div>'
-      +'<button class="btn btn-sm" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;font-size:11px" data-num="'+u.number+'" onclick="closeUmbrellaSession(this.dataset.num)">💰 Encerrar conta</button>'
+      +(isOpen
+        ? '<button class="btn btn-sm" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;font-size:11px" data-num="'+u.number+'" onclick="closeUmbrellaSession(this.dataset.num)">💰 Encerrar conta</button>'
+        : '')
       +'</div>';
   }).join('');
 
-  grid.innerHTML = qrSection + umbHtml;
+  if(!filtered.length){
+    umbHtml = '<div style="padding:32px;text-align:center;color:var(--sl-400);grid-column:1/-1">Nenhum guarda-sol com esse filtro.</div>';
+  }
+
+  grid.innerHTML = qrSection + filterBar + umbHtml;
 
   setTimeout(function(){
     var copyBtn = document.getElementById('copy-qr-btn');
