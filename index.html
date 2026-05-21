@@ -906,9 +906,10 @@ tr:hover td{background:var(--sand-50)}
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px">
           <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por tipo</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="hf-btn lt-btn active" onclick="liveTypeFilter('all',this)" style="flex:1;min-width:90px">🔄 Tudo</button>
-            <button class="hf-btn lt-btn" onclick="liveTypeFilter('drinks',this)" style="flex:1;min-width:90px;border-left:3px solid #0ea5e9">🍹 Bebidas</button>
-            <button class="hf-btn lt-btn" onclick="liveTypeFilter('foods',this)" style="flex:1;min-width:90px;border-left:3px solid #f59e0b">🍽️ Comida</button>
+            <button class="hf-btn lt-btn active" onclick="liveTypeFilter('all',this)" style="flex:1;min-width:80px">🔄 Tudo</button>
+            <button class="hf-btn lt-btn" onclick="liveTypeFilter('drinks',this)" style="flex:1;min-width:80px;border-left:3px solid #0ea5e9">🍹 Bebidas</button>
+            <button class="hf-btn lt-btn" onclick="liveTypeFilter('foods',this)" style="flex:1;min-width:80px;border-left:3px solid #f59e0b">🍽️ Comida</button>
+            <button class="hf-btn lt-btn" onclick="liveTypeFilter('others',this)" style="flex:1;min-width:80px;border-left:3px solid #10b981">📦 Outros</button>
           </div>
         </div>
         <div class="orders-grid" id="live-orders-grid"></div>
@@ -922,30 +923,33 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </div>
         <!-- Filtros de período -->
-        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-          <div>
-            <label class="label" style="margin-bottom:4px">Período</label>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:12px 14px;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por período</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button class="hf-btn active" id="hp-today" onclick="setHistPeriod('today',this)">Hoje</button>
               <button class="hf-btn" id="hp-week" onclick="setHistPeriod('week',this)">7 dias</button>
               <button class="hf-btn" id="hp-month" onclick="setHistPeriod('month',this)">Este mês</button>
               <button class="hf-btn" id="hp-custom" onclick="setHistPeriod('custom',this)">Intervalo</button>
             </div>
-          </div>
-          <div id="hist-custom-dates" style="display:none;gap:8px;align-items:flex-end;flex-wrap:wrap">
-            <div><label class="label">De</label><input class="input" type="date" id="hist-date-from" style="width:auto"/></div>
-            <div><label class="label">Até</label><input class="input" type="date" id="hist-date-to" style="width:auto"/></div>
-            <button class="btn btn-ocean btn-sm" onclick="renderHist()">Filtrar</button>
+            <div id="hist-custom-dates" style="display:none;gap:8px;align-items:flex-end;flex-wrap:wrap">
+              <div><label class="label">De</label><input class="input" type="date" id="hist-date-from" style="width:auto"/></div>
+              <div><label class="label">Até</label><input class="input" type="date" id="hist-date-to" style="width:auto"/></div>
+              <button class="btn btn-ocean btn-sm" onclick="renderHist()">Filtrar</button>
+            </div>
           </div>
         </div>
-        <div class="hist-filters">
-          <button class="hf-btn active" onclick="histFilter('all',this)">Todos</button>
-          <button class="hf-btn" onclick="histFilter('pending',this)">⏳ Pendente</button>
-          <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
-          <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
-          <button class="hf-btn" onclick="histFilter('billed',this)">💰 Faturado</button>
-          <button class="hf-btn" onclick="histFilter('waiter',this)">🙋 Garçom</button>
-          <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:12px 14px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por status</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="hf-btn active" onclick="histFilter('all',this)">Todos</button>
+            <button class="hf-btn" onclick="histFilter('pending',this)">⏳ Pendente</button>
+            <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
+            <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
+            <button class="hf-btn" onclick="histFilter('billed',this)">💰 Faturado</button>
+            <button class="hf-btn" onclick="histFilter('waiter',this)">🙋 Garçom</button>
+            <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
+          </div>
         </div>
         <div class="hist-table" id="hist-table"></div>
       </div>
@@ -2088,9 +2092,10 @@ tr:hover td{background:var(--sand-50)}
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px">
           <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por tipo</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="hf-btn lt-btn active" onclick="liveTypeFilter('all',this)" style="flex:1;min-width:90px">🔄 Tudo</button>
-            <button class="hf-btn lt-btn" onclick="liveTypeFilter('drinks',this)" style="flex:1;min-width:90px;border-left:3px solid #0ea5e9">🍹 Bebidas</button>
-            <button class="hf-btn lt-btn" onclick="liveTypeFilter('foods',this)" style="flex:1;min-width:90px;border-left:3px solid #f59e0b">🍽️ Comida</button>
+            <button class="hf-btn lt-btn active" onclick="liveTypeFilter('all',this)" style="flex:1;min-width:80px">🔄 Tudo</button>
+            <button class="hf-btn lt-btn" onclick="liveTypeFilter('drinks',this)" style="flex:1;min-width:80px;border-left:3px solid #0ea5e9">🍹 Bebidas</button>
+            <button class="hf-btn lt-btn" onclick="liveTypeFilter('foods',this)" style="flex:1;min-width:80px;border-left:3px solid #f59e0b">🍽️ Comida</button>
+            <button class="hf-btn lt-btn" onclick="liveTypeFilter('others',this)" style="flex:1;min-width:80px;border-left:3px solid #10b981">📦 Outros</button>
           </div>
         </div>
         <div class="orders-grid" id="live-orders-grid"></div>
@@ -2104,30 +2109,33 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </div>
         <!-- Filtros de período -->
-        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:12px 14px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
-          <div>
-            <label class="label" style="margin-bottom:4px">Período</label>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:12px 14px;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por período</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button class="hf-btn active" id="hp-today" onclick="setHistPeriod('today',this)">Hoje</button>
               <button class="hf-btn" id="hp-week" onclick="setHistPeriod('week',this)">7 dias</button>
               <button class="hf-btn" id="hp-month" onclick="setHistPeriod('month',this)">Este mês</button>
               <button class="hf-btn" id="hp-custom" onclick="setHistPeriod('custom',this)">Intervalo</button>
             </div>
-          </div>
-          <div id="hist-custom-dates" style="display:none;gap:8px;align-items:flex-end;flex-wrap:wrap">
-            <div><label class="label">De</label><input class="input" type="date" id="hist-date-from" style="width:auto"/></div>
-            <div><label class="label">Até</label><input class="input" type="date" id="hist-date-to" style="width:auto"/></div>
-            <button class="btn btn-ocean btn-sm" onclick="renderHist()">Filtrar</button>
+            <div id="hist-custom-dates" style="display:none;gap:8px;align-items:flex-end;flex-wrap:wrap">
+              <div><label class="label">De</label><input class="input" type="date" id="hist-date-from" style="width:auto"/></div>
+              <div><label class="label">Até</label><input class="input" type="date" id="hist-date-to" style="width:auto"/></div>
+              <button class="btn btn-ocean btn-sm" onclick="renderHist()">Filtrar</button>
+            </div>
           </div>
         </div>
-        <div class="hist-filters">
-          <button class="hf-btn active" onclick="histFilter('all',this)">Todos</button>
-          <button class="hf-btn" onclick="histFilter('pending',this)">⏳ Pendente</button>
-          <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
-          <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
-          <button class="hf-btn" onclick="histFilter('billed',this)">💰 Faturado</button>
-          <button class="hf-btn" onclick="histFilter('waiter',this)">🙋 Garçom</button>
-          <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:12px 14px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por status</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="hf-btn active" onclick="histFilter('all',this)">Todos</button>
+            <button class="hf-btn" onclick="histFilter('pending',this)">⏳ Pendente</button>
+            <button class="hf-btn" onclick="histFilter('preparing',this)">👨‍🍳 Em produção</button>
+            <button class="hf-btn" onclick="histFilter('delivered',this)">✅ Entregue</button>
+            <button class="hf-btn" onclick="histFilter('billed',this)">💰 Faturado</button>
+            <button class="hf-btn" onclick="histFilter('waiter',this)">🙋 Garçom</button>
+            <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
+          </div>
         </div>
         <div class="hist-table" id="hist-table"></div>
       </div>
@@ -3483,22 +3491,29 @@ function closeCart(){
   $('cart-drawer').classList.remove('open');
 }
 
-// Detecta se um item do carrinho é bebida com base na categoria do produto
-function isDrink(item){
+// Detecta o grupo de um item: 'drinks' (bebidas), 'others' (outros) ou 'foods' (comida).
+// Baseado no nome da categoria do produto.
+function getOrderGroup(item){
   var prod = catalog.find(function(p){ return p.id === item.id || p.name === item.name; });
-  if(!prod) return false;
+  if(!prod) return 'foods';
   var catId = prod.category_id;
-  if(!catId) return false;
+  if(!catId) return 'foods';
   var cat = (dbCategories.length ? dbCategories : (typeof MOCK_CATS!=='undefined' ? MOCK_CATS : []))
     .find(function(c){ return String(c.id) === String(catId); });
-  if(!cat) return false;
+  if(!cat) return 'foods';
   var catName = String(cat.name||'').toLowerCase();
-  // Bebidas, Cervejas, Drinks, Sucos, Refrigerantes
-  return /beb|cerv|drink|suco|refrig/i.test(catName);
+  if(/beb|cerv|drink|suco|refrig/i.test(catName)) return 'drinks';
+  if(/outro/i.test(catName)) return 'others';
+  return 'foods';
+}
+
+// Mantida para compatibilidade
+function isDrink(item){
+  return getOrderGroup(item) === 'drinks';
 }
 
 // Marca de versão para confirmar visualmente que o código novo está rodando
-window._APP_VERSION = 'v131-status-label';
+window._APP_VERSION = 'v134-clean-filters';
 console.log('[Recebaa] Versão:', window._APP_VERSION);
 setTimeout(function(){
   // Inserir badge de versão num canto da tela
@@ -3542,17 +3557,23 @@ async function placeOrder(){
     return;
   }
 
-  // Dividir itens em 2 grupos: bebidas vs comida
-  var drinks = items.filter(isDrink);
-  var foods  = items.filter(function(i){ return !isDrink(i); });
+  // Dividir itens em até 3 grupos: bebidas, outros, comida
+  var drinks = items.filter(function(i){ return getOrderGroup(i) === 'drinks'; });
+  var others = items.filter(function(i){ return getOrderGroup(i) === 'others'; });
+  var foods  = items.filter(function(i){ return getOrderGroup(i) === 'foods'; });
 
-  // Definir os grupos que vão virar pedidos separados
-  var groups = [];
-  if(drinks.length && foods.length){
-    groups.push({ kind: 'drinks', items: drinks, label: 'bebidas' });
-    groups.push({ kind: 'foods',  items: foods,  label: 'comida' });
+  // Definir os grupos que vão virar pedidos separados (só inclui não-vazios)
+  var nonEmpty = [];
+  if(drinks.length) nonEmpty.push({ kind: 'drinks', items: drinks, label: 'bebidas' });
+  if(others.length) nonEmpty.push({ kind: 'others', items: others, label: 'outros'  });
+  if(foods.length)  nonEmpty.push({ kind: 'foods',  items: foods,  label: 'comida'  });
+
+  var groups;
+  if(nonEmpty.length > 1){
+    groups = nonEmpty;
   } else {
-    groups.push({ kind: 'single', items: items, label: '' });
+    // Carrinho 100% de um único grupo → pedido único, sem tag
+    groups = [{ kind: 'single', items: items, label: '' }];
   }
 
   setLoading('place-order-btn',true,'Enviando...');
@@ -3565,8 +3586,11 @@ async function placeOrder(){
     var g = groups[gi];
     var groupItems = g.items;
     var groupTotal = groupItems.reduce(function(s,i){ return s + i.price * i.qty; }, 0);
-    // Marca a nota com o tipo do pedido (drinks/foods)
-    var noteSuffix = g.kind === 'single' ? '' : (g.kind === 'drinks' ? ' [BEBIDAS]' : ' [COMIDA]');
+    // Marca a nota com o tipo do pedido (drinks/foods/others)
+    var noteSuffix = '';
+    if(g.kind === 'drinks') noteSuffix = ' [BEBIDAS]';
+    else if(g.kind === 'foods')  noteSuffix = ' [COMIDA]';
+    else if(g.kind === 'others') noteSuffix = ' [OUTROS]';
     var notesFinal = (notesValue || '') + noteSuffix;
 
     if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
@@ -3633,9 +3657,10 @@ async function placeOrder(){
   // Toast informativo se foi dividido
   if(groups.length > 1){
     var nums = createdNumbers.map(function(c){
-      return '#'+c.num+' ('+(c.kind === 'drinks' ? 'bebidas' : 'comida')+')';
-    }).join(' e ');
-    toast('🍹🍽️ Seu pedido foi dividido em: '+nums);
+      var lab = c.kind === 'drinks' ? 'bebidas' : (c.kind === 'others' ? 'outros' : 'comida');
+      return '#'+c.num+' ('+lab+')';
+    }).join(' · ');
+    toast('🍹🍽️📦 Seu pedido foi dividido em: '+nums);
   }
 
   setLoading('place-order-btn',false,'Enviar Pedido 🚀');
@@ -4151,15 +4176,17 @@ function renderMyOrders(){
       +'<div style="font-size:13px;font-weight:700">'+fmt(personTotal)+'</div></div>';
     personOrders.forEach(function(o){
       var p=PILL[o.status]||{l:o.status,c:''};
-      // Detectar tag de grupo (bebidas/comida)
+      // Detectar tag de grupo (bebidas/comida/outros)
       var rawN = String(o.notes||'');
       var groupBadge = '';
       if(/\[BEBIDAS\]/.test(rawN)){
         groupBadge = '<span style="font-size:10px;background:#0ea5e9;color:#fff;padding:2px 8px;border-radius:99px;font-weight:600;margin-left:6px">🍹 Bebidas</span>';
+      } else if(/\[OUTROS\]/.test(rawN)){
+        groupBadge = '<span style="font-size:10px;background:#10b981;color:#fff;padding:2px 8px;border-radius:99px;font-weight:600;margin-left:6px">📦 Outros</span>';
       } else if(/\[COMIDA\]/.test(rawN)){
         groupBadge = '<span style="font-size:10px;background:#f59e0b;color:#fff;padding:2px 8px;border-radius:99px;font-weight:600;margin-left:6px">🍽️ Comida</span>';
       }
-      var notesClean = rawN.replace(/\s*\[(BEBIDAS|COMIDA)\]\s*/g, '').trim();
+      var notesClean = rawN.replace(/\s*\[(BEBIDAS|COMIDA|OUTROS)\]\s*/g, '').trim();
       html+='<div class="my-order-card" data-s="'+o.status+'" style="border-radius:0;border:none;border-bottom:1px solid var(--sand-50);margin-bottom:0">'
         +'<div class="my-order-head"><div class="my-order-num">Pedido #'+o.order_number+groupBadge+'</div><span class="pill '+p.c+'">'+p.l+'</span></div>'
         +'<div class="my-order-items-txt">'+(o.items||[]).map(function(i){
@@ -4782,20 +4809,20 @@ function liveTypeFilter(f, btn){
   renderLiveOrders();
 }
 
-// Detecta se um pedido pertence ao grupo 'drinks' (bebidas) ou 'foods' (comida)
-// com base na tag [BEBIDAS]/[COMIDA] nas notes ou, em fallback, nas categorias dos itens
+// Detecta se um pedido pertence a 'drinks', 'foods' ou 'others'
+// com base na tag [BEBIDAS]/[COMIDA]/[OUTROS] nas notes ou nas categorias dos itens
 function orderTypeOf(o){
   var notes = String(o.notes || '');
   if(/\[BEBIDAS\]/.test(notes)) return 'drinks';
-  if(/\[COMIDA\]/.test(notes)) return 'foods';
-  // Fallback: olhar itens
+  if(/\[OUTROS\]/.test(notes))  return 'others';
+  if(/\[COMIDA\]/.test(notes))  return 'foods';
+  // Fallback: olhar itens (todos do mesmo grupo)
   var items = o.items || [];
   if(!items.length) return 'foods';
-  var allDrinks = items.every(function(i){ return isDrink(i); });
-  if(allDrinks) return 'drinks';
-  var anyDrink = items.some(function(i){ return isDrink(i); });
-  if(anyDrink) return 'mixed';
-  return 'foods';
+  var groups = items.map(getOrderGroup);
+  var allEq = groups.every(function(g){ return g === groups[0]; });
+  if(allEq) return groups[0];
+  return 'mixed';
 }
 
 function renderLiveOrders(){
@@ -4817,11 +4844,12 @@ function renderLiveOrders(){
       // Sem filtro: comportamento original (só ativos)
       if(['delivered','cancelled','billed'].includes(o.status)) return false;
     }
-    // Aplicar filtro de tipo (bebidas/comida)
+    // Aplicar filtro de tipo (bebidas/comida/outros)
     if(liveTypeFilterVal !== 'all'){
       var t = orderTypeOf(o);
       if(liveTypeFilterVal === 'drinks' && t !== 'drinks') return false;
       if(liveTypeFilterVal === 'foods'  && t !== 'foods') return false;
+      if(liveTypeFilterVal === 'others' && t !== 'others') return false;
     }
     return true;
   });
@@ -4883,7 +4911,7 @@ function orderCard(o){
   const acts=(STATUS_NEXT[o.status]||[]).map(a=>
     '<button class="btn btn-sm '+(a.danger?'btn-danger':'btn-dark')+'" onclick="advOrder(\''+o.id+'\',\''+a.s+'\')">'+a.l+'</button>'
   ).join('');
-  // Detectar marcador [BEBIDAS] ou [COMIDA] e separar da nota visível
+  // Detectar marcador [BEBIDAS], [OUTROS] ou [COMIDA] e separar da nota visível
   var rawNotes = o.notes || '';
   var groupTag = '';
   var groupBorder = '';
@@ -4891,6 +4919,10 @@ function orderCard(o){
     groupTag = '<span style="font-size:11px;background:#0ea5e9;color:#fff;padding:2px 8px;border-radius:99px;font-weight:600">🍹 Bebidas</span>';
     groupBorder = 'border-left:4px solid #0ea5e9;';
     rawNotes = rawNotes.replace(/\s*\[BEBIDAS\]\s*/g, '').trim();
+  } else if(/\[OUTROS\]/.test(rawNotes)){
+    groupTag = '<span style="font-size:11px;background:#10b981;color:#fff;padding:2px 8px;border-radius:99px;font-weight:600">📦 Outros</span>';
+    groupBorder = 'border-left:4px solid #10b981;';
+    rawNotes = rawNotes.replace(/\s*\[OUTROS\]\s*/g, '').trim();
   } else if(/\[COMIDA\]/.test(rawNotes)){
     groupTag = '<span style="font-size:11px;background:#f59e0b;color:#fff;padding:2px 8px;border-radius:99px;font-weight:600">🍽️ Comida</span>';
     groupBorder = 'border-left:4px solid #f59e0b;';
@@ -5101,8 +5133,7 @@ function renderHistTable(list, skipFilterSetup){
     el.innerHTML='<div style="padding:32px;text-align:center;color:var(--sl-400)">Nenhum pedido encontrado.</div>';
     return;
   }
-  var f = window._histColFilters || { num:'', umb:'', cliente:'', itens:'' };
-  // Cabeçalho clicável + linha de filtros
+  // Cabeçalho clicável (ordenação)
   var thead = '<thead>'
     +'<tr>'
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'num\')"># '+histSortIcon('num')+'</th>'
@@ -5114,21 +5145,10 @@ function renderHistTable(list, skipFilterSetup){
       +'<th>Status</th>'
       +'<th>Ação</th>'
     +'</tr>'
-    +'<tr class="hist-filter-row">'
-      +'<th style="padding:4px"><input type="text" placeholder="Filtrar..." value="'+esc(f.num)+'" oninput="setHistColFilter(\'num\',this.value)" style="width:100%;padding:4px 6px;font-size:11px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></th>'
-      +'<th style="padding:4px"><input type="text" placeholder="Filtrar..." value="'+esc(f.umb)+'" oninput="setHistColFilter(\'umb\',this.value)" style="width:100%;padding:4px 6px;font-size:11px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></th>'
-      +'<th style="padding:4px"><input type="text" placeholder="Filtrar..." value="'+esc(f.cliente)+'" oninput="setHistColFilter(\'cliente\',this.value)" style="width:100%;padding:4px 6px;font-size:11px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></th>'
-      +'<th></th>'
-      +'<th style="padding:4px"><input type="text" placeholder="Filtrar..." value="'+esc(f.itens)+'" oninput="setHistColFilter(\'itens\',this.value)" style="width:100%;padding:4px 6px;font-size:11px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></th>'
-      +'<th></th>'
-      +'<th></th>'
-      +'<th style="padding:4px"><button class="btn btn-sm" style="font-size:10px;padding:3px 6px;width:100%" onclick="clearHistColFilters()">Limpar</button></th>'
-    +'</tr>'
     +'</thead>';
 
   if(!list.length){
-    el.innerHTML='<table>'+thead+'<tbody><tr><td colspan="8" style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum pedido com esses filtros.</td></tr></tbody></table>';
-    setTimeout(function(){ var inp = el.querySelector('input[oninput*="\''+window._histLastFocus+'\'"]'); if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } }, 0);
+    el.innerHTML='<table>'+thead+'<tbody><tr><td colspan="8" style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum pedido encontrado.</td></tr></tbody></table>';
     return;
   }
 
@@ -5137,16 +5157,18 @@ function renderHistTable(list, skipFilterSetup){
       const p=PILL[o.status]||{l:o.status,c:''};
       const can=!['delivered','cancelled','billed'].includes(o.status);
       const isSpecial = o.customer_name==='PEDIDO DE CONTA'||o.customer_name==='CHAMADA DE ATENDENTE';
-      // Detectar tag de grupo (bebidas/comida) no notes
+      // Detectar tag de grupo (bebidas/comida/outros) no notes
       var notesRaw = String(o.notes||'');
       var groupChip = '';
       if(/\[BEBIDAS\]/.test(notesRaw)){
         groupChip = ' <span style="font-size:9px;background:#0ea5e9;color:#fff;padding:1px 6px;border-radius:99px;font-weight:600;margin-left:4px">🍹</span>';
+      } else if(/\[OUTROS\]/.test(notesRaw)){
+        groupChip = ' <span style="font-size:9px;background:#10b981;color:#fff;padding:1px 6px;border-radius:99px;font-weight:600;margin-left:4px">📦</span>';
       } else if(/\[COMIDA\]/.test(notesRaw)){
         groupChip = ' <span style="font-size:9px;background:#f59e0b;color:#fff;padding:1px 6px;border-radius:99px;font-weight:600;margin-left:4px">🍽️</span>';
       }
       // Remover marcador da nota antes de exibir
-      var notesClean = notesRaw.replace(/\s*\[(BEBIDAS|COMIDA)\]\s*/g, '').trim();
+      var notesClean = notesRaw.replace(/\s*\[(BEBIDAS|COMIDA|OUTROS)\]\s*/g, '').trim();
       return '<tr>'
         +'<td><b>#'+(o.order_number||'—')+'</b>'+groupChip+'</td>'
         +'<td>☂️ '+esc(o.umb||o.umbrella_num||'?')+'</td>'
@@ -5685,14 +5707,7 @@ function contasSortIcon(col){
 function applyContasFilters(){
   var grid = $('contas-grid');
   if(!grid) return;
-  var raw = window._contasRawList || [];
-  var f = window._contasColFilters;
-  var contasOrders = raw.filter(function(o){
-    if(f.umb && String(o.umbrella_num||o.umb||'').toLowerCase().indexOf(f.umb) === -1) return false;
-    if(f.valor && String(o.total||'').toLowerCase().indexOf(f.valor) === -1) return false;
-    if(f.texto && String(o.notes||'').toLowerCase().indexOf(f.texto) === -1) return false;
-    return true;
-  });
+  var contasOrders = (window._contasRawList || []).slice();
   if(window._contasSortBy){
     var dir = window._contasSortDir === 'asc' ? 1 : -1;
     contasOrders.sort(function(a,b){
@@ -5729,24 +5744,16 @@ function applyContasFilters(){
   var badge = $('contas-badge');
   if(badge) badge.textContent = (window._contasRawList||[]).filter(function(o){ return !['delivered','cancelled','billed'].includes(o.status); }).length;
 
-  // Barra de filtros das colunas
-  var f2 = window._contasColFilters;
-  var filterBar = '<div style="background:#fff;border:1px solid var(--sand-100);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end">'
-    +'<div><label style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px">Guarda-sol</label><input type="text" placeholder="ex: 7" value="'+esc(f2.umb)+'" oninput="setContasColFilter(\'umb\',this.value)" style="width:100%;padding:5px 8px;font-size:12px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></div>'
-    +'<div><label style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px">Valor</label><input type="text" placeholder="ex: 100" value="'+esc(f2.valor)+'" oninput="setContasColFilter(\'valor\',this.value)" style="width:100%;padding:5px 8px;font-size:12px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></div>'
-    +'<div><label style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px">Texto na nota</label><input type="text" placeholder="ex: dividir" value="'+esc(f2.texto)+'" oninput="setContasColFilter(\'texto\',this.value)" style="width:100%;padding:5px 8px;font-size:12px;border:1px solid var(--sand-100);border-radius:6px;font-family:var(--font)"/></div>'
-    +'<button class="btn btn-sm" style="font-size:11px;padding:6px 10px" onclick="clearContasFilters()">Limpar</button>'
-    +'</div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:10px;font-size:11px;color:var(--sl-400)">'
-    +'<span>Ordenar:</span>'
-    +'<button type="button" onclick="setContasSort(\'umb\')" style="background:none;border:none;cursor:pointer;color:inherit;font-size:11px">Guarda-sol '+contasSortIcon('umb')+'</button>'
-    +'<button type="button" onclick="setContasSort(\'hora\')" style="background:none;border:none;cursor:pointer;color:inherit;font-size:11px">Hora '+contasSortIcon('hora')+'</button>'
-    +'<button type="button" onclick="setContasSort(\'valor\')" style="background:none;border:none;cursor:pointer;color:inherit;font-size:11px">Valor '+contasSortIcon('valor')+'</button>'
+  // Barra só com ordenação (filtros editáveis removidos)
+  var filterBar = '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
+    +'<span style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Ordenar por:</span>'
+    +'<button type="button" onclick="setContasSort(\'umb\')" style="background:none;border:none;cursor:pointer;color:var(--sl-600);font-size:12px;font-weight:500">Guarda-sol '+contasSortIcon('umb')+'</button>'
+    +'<button type="button" onclick="setContasSort(\'hora\')" style="background:none;border:none;cursor:pointer;color:var(--sl-600);font-size:12px;font-weight:500">Hora '+contasSortIcon('hora')+'</button>'
+    +'<button type="button" onclick="setContasSort(\'valor\')" style="background:none;border:none;cursor:pointer;color:var(--sl-600);font-size:12px;font-weight:500">Valor '+contasSortIcon('valor')+'</button>'
     +'</div>';
 
   if(!contasAtivas.length && !contasFechadas.length){
-    grid.innerHTML = filterBar + '<div style="padding:48px;text-align:center;color:var(--sl-400)"><div style="font-size:40px;margin-bottom:12px">🧾</div><div>Nenhuma solicitação de conta com esses filtros.</div></div>';
-    restoreContasFocus();
+    grid.innerHTML = filterBar + '<div style="padding:48px;text-align:center;color:var(--sl-400)"><div style="font-size:40px;margin-bottom:12px">🧾</div><div>Nenhuma solicitação de conta.</div></div>';
     return;
   }
 
