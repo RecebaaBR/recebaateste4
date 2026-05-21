@@ -892,19 +892,24 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="kpage" id="kpage-orders">
         <div class="page-header"><div class="page-title">Pedidos ao vivo</div><div class="live-dot">Ao vivo</div></div>
-        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
-          <button class="hf-btn active" onclick="liveFilter('all',this)">Todos</button>
-          <button class="hf-btn" onclick="liveFilter('pending',this)">📋 Recebido</button>
-          <button class="hf-btn" onclick="liveFilter('accepted',this)">✅ Confirmado</button>
-          <button class="hf-btn" onclick="liveFilter('preparing',this)">👨‍🍳 Em preparo</button>
-          <button class="hf-btn" onclick="liveFilter('delivering',this)">🏃 A caminho</button>
-          <button class="hf-btn" onclick="liveFilter('delivered',this)">🎉 Entregue</button>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por status</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="hf-btn active" onclick="liveFilter('all',this)">Todos</button>
+            <button class="hf-btn" onclick="liveFilter('pending',this)">📋 Recebido</button>
+            <button class="hf-btn" onclick="liveFilter('accepted',this)">✅ Confirmado</button>
+            <button class="hf-btn" onclick="liveFilter('preparing',this)">👨‍🍳 Em preparo</button>
+            <button class="hf-btn" onclick="liveFilter('delivering',this)">🏃 A caminho</button>
+            <button class="hf-btn" onclick="liveFilter('delivered',this)">🎉 Entregue</button>
+          </div>
         </div>
-        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:11px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em;margin-right:4px">Tipo:</span>
-          <button class="hf-btn lt-btn active" onclick="liveTypeFilter('all',this)">Todos</button>
-          <button class="hf-btn lt-btn" onclick="liveTypeFilter('drinks',this)" style="border-left:3px solid #0ea5e9">🍹 Bebidas</button>
-          <button class="hf-btn lt-btn" onclick="liveTypeFilter('foods',this)" style="border-left:3px solid #f59e0b">🍽️ Comida/Outros</button>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por tipo</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="hf-btn lt-btn active" onclick="liveTypeFilter('all',this)" style="flex:1;min-width:90px">🔄 Tudo</button>
+            <button class="hf-btn lt-btn" onclick="liveTypeFilter('drinks',this)" style="flex:1;min-width:90px;border-left:3px solid #0ea5e9">🍹 Bebidas</button>
+            <button class="hf-btn lt-btn" onclick="liveTypeFilter('foods',this)" style="flex:1;min-width:90px;border-left:3px solid #f59e0b">🍽️ Comida</button>
+          </div>
         </div>
         <div class="orders-grid" id="live-orders-grid"></div>
       </div>
@@ -2069,19 +2074,24 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="kpage" id="kpage-orders">
         <div class="page-header"><div class="page-title">Pedidos ao vivo</div><div class="live-dot">Ao vivo</div></div>
-        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap">
-          <button class="hf-btn active" onclick="liveFilter('all',this)">Todos</button>
-          <button class="hf-btn" onclick="liveFilter('pending',this)">📋 Recebido</button>
-          <button class="hf-btn" onclick="liveFilter('accepted',this)">✅ Confirmado</button>
-          <button class="hf-btn" onclick="liveFilter('preparing',this)">👨‍🍳 Em preparo</button>
-          <button class="hf-btn" onclick="liveFilter('delivering',this)">🏃 A caminho</button>
-          <button class="hf-btn" onclick="liveFilter('delivered',this)">🎉 Entregue</button>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:8px">
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por status</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="hf-btn active" onclick="liveFilter('all',this)">Todos</button>
+            <button class="hf-btn" onclick="liveFilter('pending',this)">📋 Recebido</button>
+            <button class="hf-btn" onclick="liveFilter('accepted',this)">✅ Confirmado</button>
+            <button class="hf-btn" onclick="liveFilter('preparing',this)">👨‍🍳 Em preparo</button>
+            <button class="hf-btn" onclick="liveFilter('delivering',this)">🏃 A caminho</button>
+            <button class="hf-btn" onclick="liveFilter('delivered',this)">🎉 Entregue</button>
+          </div>
         </div>
-        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:11px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.06em;margin-right:4px">Tipo:</span>
-          <button class="hf-btn lt-btn active" onclick="liveTypeFilter('all',this)">Todos</button>
-          <button class="hf-btn lt-btn" onclick="liveTypeFilter('drinks',this)" style="border-left:3px solid #0ea5e9">🍹 Bebidas</button>
-          <button class="hf-btn lt-btn" onclick="liveTypeFilter('foods',this)" style="border-left:3px solid #f59e0b">🍽️ Comida/Outros</button>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por tipo</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="hf-btn lt-btn active" onclick="liveTypeFilter('all',this)" style="flex:1;min-width:90px">🔄 Tudo</button>
+            <button class="hf-btn lt-btn" onclick="liveTypeFilter('drinks',this)" style="flex:1;min-width:90px;border-left:3px solid #0ea5e9">🍹 Bebidas</button>
+            <button class="hf-btn lt-btn" onclick="liveTypeFilter('foods',this)" style="flex:1;min-width:90px;border-left:3px solid #f59e0b">🍽️ Comida</button>
+          </div>
         </div>
         <div class="orders-grid" id="live-orders-grid"></div>
       </div>
@@ -3488,7 +3498,7 @@ function isDrink(item){
 }
 
 // Marca de versão para confirmar visualmente que o código novo está rodando
-window._APP_VERSION = 'v129-umb-filters';
+window._APP_VERSION = 'v131-status-label';
 console.log('[Recebaa] Versão:', window._APP_VERSION);
 setTimeout(function(){
   // Inserir badge de versão num canto da tela
