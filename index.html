@@ -3460,6 +3460,20 @@ function closeCart(){
   $('cart-drawer').classList.remove('open');
 }
 
+// Detecta se um item do carrinho é bebida com base na categoria do produto
+function isDrink(item){
+  var prod = catalog.find(function(p){ return p.id === item.id || p.name === item.name; });
+  if(!prod) return false;
+  var catId = prod.category_id;
+  if(!catId) return false;
+  var cat = (dbCategories.length ? dbCategories : (typeof MOCK_CATS!=='undefined' ? MOCK_CATS : []))
+    .find(function(c){ return String(c.id) === String(catId); });
+  if(!cat) return false;
+  var catName = String(cat.name||'').toLowerCase();
+  // Bebidas, Cervejas, Drinks, Sucos, Refrigerantes
+  return /beb|cerv|drink|suco|refrig/i.test(catName);
+}
+
 async function placeOrder(){
   // Proteção: sessão bloqueada por PEDIDO DE CONTA ativo
   if(window._billRequested){
@@ -3490,64 +3504,111 @@ async function placeOrder(){
     toast('⚠️ "'+unavailable[0].name+'" ficou indisponível. Remova do carrinho.');
     return;
   }
-  const total=items.reduce((s,i)=>s+i.price*i.qty,0);
+
+  // Dividir itens em 2 grupos: bebidas vs comida
+  var drinks = items.filter(isDrink);
+  var foods  = items.filter(function(i){ return !isDrink(i); });
+
+  // Definir os grupos que vão virar pedidos separados
+  var groups = [];
+  if(drinks.length && foods.length){
+    groups.push({ kind: 'drinks', items: drinks, label: 'bebidas' });
+    groups.push({ kind: 'foods',  items: foods,  label: 'comida' });
+  } else {
+    groups.push({ kind: 'single', items: items, label: '' });
+  }
+
   setLoading('place-order-btn',true,'Enviando...');
 
-  let orderId, orderNum;
+  var lastOrderId = null, lastOrderNum = null;
+  var createdNumbers = []; // pra mensagem final
+  var notesValue = $('order-notes').value;
 
-  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-    // Salvar no Supabase
-    const {data:ord,error:e1}=await sb.from('orders').insert({
-      kiosk_id:currentKiosk.id,
-      umbrella_num:String(window._umb||'?'),
-      order_number:0, // preenchido pelo trigger
-      customer_name:name,
-      notes:$('order-notes').value,
-      status:'pending',
-      total
-    }).select().single();
-    if(e1||!ord){ toast('Erro ao enviar pedido: '+(e1&&e1.message)); setLoading('place-order-btn',false,'Enviar Pedido 🚀'); return; }
-    // Salvar itens
-    await sb.from('order_items').insert(items.map(function(i){
-      // Buscar custo do produto no catalog no momento da venda
-      var prod = catalog.find(function(p){ return p.name===i.name || p.id===i.id; });
-      var costAtTime = prod && prod.cost_price ? Number(prod.cost_price) : null;
-      return {
-        order_id: ord.id,
-        product_name: i.name,
-        quantity: i.qty,
-        unit_price: i.price,
-        cost_price: costAtTime,
-        notes: i.notes||null,
-        emoji: i.emoji||null
+  for(var gi = 0; gi < groups.length; gi++){
+    var g = groups[gi];
+    var groupItems = g.items;
+    var groupTotal = groupItems.reduce(function(s,i){ return s + i.price * i.qty; }, 0);
+    // Marca a nota com o tipo do pedido (drinks/foods)
+    var noteSuffix = g.kind === 'single' ? '' : (g.kind === 'drinks' ? ' [BEBIDAS]' : ' [COMIDA]');
+    var notesFinal = (notesValue || '') + noteSuffix;
+
+    if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+      const {data:ord,error:e1} = await sb.from('orders').insert({
+        kiosk_id: currentKiosk.id,
+        umbrella_num: String(window._umb||'?'),
+        order_number: 0,
+        customer_name: name,
+        notes: notesFinal,
+        status: 'pending',
+        total: groupTotal
+      }).select().single();
+      if(e1 || !ord){
+        toast('Erro ao enviar pedido: '+(e1 && e1.message));
+        setLoading('place-order-btn',false,'Enviar Pedido 🚀');
+        return;
+      }
+      await sb.from('order_items').insert(groupItems.map(function(i){
+        var prod = catalog.find(function(p){ return p.name===i.name || p.id===i.id; });
+        var costAtTime = prod && prod.cost_price ? Number(prod.cost_price) : null;
+        return {
+          order_id: ord.id,
+          product_name: i.name,
+          quantity: i.qty,
+          unit_price: i.price,
+          cost_price: costAtTime,
+          notes: i.notes || null,
+          emoji: i.emoji || null
+        };
+      }));
+      lastOrderId = ord.id; lastOrderNum = ord.order_number;
+      createdNumbers.push({ num: ord.order_number, kind: g.kind });
+      var fullOrder = Object.assign({}, ord, {
+        items: groupItems.map(function(i){ return {name:i.name, qty:i.qty, price:i.price}; }),
+        umb: String(window._umb||'?'),
+        time: timeNow()
+      });
+      orders.unshift(fullOrder);
+      if(!window._allUmbOrders) window._allUmbOrders = [];
+      window._allUmbOrders.unshift(fullOrder);
+      myOrders.unshift(fullOrder);
+    } else {
+      // Demo sem banco
+      var num = orders.length ? Math.max.apply(null, orders.map(function(o){return o.order_number||0;})) + 1 : 1;
+      var o = {
+        id: 'local-'+Date.now()+'-'+gi,
+        order_number: num,
+        umb: String(window._umb||'?'),
+        customer_name: name,
+        notes: notesFinal,
+        status: 'pending',
+        total: groupTotal,
+        items: groupItems.map(function(i){ return {name:i.name, qty:i.qty, price:i.price}; }),
+        time: timeNow(),
+        created_at: new Date().toISOString()
       };
-    }));
-    orderId=ord.id; orderNum=ord.order_number;
-    const fullOrder={...ord,items:items.map(i=>({name:i.name,qty:i.qty,price:i.price})),umb:String(window._umb||'?'),time:timeNow()};
-    orders.unshift(fullOrder);
-    if(!window._allUmbOrders) window._allUmbOrders=[];
-  window._allUmbOrders.unshift(fullOrder);
-  myOrders.unshift(fullOrder);
-  } else {
-    // Demo sem banco
-    const num=orders.length?Math.max(...orders.map(o=>o.order_number||0))+1:1;
-    const o={id:'local-'+Date.now(),order_number:num,umb:String(window._umb||'?'),customer_name:name,
-      notes:$('order-notes').value,status:'pending',total,
-      items:items.map(i=>({name:i.name,qty:i.qty,price:i.price})),time:timeNow(),created_at:new Date().toISOString()};
-    orders.unshift(o); myOrders.unshift(o);
-    orderId=o.id; orderNum=num;
-    setTimeout(()=>simulateProgress(o.id),3000);
+      orders.unshift(o); myOrders.unshift(o);
+      lastOrderId = o.id; lastOrderNum = num;
+      createdNumbers.push({ num: num, kind: g.kind });
+      setTimeout((function(id){ return function(){ simulateProgress(id); }; })(o.id), 3000);
+    }
+  }
+
+  // Toast informativo se foi dividido
+  if(groups.length > 1){
+    var nums = createdNumbers.map(function(c){
+      return '#'+c.num+' ('+(c.kind === 'drinks' ? 'bebidas' : 'comida')+')';
+    }).join(' e ');
+    toast('🍹🍽️ Seu pedido foi dividido em: '+nums);
   }
 
   setLoading('place-order-btn',false,'Enviar Pedido 🚀');
   cart={}; refreshCart(); closeCart();
   $('customer-name').value=''; $('order-notes').value='';
-  // Atualizar todos os cards do cardápio para resetar os botões de quantidade
   buildMenu();
   $('client-menu').classList.add('hidden');
   $('client-status').classList.remove('hidden');
-  $('status-num').textContent=orderNum;
-  $('status-name').textContent=name;
+  $('status-num').textContent = lastOrderNum;
+  $('status-name').textContent = name;
   renderStatusSteps('pending');
   updateOrdersBadge();
 
@@ -4053,8 +4114,17 @@ function renderMyOrders(){
       +'<div style="font-size:13px;font-weight:700">'+fmt(personTotal)+'</div></div>';
     personOrders.forEach(function(o){
       var p=PILL[o.status]||{l:o.status,c:''};
+      // Detectar tag de grupo (bebidas/comida)
+      var rawN = String(o.notes||'');
+      var groupBadge = '';
+      if(/\[BEBIDAS\]/.test(rawN)){
+        groupBadge = '<span style="font-size:10px;background:#0ea5e9;color:#fff;padding:2px 8px;border-radius:99px;font-weight:600;margin-left:6px">🍹 Bebidas</span>';
+      } else if(/\[COMIDA\]/.test(rawN)){
+        groupBadge = '<span style="font-size:10px;background:#f59e0b;color:#fff;padding:2px 8px;border-radius:99px;font-weight:600;margin-left:6px">🍽️ Comida</span>';
+      }
+      var notesClean = rawN.replace(/\s*\[(BEBIDAS|COMIDA)\]\s*/g, '').trim();
       html+='<div class="my-order-card" data-s="'+o.status+'" style="border-radius:0;border:none;border-bottom:1px solid var(--sand-50);margin-bottom:0">'
-        +'<div class="my-order-head"><div class="my-order-num">Pedido #'+o.order_number+'</div><span class="pill '+p.c+'">'+p.l+'</span></div>'
+        +'<div class="my-order-head"><div class="my-order-num">Pedido #'+o.order_number+groupBadge+'</div><span class="pill '+p.c+'">'+p.l+'</span></div>'
         +'<div class="my-order-items-txt">'+(o.items||[]).map(function(i){
           var line = '• '+i.qty+'x '+esc(i.name);
           if(i.price != null){
@@ -4063,7 +4133,7 @@ function renderMyOrders(){
           }
           return line;
         }).join('<br/>')+'</div>'
-        +(o.notes?'<div style="font-size:11px;color:var(--sl-400);font-style:italic;margin-bottom:4px">📝 '+esc(o.notes)+'</div>':'')
+        +(notesClean?'<div style="font-size:11px;color:var(--sl-400);font-style:italic;margin-bottom:4px">📝 '+esc(notesClean)+'</div>':'')
         +'<div class="my-order-foot"><div class="my-order-total">'+fmt(o.total)+'</div><div class="my-order-time">🕐 '+(o.time||'')+'</div></div>'
         +(o.status==='pending'?'<button class="btn btn-sm" style="width:100%;margin-top:8px;background:#fef2f2;color:var(--red);border:1px solid #fecaca" data-oid="'+o.id+'" onclick="clientCancelOrder(this.dataset.oid)">❌ Cancelar pedido</button>':'')
         +(o.status==='delivered'?'<button class="btn btn-dark btn-sm" style="width:100%;margin-top:8px" data-tab="menu" onclick="clientTab(this.dataset.tab)">Pedir novamente 🔄</button>':'')
@@ -4737,15 +4807,29 @@ function orderCard(o){
   const acts=(STATUS_NEXT[o.status]||[]).map(a=>
     '<button class="btn btn-sm '+(a.danger?'btn-danger':'btn-dark')+'" onclick="advOrder(\''+o.id+'\',\''+a.s+'\')">'+a.l+'</button>'
   ).join('');
-  var specialStyle = isCall ? 'border-left-color:#f59e0b;background:#fffbeb' : isBill ? 'border-left-color:#8b5cf6;background:#f5f3ff' : '';
+  // Detectar marcador [BEBIDAS] ou [COMIDA] e separar da nota visível
+  var rawNotes = o.notes || '';
+  var groupTag = '';
+  var groupBorder = '';
+  if(/\[BEBIDAS\]/.test(rawNotes)){
+    groupTag = '<span style="font-size:11px;background:#0ea5e9;color:#fff;padding:2px 8px;border-radius:99px;font-weight:600">🍹 Bebidas</span>';
+    groupBorder = 'border-left:4px solid #0ea5e9;';
+    rawNotes = rawNotes.replace(/\s*\[BEBIDAS\]\s*/g, '').trim();
+  } else if(/\[COMIDA\]/.test(rawNotes)){
+    groupTag = '<span style="font-size:11px;background:#f59e0b;color:#fff;padding:2px 8px;border-radius:99px;font-weight:600">🍽️ Comida</span>';
+    groupBorder = 'border-left:4px solid #f59e0b;';
+    rawNotes = rawNotes.replace(/\s*\[COMIDA\]\s*/g, '').trim();
+  }
+  var specialStyle = isCall ? 'border-left-color:#f59e0b;background:#fffbeb' : isBill ? 'border-left-color:#8b5cf6;background:#f5f3ff' : groupBorder;
   return '<div class="order-card" id="oc-'+o.id+'" data-s="'+o.status+'"'+(specialStyle?' style="'+specialStyle+'"':'')+' >'
     +'<div class="oc-head"><div class="oc-num">#'+(o.order_number||o.num||'?')+'</div>'
-    +'<div style="display:flex;gap:6px;align-items:center">'
+    +'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+    +(groupTag?groupTag:'')
     +'<span style="font-size:12px;background:var(--sand-100);padding:2px 8px;border-radius:99px">&#x2602;&#xFE0F; '+(o.umb||o.umbrella_num||'?')+'</span>'
     +'<span class="pill '+p.c+'">'+p.l+'</span></div></div>'
     +'<div class="oc-body"><div class="oc-customer">&#x1F464; '+esc(o.customer_name||o.customer||'?')+' &middot; <span style="font-size:10px;color:var(--sl-400)">&#x1F550; '+(o.time||'')+'</span></div>'
     +(o.items||[]).map(i=>'<div class="oc-item-row"><span>'+i.qty+'\xd7 '+esc(i.name)+'</span><span>'+fmt(i.qty*i.price)+'</span></div>').join('')
-    +(o.notes?'<div class="oc-note">&#x1F4DD; '+esc(o.notes)+'</div>':'')
+    +(rawNotes?'<div class="oc-note">&#x1F4DD; '+esc(rawNotes)+'</div>':'')
     +(isBill?'<div style="background:#8b5cf6;color:#fff;border-radius:8px;padding:8px 12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:500">💰 Valor a cobrar</span><span style="font-size:18px;font-weight:700">'+fmt(o.total)+'</span></div>':'<div class="oc-total"><span>Total</span><span>'+fmt(o.total)+'</span></div>')
     +'</div>'
     +(acts?'<div class="oc-actions">'+acts+'</div>':'')
@@ -4977,12 +5061,22 @@ function renderHistTable(list, skipFilterSetup){
       const p=PILL[o.status]||{l:o.status,c:''};
       const can=!['delivered','cancelled','billed'].includes(o.status);
       const isSpecial = o.customer_name==='PEDIDO DE CONTA'||o.customer_name==='CHAMADA DE ATENDENTE';
+      // Detectar tag de grupo (bebidas/comida) no notes
+      var notesRaw = String(o.notes||'');
+      var groupChip = '';
+      if(/\[BEBIDAS\]/.test(notesRaw)){
+        groupChip = ' <span style="font-size:9px;background:#0ea5e9;color:#fff;padding:1px 6px;border-radius:99px;font-weight:600;margin-left:4px">🍹</span>';
+      } else if(/\[COMIDA\]/.test(notesRaw)){
+        groupChip = ' <span style="font-size:9px;background:#f59e0b;color:#fff;padding:1px 6px;border-radius:99px;font-weight:600;margin-left:4px">🍽️</span>';
+      }
+      // Remover marcador da nota antes de exibir
+      var notesClean = notesRaw.replace(/\s*\[(BEBIDAS|COMIDA)\]\s*/g, '').trim();
       return '<tr>'
-        +'<td><b>#'+(o.order_number||'—')+'</b></td>'
+        +'<td><b>#'+(o.order_number||'—')+'</b>'+groupChip+'</td>'
         +'<td>☂️ '+esc(o.umb||o.umbrella_num||'?')+'</td>'
         +'<td>'+esc(o.customer_name||'?')+'</td>'
         +'<td>'+(o.time||'—')+'</td>'
-        +'<td style="color:var(--sl-500);font-size:11px">'+(isSpecial?esc((o.notes||'').split(' · ')[0]):(o.items||[]).map(i=>i.qty+'× '+esc(i.name)).join(', '))+'</td>'
+        +'<td style="color:var(--sl-500);font-size:11px">'+(isSpecial?esc(notesClean.split(' · ')[0]):(o.items||[]).map(i=>i.qty+'× '+esc(i.name)).join(', '))+'</td>'
         +'<td><b>'+fmt(o.total)+'</b></td>'
         +(function(){
           var isConta = o.customer_name==='PEDIDO DE CONTA';
