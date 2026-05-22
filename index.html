@@ -3510,20 +3510,6 @@ function isDrink(item){
   return getOrderGroup(item) === 'drinks';
 }
 
-// Marca de versão para confirmar visualmente que o código novo está rodando
-window._APP_VERSION = 'v138-logo-bigger';
-console.log('[Recebaa] Versão:', window._APP_VERSION);
-setTimeout(function(){
-  // Inserir badge de versão num canto da tela
-  if(!document.getElementById('app-version-tag')){
-    var tag = document.createElement('div');
-    tag.id = 'app-version-tag';
-    tag.style.cssText = 'position:fixed;bottom:8px;right:8px;background:#10b981;color:#fff;font-size:9px;padding:3px 8px;border-radius:99px;z-index:9999;opacity:.7;font-family:monospace;pointer-events:none';
-    tag.textContent = window._APP_VERSION;
-    document.body.appendChild(tag);
-  }
-}, 1000);
-
 async function placeOrder(){
   // Proteção: sessão bloqueada por PEDIDO DE CONTA ativo
   if(window._billRequested){
