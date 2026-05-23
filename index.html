@@ -2056,6 +2056,7 @@ tr:hover td{background:var(--sand-50)}
         <button class="s-item" id="mute-btn" onclick="toggleMute()" style="margin-bottom:4px">
           <span class="s-icon">🔔</span>Sons ativos
         </button>
+        <button class="s-item" onclick="openChangePasswordModal()"><span class="s-icon">🔑</span>Alterar senha</button>
         <button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button>
       </div>
     </aside>
@@ -2139,6 +2140,7 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="kpage" id="kpage-menu">
         <div class="page-header"><div class="page-title">Cardápio</div><button class="btn btn-ocean btn-sm" onclick="openAddModal()">+ Produto</button></div>
+        <div id="mgmt-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
         <div class="menu-grid" id="mgmt-grid"></div>
       </div>
       <div class="kpage" id="kpage-contas">
@@ -2554,6 +2556,49 @@ var MOCK_PRODUCTS = [
 ];
 
 // ══════════════════════════════════════════════════════
+// SESSÃO DO CLIENTE — localStorage com expiração de 4h
+// ══════════════════════════════════════════════════════
+// Substitui o uso direto de sessionStorage para sobreviver a:
+//  - pull-to-refresh do navegador
+//  - fechar/reabrir a aba (sem trocar de pessoa, normalmente)
+//  - mas expirar depois de 4h pra evitar "cliente do dia anterior" carregar dados antigos
+var CLIENT_SESSION_TTL_MS = 4 * 60 * 60 * 1000; // 4 horas
+
+function clientStateSet(key, value){
+  try{
+    var payload = JSON.stringify({ v: String(value), t: Date.now() });
+    localStorage.setItem('recebaa-client-' + key, payload);
+  }catch(e){}
+}
+
+function clientStateGet(key){
+  try{
+    var raw = localStorage.getItem('recebaa-client-' + key);
+    if(!raw) return null;
+    // Compat: se foi salvo no formato antigo (string pura), aceita uma vez e migra
+    if(raw.charAt(0) !== '{'){ return raw; }
+    var obj = JSON.parse(raw);
+    if(!obj || typeof obj.t !== 'number') return null;
+    if(Date.now() - obj.t > CLIENT_SESSION_TTL_MS){
+      // expirou
+      localStorage.removeItem('recebaa-client-' + key);
+      return null;
+    }
+    return obj.v;
+  }catch(e){ return null; }
+}
+
+function clientStateClear(){
+  try{ localStorage.removeItem('recebaa-client-kiosk'); }catch(e){}
+  try{ localStorage.removeItem('recebaa-client-umb');   }catch(e){}
+  try{ localStorage.removeItem('recebaa-client-name');  }catch(e){}
+  // limpar restos do sessionStorage antigo também
+  try{ sessionStorage.removeItem('recebaa-client-kiosk'); }catch(e){}
+  try{ sessionStorage.removeItem('recebaa-client-umb');   }catch(e){}
+  try{ sessionStorage.removeItem('recebaa-client-name');  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════
 // SCANNER QR — getUserMedia + jsQR (scanner ao vivo)
 // ══════════════════════════════════════════════════════
 var _qrStream = null;
@@ -2633,8 +2678,8 @@ function goToClient(btn){
   // Checar se há sessão salva (sessionStorage) — pode estar antes da restauração
   var savedKiosk = null, savedUmb = null;
   try{
-    savedKiosk = sessionStorage.getItem('recebaa-client-kiosk');
-    savedUmb = sessionStorage.getItem('recebaa-client-umb');
+    savedKiosk = clientStateGet('kiosk');
+    savedUmb = clientStateGet('umb');
   }catch(e){}
   if(savedKiosk && savedUmb){
     // Sessão salva mas ainda não restaurada — restaurar agora
@@ -3023,8 +3068,8 @@ window.addEventListener('load', async function(){
   if(isConfigured && !kioskId && !umbNum){
     var savedKiosk = null, savedUmb = null;
     try{
-      savedKiosk = sessionStorage.getItem('recebaa-client-kiosk');
-      savedUmb = sessionStorage.getItem('recebaa-client-umb');
+      savedKiosk = clientStateGet('kiosk');
+      savedUmb = clientStateGet('umb');
     }catch(e){}
     if(savedKiosk && savedUmb){
       // Setar kiosk salvo na URL (sem recarregar) para que goToMenu o detecte
@@ -3040,9 +3085,7 @@ window.addEventListener('load', async function(){
       try{ await goToMenu(); }catch(e){
         // Em caso de erro inesperado, limpa sessão obsoleta
         try{
-          sessionStorage.removeItem('recebaa-client-kiosk');
-          sessionStorage.removeItem('recebaa-client-umb');
-          sessionStorage.removeItem('recebaa-client-name');
+          clientStateClear();
         }catch(e2){}
       }
     }
@@ -3092,8 +3135,8 @@ async function goToMenu(){
 
     // Persistir sessão do cliente para sobreviver a refresh (pull-to-refresh no mobile)
     try{
-      sessionStorage.setItem('recebaa-client-kiosk', currentKiosk.id);
-      sessionStorage.setItem('recebaa-client-umb', String(window._umb));
+      clientStateSet('kiosk', currentKiosk.id);
+      clientStateSet('umb', String(window._umb));
     }catch(e){}
 
     if(currentKiosk){
@@ -3528,7 +3571,7 @@ async function placeOrder(){
     toast('⚠️ Nome muito longo. Use no máximo 60 caracteres.');
     return;
   }
-  try{ sessionStorage.setItem('recebaa-client-name', name); }catch(e){}
+  clientStateSet('name', name);
   const items=Object.values(cart);
   if(!items.length){ toast('Adicione itens ao carrinho'); return; }
   // Validar que todos os itens do carrinho ainda estão disponíveis
@@ -3740,9 +3783,7 @@ function encerrarSessaoCliente(){
   window._allUmbOrders = [];
   window._billRequested = false;
   applyBillBlock();
-  try{ sessionStorage.removeItem('recebaa-client-name'); }catch(e){}
-  try{ sessionStorage.removeItem('recebaa-client-kiosk'); }catch(e){}
-  try{ sessionStorage.removeItem('recebaa-client-umb'); }catch(e){}
+  clientStateClear();
 
   // Mostrar mensagem de encerramento e voltar para a landing
   toast('💰 Conta faturada! Obrigado pela visita. 🌊');
@@ -4543,6 +4584,86 @@ function doLogout(){
 }
 
 // ══════════════════════════════════════════════════════
+// QUIOSQUE — ALTERAR SENHA (logado)
+// ══════════════════════════════════════════════════════
+function openChangePasswordModal(){
+  if(!currentKiosk){ toast('Faça login primeiro'); return; }
+  var old = document.getElementById('dyn-change-pwd');
+  if(old) old.remove();
+
+  var div = document.createElement('div');
+  div.id = 'dyn-change-pwd';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto';
+  div.onclick = function(e){ if(e.target===div) closeChangePasswordModal(); };
+  div.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9">'
+    +'<div style="font-size:15px;font-weight:600">🔑 Alterar senha</div>'
+    +'<button onclick="closeChangePasswordModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
+    +'</div>'
+    +'<div style="padding:20px;display:flex;flex-direction:column;gap:14px">'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Senha atual *</label>'
+    +'<input id="cp-old" type="password" class="input" style="width:100%" autocomplete="current-password"/></div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Nova senha * (mín. 6 caracteres)</label>'
+    +'<input id="cp-new" type="password" class="input" style="width:100%" autocomplete="new-password"/></div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Confirmar nova senha *</label>'
+    +'<input id="cp-new2" type="password" class="input" style="width:100%" autocomplete="new-password"/></div>'
+    +'<div style="display:flex;gap:8px;margin-top:6px">'
+    +'<button class="btn btn-ghost" style="flex:1" onclick="closeChangePasswordModal()">Cancelar</button>'
+    +'<button class="btn btn-ocean" id="cp-save-btn" style="flex:1" onclick="submitChangePassword()">Salvar</button>'
+    +'</div></div></div>';
+  document.body.appendChild(div);
+  setTimeout(function(){ var el=document.getElementById('cp-old'); if(el) el.focus(); }, 50);
+}
+
+function closeChangePasswordModal(){
+  var d = document.getElementById('dyn-change-pwd');
+  if(d) d.remove();
+}
+
+async function submitChangePassword(){
+  var oldPw = ($('cp-old')||{}).value || '';
+  var newPw = ($('cp-new')||{}).value || '';
+  var newPw2 = ($('cp-new2')||{}).value || '';
+  if(!oldPw){ toast('⚠️ Informe a senha atual'); return; }
+  if(newPw.length < 6){ toast('⚠️ Nova senha deve ter pelo menos 6 caracteres'); return; }
+  if(newPw !== newPw2){ toast('⚠️ As senhas não conferem'); return; }
+  if(newPw === oldPw){ toast('⚠️ A nova senha deve ser diferente da atual'); return; }
+
+  setLoading('cp-save-btn', true, 'Salvar');
+
+  if(!isConfigured){
+    // Modo demo — apenas confirma
+    setLoading('cp-save-btn', false, 'Salvar');
+    toast('✅ Senha alterada (modo demo)');
+    closeChangePasswordModal();
+    return;
+  }
+
+  // Validar senha atual buscando no banco
+  var resp = await sb.from('kiosks').select('password').eq('id', currentKiosk.id).single();
+  if(resp.error || !resp.data){
+    setLoading('cp-save-btn', false, 'Salvar');
+    toast('❌ Erro ao validar senha atual');
+    return;
+  }
+  if(resp.data.password !== oldPw){
+    setLoading('cp-save-btn', false, 'Salvar');
+    toast('❌ Senha atual incorreta');
+    return;
+  }
+
+  // Atualizar senha
+  var upd = await sb.from('kiosks').update({ password: newPw }).eq('id', currentKiosk.id);
+  setLoading('cp-save-btn', false, 'Salvar');
+  if(upd.error){
+    toast('❌ Erro ao alterar senha: ' + upd.error.message);
+    return;
+  }
+  closeChangePasswordModal();
+  toast('✅ Senha alterada com sucesso!');
+}
+
+// ══════════════════════════════════════════════════════
 // QUIOSQUE — REALTIME
 // ══════════════════════════════════════════════════════
 function subscribeRealtime(){
@@ -5288,9 +5409,22 @@ function populateCatSelect(){
 
 function renderMgmt(){
   const grid=$('mgmt-grid'); if(!grid) return;
+  // Atualizar barra de filtros (caso categorias tenham mudado)
+  renderMgmtFilters();
   if(!catalog.length){grid.innerHTML='<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--sl-400)">Nenhum produto ainda. Clique em + Produto.</div>';return;}
   const cats=dbCategories.length?dbCategories:MOCK_CATS;
-  grid.innerHTML=catalog.map(p=>{
+  // Aplicar filtro por categoria, se houver
+  var filtered = catalog;
+  if(window._mgmtFilter && window._mgmtFilter !== 'all'){
+    filtered = catalog.filter(function(p){
+      return (p.category_id || p.cat) === window._mgmtFilter;
+    });
+  }
+  if(!filtered.length){
+    grid.innerHTML='<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--sl-400)">Nenhum produto nesta categoria.</div>';
+    return;
+  }
+  grid.innerHTML=filtered.map(p=>{
     const cat=cats.find(c=>c.id===(p.category_id||p.cat))||{name:'&mdash;'};
     const imgUrl=p.image_url||p.photoUrl;
     const img=imgUrl?'<div class="mgmt-img"><img src="'+esc(imgUrl)+'" alt="'+esc(p.name)+'"/></div>':'<div class="mgmt-img">'+esc(p.emoji||'&#x1F374;')+'</div>';
@@ -5306,6 +5440,35 @@ function renderMgmt(){
       +'<button class="btn btn-danger btn-sm" onclick="removeProd(\''+p.id+'\')">&#x1F5D1;&#xFE0F;</button>'
       +'</div></div></div>';
   }).join('');
+}
+
+// Renderiza barra de filtros por categoria (botões dinâmicos baseados nas categorias do quiosque)
+function renderMgmtFilters(){
+  var bar = document.getElementById('mgmt-filters');
+  if(!bar) return;
+  var cats = dbCategories.length ? dbCategories : MOCK_CATS;
+  if(!cats.length){ bar.innerHTML = ''; return; }
+  var active = window._mgmtFilter || 'all';
+  // Contar produtos por categoria
+  var counts = {};
+  catalog.forEach(function(p){
+    var c = p.category_id || p.cat;
+    if(c) counts[c] = (counts[c]||0) + 1;
+  });
+  var html = '<button class="hf-btn'+(active==='all'?' active':'')+'" onclick="setMgmtFilter(\'all\')">Todos ('+catalog.length+')</button>';
+  cats.forEach(function(c){
+    var n = counts[c.id] || 0;
+    if(n === 0) return; // ocultar categorias sem produtos
+    var label = (c.emoji ? c.emoji + ' ' : '') + esc(c.name) + ' (' + n + ')';
+    html += '<button class="hf-btn'+(active===c.id?' active':'')+'" onclick="setMgmtFilter(\''+c.id+'\')">'+label+'</button>';
+  });
+  bar.innerHTML = html;
+}
+
+// Trocar filtro ativo e re-renderizar
+function setMgmtFilter(catId){
+  window._mgmtFilter = catId;
+  renderMgmt();
 }
 
 function editProdFromBtn(btn){
