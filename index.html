@@ -671,6 +671,11 @@ tr:hover td{background:var(--sand-50)}
     <div class="lp-footer" style="padding:20px 24px">
       <div style="margin-bottom:4px;opacity:.6"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:24px;width:auto;filter:brightness(2)"/></div>
       <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
+      <div style="margin-top:10px;font-size:12px;opacity:.6">
+        <a href="/privacy.html" style="color:inherit;text-decoration:underline;margin:0 8px">Política de Privacidade</a>
+        ·
+        <a href="/terms.html" style="color:inherit;text-decoration:underline;margin:0 8px">Termos de Uso</a>
+      </div>
     </div>
 
   </div>
@@ -845,7 +850,16 @@ tr:hover td{background:var(--sand-50)}
         <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"/></div>
       </div>
-      <button class="btn btn-ocean" id="register-btn" style="width:100%;margin-top:20px" onclick="doRegister()">Criar conta 🚀</button>
+      <div style="margin-top:16px;padding:12px 14px;background:#f1f5f9;border-radius:8px;display:flex;align-items:flex-start;gap:10px">
+        <input type="checkbox" id="reg-terms" style="margin-top:3px;cursor:pointer"/>
+        <label for="reg-terms" style="font-size:13px;color:var(--sl-600);line-height:1.5;cursor:pointer">
+          Li e aceito os
+          <a href="/terms.html" target="_blank" style="color:var(--ocean-600);text-decoration:underline">Termos de Uso</a>
+          e a
+          <a href="/privacy.html" target="_blank" style="color:var(--ocean-600);text-decoration:underline">Política de Privacidade</a>.
+        </label>
+      </div>
+      <button class="btn btn-ocean" id="register-btn" style="width:100%;margin-top:14px" onclick="doRegister()">Criar conta 🚀</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:14px">
         Já tem conta? <a class="auth-link" href="#" onclick="showCard('login');return false">Entrar</a>
       </p>
@@ -1908,6 +1922,11 @@ tr:hover td{background:var(--sand-50)}
     <div class="lp-footer" style="padding:20px 24px">
       <div style="margin-bottom:4px;opacity:.6"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:24px;width:auto;filter:brightness(2)"/></div>
       <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
+      <div style="margin-top:10px;font-size:12px;opacity:.6">
+        <a href="/privacy.html" style="color:inherit;text-decoration:underline;margin:0 8px">Política de Privacidade</a>
+        ·
+        <a href="/terms.html" style="color:inherit;text-decoration:underline;margin:0 8px">Termos de Uso</a>
+      </div>
     </div>
 
   </div>
@@ -2030,7 +2049,16 @@ tr:hover td{background:var(--sand-50)}
         <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"/></div>
       </div>
-      <button class="btn btn-ocean" id="register-btn" style="width:100%;margin-top:20px" onclick="doRegister()">Criar conta 🚀</button>
+      <div style="margin-top:16px;padding:12px 14px;background:#f1f5f9;border-radius:8px;display:flex;align-items:flex-start;gap:10px">
+        <input type="checkbox" id="reg-terms" style="margin-top:3px;cursor:pointer"/>
+        <label for="reg-terms" style="font-size:13px;color:var(--sl-600);line-height:1.5;cursor:pointer">
+          Li e aceito os
+          <a href="/terms.html" target="_blank" style="color:var(--ocean-600);text-decoration:underline">Termos de Uso</a>
+          e a
+          <a href="/privacy.html" target="_blank" style="color:var(--ocean-600);text-decoration:underline">Política de Privacidade</a>.
+        </label>
+      </div>
+      <button class="btn btn-ocean" id="register-btn" style="width:100%;margin-top:14px" onclick="doRegister()">Criar conta 🚀</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:14px">
         Já tem conta? <a class="auth-link" href="#" onclick="showCard('login');return false">Entrar</a>
       </p>
@@ -4295,6 +4323,11 @@ async function doRegister(){
   if(!owner||!email||!pass||!phone||!kname){ toast('Preencha todos os campos obrigatórios *'); return; }
   if(!doc){ toast('Informe o CPF ou CNPJ *'); return; }
   if(pass.length<6){ toast('Senha deve ter mínimo 6 caracteres'); return; }
+  // Validar aceite dos Termos e Política
+  var termsBoxes = document.querySelectorAll('[id="reg-terms"]');
+  var accepted = false;
+  termsBoxes.forEach(function(cb){ if(cb.checked) accepted = true; });
+  if(!accepted){ toast('⚠️ Você precisa aceitar os Termos de Uso e a Política de Privacidade'); return; }
   setLoading('register-btn',true,'Criando conta...');
 
   if(isConfigured){
