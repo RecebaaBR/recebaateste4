@@ -851,7 +851,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 caracteres"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo"/><div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div></div>
         <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
       </div>
       <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
@@ -2050,7 +2050,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 caracteres"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo"/><div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div></div>
         <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
       </div>
       <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
@@ -4414,6 +4414,9 @@ async function doRegister(){
   if(!owner||!email||!pass||!phone||!kname){ toast('Preencha todos os campos obrigatórios *'); return; }
   if(!doc){ toast('Informe o CPF ou CNPJ *'); return; }
   if(pass.length<6){ toast('Senha deve ter mínimo 6 caracteres'); return; }
+  if(!/[A-Z]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 letra MAIÚSCULA'); return; }
+  if(!/[0-9]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 número'); return; }
+  if(!/[^A-Za-z0-9]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 símbolo (ex: !@#$%&*?)'); return; }
   // Validar aceite dos Termos e Política
   var termsBoxes = document.querySelectorAll('[id="reg-terms"]');
   var accepted = false;
