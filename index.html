@@ -4758,15 +4758,26 @@ function updateDashMetrics(){
       || o.customer_name==='ENCERRAMENTO'
       || o.customer_name==='CHAMADA DE ATENDENTE';
   };
+  // Janela "hoje" no fuso local: das 00:00 de hoje até 00:00 de amanhã
+  var _now = new Date();
+  var _todayStart = new Date(_now.getFullYear(), _now.getMonth(), _now.getDate()).getTime();
+  var _todayEnd   = _todayStart + 24*60*60*1000;
+  var isToday = function(o){
+    if(!o.created_at) return false;
+    var t = new Date(o.created_at).getTime();
+    return t >= _todayStart && t < _todayEnd;
+  };
   var realOrders = orders.filter(function(o){ return !isSpecial(o); });
+  // Métricas "hoje" só consideram pedidos do dia atual
+  var realToday = realOrders.filter(isToday);
   const active=realOrders.filter(o=>!['delivered','cancelled'].includes(o.status));
-  const delivered=realOrders.filter(o=>o.status==='delivered');
+  const delivered=realToday.filter(o=>o.status==='delivered');
   const rev=delivered.reduce((s,o)=>s+Number(o.total),0);
   const ticket=delivered.length?rev/delivered.length:0;
-  const cancelled=realOrders.filter(o=>o.status==='cancelled');
+  const cancelled=realToday.filter(o=>o.status==='cancelled');
   const m=x=>$(x);
   if(m('m-revenue')) m('m-revenue').textContent=fmt(rev);
-  if(m('m-total')) m('m-total').textContent=realOrders.length;
+  if(m('m-total')) m('m-total').textContent=realToday.length;
   if(m('m-ticket')) m('m-ticket').textContent=fmt(ticket);
   if(m('metric-active')) m('metric-active').textContent=active.length;
   if(m('m-products')) m('m-products').textContent=catalog.filter(p=>p.is_available!==false).length;
@@ -4777,7 +4788,7 @@ function updateDashMetrics(){
   var contasBadge = $('contas-badge');
   if(contasBadge) contasBadge.textContent = contasPend.length;
   const counts={};
-  realOrders.forEach(o=>(o.items||[]).forEach(i=>{counts[i.name]=(counts[i.name]||0)+i.qty;}));
+  realToday.forEach(o=>(o.items||[]).forEach(i=>{counts[i.name]=(counts[i.name]||0)+i.qty;}));
   const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const max=top[0]?top[0][1]:1;
   const ch=$('top-products-chart');
