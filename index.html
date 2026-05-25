@@ -4319,19 +4319,21 @@ async function doLogin(){
   setLoading('login-btn',true,'Entrando...');
 
   if(isConfigured){
-    const {data:kiosks,error}=await sb.from('kiosks').select('*').eq('owner_email',email).limit(1);
-    if(error||!kiosks||!kiosks.length){ toast('E-mail não encontrado. Verifique suas credenciais.'); setLoading('login-btn',false,'Entrar'); return; }
-    const k = kiosks[0];
-    // Verificar senha — se o banco não tem senha cadastrada, rejeita
-    const storedPass = k.password || k.owner_password || '';
-    if(!storedPass){
-      toast('⚠️ Conta sem senha cadastrada. Entre em contato com o suporte para redefinir.');
+    // Chama RPC login_kiosk que faz a comparação com hash bcrypt no banco
+    var rpcResp = await sb.rpc('login_kiosk', { p_email: email, p_password: pass });
+    if(rpcResp.error){
+      toast('Erro ao validar credenciais: '+(rpcResp.error.message||'tente novamente'));
       setLoading('login-btn',false,'Entrar');
       return;
     }
-    if(storedPass !== pass){
-      toast('❌ Senha incorreta. Tente novamente.'); setLoading('login-btn',false,'Entrar'); return;
+    var rows = rpcResp.data || [];
+    if(!rows.length){
+      // E-mail não existe OU senha incorreta — não diferenciamos por segurança
+      toast('❌ E-mail ou senha incorretos.');
+      setLoading('login-btn',false,'Entrar');
+      return;
     }
+    const k = rows[0];
 
     if(k.blocked){ toast('⛔ Quiosque bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
     if(k.approved === false){ toast('⏳ Seu cadastro está aguardando aprovação do administrador.'); setLoading('login-btn',false,'Entrar'); return; }
@@ -4420,20 +4422,34 @@ async function doRegister(){
   setLoading('register-btn',true,'Criando conta...');
 
   if(isConfigured){
-    // Quiosque novo nasce inativo e aguardando aprovação do admin
-    var payload = {
-      name:kname, owner_email:email, owner_name:owner, phone,
-      city:$('reg-city').value.trim(), beach:$('reg-beach').value.trim(),
-      is_active:false, approved:false, owner_doc:doc, password:pass
-    };
-    var resp = await sb.from('kiosks').insert(payload).select().single();
-    // Fallback: se a coluna 'approved' ainda não existir no banco, tentar sem ela
-    if(resp.error && /approved/i.test(resp.error.message||'')){
-      delete payload.approved;
-      resp = await sb.from('kiosks').insert(payload).select().single();
+    // Chama RPC register_kiosk que hasheia a senha no banco via bcrypt
+    var resp = await sb.rpc('register_kiosk', {
+      p_name: kname,
+      p_owner_email: email,
+      p_owner_name: owner,
+      p_password: pass,
+      p_phone: phone,
+      p_city: $('reg-city').value.trim(),
+      p_beach: $('reg-beach').value.trim(),
+      p_owner_doc: doc
+    });
+    if(resp.error){
+      var msg = resp.error.message || '';
+      if(/já cadastrado/i.test(msg) || /duplicate/i.test(msg)){
+        toast('⚠️ E-mail já cadastrado. Use outro ou faça login.');
+      } else {
+        toast('Erro ao criar conta: ' + msg);
+      }
+      setLoading('register-btn',false,'Criar conta 🚀');
+      return;
     }
-    if(resp.error){ toast('Erro ao criar conta: '+(resp.error.message)); setLoading('register-btn',false,'Criar conta 🚀'); return; }
-    var data = resp.data;
+    var rows = resp.data || [];
+    if(!rows.length){
+      toast('Erro ao criar conta: resposta vazia do servidor');
+      setLoading('register-btn',false,'Criar conta 🚀');
+      return;
+    }
+    var data = rows[0];
     // Criar categorias padrão (mesmo aguardando aprovação, pra já estar pronto quando aprovar)
     await sb.from('categories').insert(MOCK_CATS.map((c,i)=>({kiosk_id:data.id,name:c.name,emoji:c.emoji,sort_order:i+1})));
     setLoading('register-btn',false,'Criar conta 🚀');
