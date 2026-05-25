@@ -439,6 +439,19 @@ tr:hover td{background:var(--sand-50)}
 @keyframes cloudFloat2{0%{transform:translateX(0)}100%{transform:translateX(calc(100vw + 450px))}}
 @keyframes cloudFloat3{0%{transform:translateX(0)}100%{transform:translateX(calc(-100vw - 450px))}}
 </style>
+<!-- EmailJS SDK + inicialização -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  (function(){
+    try{
+      emailjs.init({ publicKey: 'o7WPjTOpN1ONa9Phx' });
+      window._emailjsReady = true;
+    }catch(e){
+      console.warn('EmailJS init falhou:', e);
+      window._emailjsReady = false;
+    }
+  })();
+</script>
 </head>
 <body>
 
@@ -4348,6 +4361,50 @@ function formatDoc(input){
   input.value = v;
 }
 
+// ══════════════════════════════════════════════════════
+// E-MAILS AUTOMÁTICOS via EmailJS
+// ══════════════════════════════════════════════════════
+// Dispara 2 e-mails ao se cadastrar:
+//   1) Boas-vindas pro quiosque (template_vlx2b6d)
+//   2) Notificação pra admin (mesmo template, destinatário fixo)
+// Se EmailJS falhar, NÃO bloqueia o cadastro — só loga no console.
+function sendCadastroEmails(params){
+  if(!window._emailjsReady || typeof emailjs === 'undefined'){
+    console.warn('EmailJS não disponível — pulando envio');
+    return;
+  }
+  // 1) Pro quiosque cadastrado
+  try{
+    emailjs.send('service_taexcqb', 'template_vlx2b6d', params)
+      .then(function(){ console.log('✉️ E-mail enviado ao quiosque:', params.to_email); })
+      .catch(function(e){ console.warn('Falha ao enviar e-mail ao quiosque:', e); });
+  }catch(e){ console.warn('Erro emailjs (quiosque):', e); }
+
+  // 2) Pra admin (mesmos dados, destinatário fixo)
+  try{
+    var adminParams = Object.assign({}, params, { to_email: 'pediu.recebaa@gmail.com', to_name: 'Admin Recebaa' });
+    // Mantém os dados originais do quiosque pra você ver quem cadastrou
+    adminParams.kiosk_owner = params.to_name;
+    adminParams.kiosk_email_original = params.to_email;
+    emailjs.send('service_taexcqb', 'template_vlx2b6d', adminParams)
+      .then(function(){ console.log('✉️ Notificação admin enviada'); })
+      .catch(function(e){ console.warn('Falha ao notificar admin:', e); });
+  }catch(e){ console.warn('Erro emailjs (admin):', e); }
+}
+
+// Disparado quando admin aprova o quiosque (template_1omuz1n)
+function sendAprovacaoEmail(params){
+  if(!window._emailjsReady || typeof emailjs === 'undefined'){
+    console.warn('EmailJS não disponível — pulando envio');
+    return;
+  }
+  try{
+    emailjs.send('service_taexcqb', 'template_1omuz1n', params)
+      .then(function(){ console.log('✉️ E-mail de aprovação enviado:', params.to_email); })
+      .catch(function(e){ console.warn('Falha ao enviar e-mail de aprovação:', e); });
+  }catch(e){ console.warn('Erro emailjs (aprovação):', e); }
+}
+
 async function doRegister(){
   const owner=$('reg-owner').value.trim(), email=$('reg-email').value.trim(),
     pass=$('reg-pass').value.trim(), phone=$('reg-phone').value.trim(),
@@ -4380,6 +4437,16 @@ async function doRegister(){
     // Criar categorias padrão (mesmo aguardando aprovação, pra já estar pronto quando aprovar)
     await sb.from('categories').insert(MOCK_CATS.map((c,i)=>({kiosk_id:data.id,name:c.name,emoji:c.emoji,sort_order:i+1})));
     setLoading('register-btn',false,'Criar conta 🚀');
+    // Enviar e-mails de notificação (não bloqueia o fluxo se falhar)
+    sendCadastroEmails({
+      to_name: owner,
+      to_email: email,
+      kiosk_name: kname,
+      kiosk_city: $('reg-city').value.trim() || '—',
+      kiosk_beach: $('reg-beach').value.trim() || '—',
+      kiosk_phone: phone,
+      kiosk_doc: doc
+    });
     // Limpar formulário e voltar pra tela de login com aviso
     ['reg-owner','reg-email','reg-pass','reg-phone','reg-kname','reg-doc','reg-city','reg-beach'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
     showCard('login');
@@ -6748,6 +6815,18 @@ async function setKioskStatus(id, newStatus){
   var {data:kiosks} = await sb.from('kiosks').select('*').order('created_at',{ascending:false});
   renderAdminKiosksTable(kiosks||[]);
   toast('✅ Quiosque '+labels[newStatus]+' com sucesso!');
+
+  // Enviar e-mail de aprovação se for o caso (somente quando aprovar)
+  if(newStatus === 'approve'){
+    var approvedKiosk = (kiosks||[]).find(function(k){ return k.id === id; });
+    if(approvedKiosk){
+      sendAprovacaoEmail({
+        to_name: approvedKiosk.owner_name || 'Responsável',
+        to_email: approvedKiosk.owner_email,
+        kiosk_name: approvedKiosk.name || 'Seu quiosque'
+      });
+    }
+  }
 }
 
 
