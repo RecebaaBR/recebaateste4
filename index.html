@@ -3230,7 +3230,7 @@ async function goToMenu(){
 
     window._clientRealtimeChannel = sb.channel(chName)
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'orders',
-        filter:'kiosk_id=eq.'+currentKiosk.id+'&umbrella_num=eq.'+String(window._umb||'?')},
+        filter:'kiosk_id=eq.'+currentKiosk.id},
         function(payload){
           var updated = payload.new;
           // PEDIDO DE CONTA cancelado pelo quiosque → desbloquear sessão
@@ -3273,7 +3273,7 @@ async function goToMenu(){
           }
         })
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',
-        filter:'kiosk_id=eq.'+currentKiosk.id+'&umbrella_num=eq.'+String(window._umb||'?')},
+        filter:'kiosk_id=eq.'+currentKiosk.id},
         function(payload){
           if(payload.new.customer_name === 'ENCERRAMENTO' &&
              payload.new.umbrella_num === String(window._umb||'?')){
@@ -3294,7 +3294,7 @@ async function goToMenu(){
           }
         })
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',
-        filter:'kiosk_id=eq.'+currentKiosk.id+'&umbrella_num=eq.'+String(window._umb||'?')},
+        filter:'kiosk_id=eq.'+currentKiosk.id},
         function(payload){
           var inserted = payload.new;
           // Ignorar pedidos especiais
