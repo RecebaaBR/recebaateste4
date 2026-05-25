@@ -4788,7 +4788,7 @@ function updateDashMetrics(){
   var contasBadge = $('contas-badge');
   if(contasBadge) contasBadge.textContent = contasPend.length;
   const counts={};
-  realToday.forEach(o=>(o.items||[]).forEach(i=>{counts[i.name]=(counts[i.name]||0)+i.qty;}));
+  realToday.filter(o=>o.status!=='cancelled').forEach(o=>(o.items||[]).forEach(i=>{counts[i.name]=(counts[i.name]||0)+i.qty;}));
   const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const max=top[0]?top[0][1]:1;
   const ch=$('top-products-chart');
