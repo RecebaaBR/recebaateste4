@@ -7023,7 +7023,7 @@ function aPage(name,btn){
 // Inserir rodapé de contato em cada screen do app + landing
 (function(){
   function injectFooter(){
-    var html = '<div class="recebaa-footer">📧 Contato: <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a> · © 2026 Recebaa</div>';
+    var html = '<div class="recebaa-footer">📧 Contato: <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a> · © 2026 Recebaa<br/><span style="font-size:12px;opacity:.75"><a href="/privacy.html">Política de Privacidade</a> · <a href="/terms.html">Termos de Uso</a></span></div>';
     // Cada .screen recebe um footer no final
     document.querySelectorAll('.screen').forEach(function(s){
       if(!s.querySelector(':scope > .recebaa-footer')){
