@@ -3590,6 +3590,10 @@ async function placeOrder(){
 
   setLoading('place-order-btn',true,'Enviando...');
 
+  // Chave-base de idempotência: única por clique do cliente
+  // Cada grupo (drinks/foods/others) recebe uma chave derivada
+  var idempotencyBase = 'ord-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
   var lastOrderId = null, lastOrderNum = null;
   var createdNumbers = []; // pra mensagem final
   var notesValue = $('order-notes').value;
@@ -3606,15 +3610,43 @@ async function placeOrder(){
     var notesFinal = (notesValue || '') + noteSuffix;
 
     if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-      const {data:ord,error:e1} = await sb.from('orders').insert({
+      var idempKey = idempotencyBase + '-' + g.kind;
+      var insertResult = await sb.from('orders').insert({
         kiosk_id: currentKiosk.id,
         umbrella_num: String(window._umb||'?'),
         order_number: 0,
         customer_name: name,
         notes: notesFinal,
         status: 'pending',
-        total: groupTotal
+        total: groupTotal,
+        idempotency_key: idempKey
       }).select().single();
+      var ord = insertResult.data;
+      var e1 = insertResult.error;
+      // Conflito UNIQUE (23505) = re-tentativa do mesmo pedido. Buscar o registro existente.
+      if(e1 && e1.code === '23505'){
+        var existing = await sb.from('orders')
+          .select('*')
+          .eq('idempotency_key', idempKey)
+          .single();
+        if(existing.data){
+          ord = existing.data;
+          e1 = null;
+          // Não inserir order_items de novo — já foi feito no primeiro envio
+          var fullOrder = Object.assign({}, ord, {
+            items: groupItems.map(function(i){ return {name:i.name, qty:i.qty, price:i.price}; }),
+            umb: String(window._umb||'?'),
+            time: timeNow()
+          });
+          lastOrderId = ord.id; lastOrderNum = ord.order_number;
+          createdNumbers.push({ num: ord.order_number, kind: g.kind });
+          if(!orders.find(function(o){ return o.id === ord.id; })) orders.unshift(fullOrder);
+          if(!window._allUmbOrders) window._allUmbOrders = [];
+          if(!window._allUmbOrders.find(function(o){ return o.id === ord.id; })) window._allUmbOrders.unshift(fullOrder);
+          if(!myOrders.find(function(o){ return o.id === ord.id; })) myOrders.unshift(fullOrder);
+          continue; // pula pro próximo grupo
+        }
+      }
       if(e1 || !ord){
         toast('Erro ao enviar pedido: '+(e1 && e1.message));
         setLoading('place-order-btn',false,'Enviar Pedido 🚀');
