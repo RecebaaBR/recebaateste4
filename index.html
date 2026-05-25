@@ -7109,31 +7109,74 @@ async function loadAdminMetrics(){
 }
 
 // ── Credenciais admin ──────────────
-var ADMIN_USER = 'recebaa';
-var ADMIN_PASS = 'Rec@2025#master';
+var ADMIN_USER = 'recebaa'; // legado - mantido só pra retrocompatibilidade
+var ADMIN_PASS = 'Rec@2025#master'; // legado - não use mais
 var adminLoggedIn = false;
 
-function doAdminLogin(){
-  var user = $('admin-user').value.trim();
+async function doAdminLogin(){
+  var emailOrUser = $('admin-user').value.trim();
   var pass = $('admin-pass').value.trim();
-  if(user === ADMIN_USER && pass === ADMIN_PASS){
+  if(!emailOrUser || !pass){
+    toast('Preencha usuário e senha');
+    return;
+  }
+  // Usa o input como e-mail. Aceita também "recebaa" como atalho pro e-mail padrão (compat).
+  var email = emailOrUser.includes('@') ? emailOrUser : (emailOrUser === 'recebaa' ? 'pediu.recebaa@gmail.com' : emailOrUser);
+
+  if(!isConfigured){
+    toast('Modo demo: sem autenticação admin');
     adminLoggedIn = true;
     $('admin-login').classList.add('hidden');
     $('admin-dashboard').classList.remove('hidden');
     loadAdminData();
-    toast('Bem-vindo ao painel master!');
-  } else {
-    toast('Usuário ou senha incorretos');
-    $('admin-pass').value = '';
+    return;
   }
+
+  // Chama RPC login_admin (senha hasheada no banco com bcrypt)
+  var resp = await sb.rpc('login_admin', { p_email: email, p_password: pass });
+  if(resp.error){
+    toast('Erro ao validar: ' + (resp.error.message || 'tente novamente'));
+    return;
+  }
+  var rows = resp.data || [];
+  if(!rows.length){
+    toast('❌ Usuário ou senha incorretos');
+    $('admin-pass').value = '';
+    return;
+  }
+  // Login OK
+  adminLoggedIn = true;
+  try{ sessionStorage.setItem('recebaa-admin-session', JSON.stringify({ id: rows[0].id, email: rows[0].email, loginAt: Date.now() })); }catch(e){}
+  $('admin-login').classList.add('hidden');
+  $('admin-dashboard').classList.remove('hidden');
+  loadAdminData();
+  toast('✅ Bem-vindo ao painel admin!');
 }
 
 function doAdminLogout(){
   adminLoggedIn = false;
+  try{ sessionStorage.removeItem('recebaa-admin-session'); }catch(e){}
   $('admin-login').classList.remove('hidden');
   $('admin-dashboard').classList.add('hidden');
   $('admin-user').value = '';
   $('admin-pass').value = '';
+  toast('Sessão admin encerrada');
+}
+
+// Verifica se a sessão admin ainda existe ao carregar a tela
+function restoreAdminSession(){
+  try{
+    var raw = sessionStorage.getItem('recebaa-admin-session');
+    if(!raw) return false;
+    var session = JSON.parse(raw);
+    // Sessão expira após 8h
+    if(Date.now() - (session.loginAt||0) > 8*60*60*1000){
+      sessionStorage.removeItem('recebaa-admin-session');
+      return false;
+    }
+    adminLoggedIn = true;
+    return true;
+  }catch(e){ return false; }
 }
 
 function aPage(name,btn){
