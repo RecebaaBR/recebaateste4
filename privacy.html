@@ -1,198 +1,296 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Política de Privacidade — Recebaa</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"/>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:'DM Sans',system-ui,-apple-system,sans-serif;
-  color:#1e293b;line-height:1.6;background:#f8fafc;
-}
-header{
-  background:#fff;border-bottom:1px solid rgba(15,23,42,.08);
-  box-shadow:0 1px 3px rgba(15,23,42,.04);
-  padding:14px 24px;position:sticky;top:0;z-index:10;
-}
-header .wrap{max-width:880px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
-header a.home{color:#0c4a6e;text-decoration:none;font-weight:600;font-size:14px}
-header a.home:hover{text-decoration:underline}
-main{max-width:780px;margin:0 auto;padding:40px 24px 80px;background:#fff;min-height:calc(100vh - 56px)}
-h1{font-family:'Playfair Display',serif;font-size:34px;color:#0c4a6e;margin-bottom:8px;line-height:1.2}
-.subtitle{color:#64748b;font-size:15px;margin-bottom:32px;font-style:italic}
-h2{font-size:22px;color:#0c4a6e;margin:32px 0 10px;font-weight:700}
-h3{font-size:17px;color:#0369a1;margin:20px 0 6px;font-weight:600}
-p{margin-bottom:12px;font-size:15px}
-ul{padding-left:22px;margin-bottom:14px}
-li{margin-bottom:5px;font-size:15px}
-.meta{
-  background:#f1f5f9;border-radius:10px;padding:16px 20px;margin-bottom:28px;
-  font-size:13px;color:#475569;display:grid;grid-template-columns:max-content 1fr;gap:6px 20px;
-}
-.meta b{color:#0c4a6e}
-.footer-note{
-  border-top:1px solid #e2e8f0;margin-top:48px;padding-top:20px;
-  color:#64748b;font-size:13px;font-style:italic;text-align:center;
-}
-a{color:#0369a1}
-@media(max-width:600px){h1{font-size:26px}h2{font-size:19px}main{padding:24px 16px 60px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidade — Recebaa</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.7;
+      color: #1a1a1a;
+      background: #f7fafc;
+      padding: 20px;
+    }
+    .container {
+      max-width: 820px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 48px 56px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .header { text-align: center; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #e2e8f0; }
+    .header h1 { font-size: 32px; color: #1e40af; margin-bottom: 8px; }
+    .header .subtitle { font-size: 14px; color: #64748b; font-style: italic; }
+    .header .website { font-size: 14px; color: #64748b; margin-top: 8px; }
+    h1 { color: #1e293b; margin: 32px 0 16px; font-size: 24px; padding-top: 8px; }
+    h2 { color: #1e40af; margin: 28px 0 12px; font-size: 20px; }
+    h3 { color: #334155; margin: 20px 0 10px; font-size: 17px; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin: 14px 0 14px 28px; }
+    li { margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f1f5f9; font-weight: 600; color: #334155; }
+    .meta-table th { width: 30%; }
+    strong { color: #1e293b; font-weight: 600; }
+    em { color: #475569; }
+    .alert {
+      background: #dbeafe;
+      border-left: 4px solid #2563eb;
+      padding: 16px 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .footer-note {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      font-style: italic;
+      color: #64748b;
+      font-size: 14px;
+    }
+    a { color: #1e40af; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    @media (max-width: 640px) {
+      .container { padding: 24px 20px; margin: 20px auto; }
+      h1 { font-size: 20px; }
+      h2 { font-size: 18px; }
+    }
+  </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <a class="home" href="/">← Voltar ao Recebaa</a>
-    <span style="font-size:13px;color:#64748b">www.recebaa.com.br</span>
+  <div class="container">
+    <div class="header">
+      <h1>RECEBAA</h1>
+      <div class="subtitle">Pediu... Receba!</div>
+      <h2 style="margin-top: 16px;">Política de Privacidade</h2>
+      <div class="website">www.recebaa.com.br</div>
+    </div>
+
+    <table class="meta-table">
+      <tr><th>Documento</th><td>Política de Privacidade</td></tr>
+      <tr><th>Versão</th><td><strong>1.1</strong></td></tr>
+      <tr><th>Vigência a partir de</th><td><strong>26 de maio de 2026</strong></td></tr>
+      <tr><th>Última atualização</th><td><strong>26 de maio de 2026</strong></td></tr>
+      <tr><th>Controlador dos dados</th><td>Recebaa (operação em fase de constituição formal)</td></tr>
+      <tr><th>Encarregados (DPO)</th><td><strong>Leandro Correia Giorgio e Dorival Vizaco Netto — pediu.recebaa@gmail.com</strong></td></tr>
+      <tr><th>Base legal</th><td>Lei nº 13.709/2018 (LGPD)</td></tr>
+    </table>
+
+    <h1>1. Quem somos</h1>
+    <p>O <strong>Recebaa</strong> é uma plataforma de tecnologia que conecta clientes de quiosques de praia ao estabelecimento por meio de QR Code, permitindo realizar pedidos diretamente do guarda-sol. O serviço está acessível em www.recebaa.com.br e atende quiosques em território brasileiro e, futuramente, em outros países da América Latina.</p>
+    <p>Esta Política de Privacidade descreve como o Recebaa coleta, usa, armazena, compartilha e protege os dados pessoais dos seus usuários, em conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD — Lei nº 13.709/2018) e demais legislações aplicáveis.</p>
+    <div class="alert"><strong>Importante:</strong> O Recebaa encontra-se atualmente em <strong>fase de desenvolvimento (Beta / MVP)</strong>. As práticas de proteção de dados descritas aqui são aplicadas integralmente, mas o usuário deve estar ciente de que medidas adicionais de segurança serão implementadas conforme a plataforma evolui (vide Termos de Uso, Cláusula 2).</div>
+
+    <h1>2. Quem é o titular dos dados</h1>
+    <p>Esta política se aplica a três grupos de pessoas:</p>
+    <ul>
+      <li><strong>Quiosques cadastrados</strong> — estabelecimentos comerciais que utilizam o Recebaa para gerenciar pedidos;</li>
+      <li><strong>Responsáveis pelos quiosques</strong> — pessoas físicas que cadastram e administram a conta do estabelecimento;</li>
+      <li><strong>Clientes finais</strong> — banhistas que utilizam o aplicativo do cliente para fazer pedidos.</li>
+    </ul>
+
+    <h1>3. Quais dados coletamos</h1>
+    <h2>3.1. Dados do responsável pelo quiosque (no cadastro)</h2>
+    <ul>
+      <li>Nome completo</li>
+      <li>Endereço de e-mail</li>
+      <li>Senha de acesso (armazenada de forma criptografada com algoritmo bcrypt)</li>
+      <li>Telefone ou WhatsApp</li>
+      <li>CPF ou CNPJ</li>
+      <li>Nome do quiosque, cidade e praia onde opera</li>
+      <li>Foto de logotipo (opcional)</li>
+    </ul>
+
+    <h2>3.2. Dados do cliente final (a cada pedido)</h2>
+    <ul>
+      <li>Apenas o nome informado pelo cliente no momento do pedido.</li>
+      <li><strong>Não coletamos CPF, e-mail, telefone ou qualquer outro dado de identificação do cliente final.</strong></li>
+      <li><strong>Não há cadastro persistente do cliente</strong> — cada pedido é tratado como uma sessão pontual.</li>
+    </ul>
+
+    <h2>3.3. Dados técnicos coletados automaticamente</h2>
+    <ul>
+      <li>Endereço IP de acesso</li>
+      <li>Tipo e versão do navegador</li>
+      <li>Sistema operacional do dispositivo</li>
+      <li>Data e hora do acesso</li>
+      <li>Páginas visitadas dentro do site</li>
+    </ul>
+    <p>Esses dados são utilizados exclusivamente para fins de segurança, prevenção a fraude e melhoria do serviço.</p>
+
+    <h1>4. Como usamos seus dados</h1>
+    <h2>4.1. Para o quiosque cadastrado</h2>
+    <ul>
+      <li>Autenticação no painel administrativo do quiosque</li>
+      <li>Comunicação operacional (suporte, atualizações de sistema)</li>
+      <li>Faturamento e cobrança da assinatura, quando aplicável</li>
+      <li>Cumprimento de obrigações legais e fiscais</li>
+      <li><strong>Acompanhamento personalizado durante a fase Beta</strong> (Cláusula 2 dos Termos de Uso)</li>
+    </ul>
+
+    <h2>4.2. Para o cliente final</h2>
+    <ul>
+      <li>Identificar o pedido vinculado ao guarda-sol correspondente</li>
+      <li>Mostrar o status do pedido em tempo real</li>
+      <li>Permitir o fechamento da conta junto ao quiosque</li>
+    </ul>
+
+    <h2>4.3. Base legal para o tratamento</h2>
+    <p>Tratamos seus dados com base nas seguintes hipóteses previstas pela LGPD:</p>
+    <ul>
+      <li><strong>Execução de contrato</strong> (Art. 7º, V) — necessário para que o serviço funcione;</li>
+      <li><strong>Cumprimento de obrigação legal</strong> (Art. 7º, II) — emissão fiscal, retenção contábil;</li>
+      <li><strong>Legítimo interesse</strong> (Art. 7º, IX) — segurança da plataforma, prevenção a fraude;</li>
+      <li><strong>Consentimento</strong> (Art. 7º, I) — quando aplicável, solicitado de forma destacada.</li>
+    </ul>
+
+    <h1>5. Com quem compartilhamos seus dados</h1>
+    <p>Não vendemos nem alugamos seus dados pessoais. Compartilhamos com terceiros apenas quando estritamente necessário, com prestadores de serviço que operam sob nossa instrução e em conformidade com a LGPD.</p>
+    <table>
+      <thead>
+        <tr><th>Prestador</th><th>País</th><th>Função</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Supabase</strong></td><td>Estados Unidos</td><td>Banco de dados e infraestrutura</td></tr>
+        <tr><td><strong>Vercel</strong></td><td>Estados Unidos</td><td>Hospedagem do site</td></tr>
+        <tr><td><strong>Netlify</strong></td><td>Estados Unidos</td><td>CDN e cache</td></tr>
+        <tr><td><strong>GitHub</strong></td><td>Estados Unidos</td><td>Armazenamento do código-fonte</td></tr>
+        <tr><td><strong>UptimeRobot</strong></td><td>Estados Unidos</td><td>Monitoramento</td></tr>
+        <tr><td><strong>EmailJS</strong></td><td>Estados Unidos</td><td>Envio de e-mails transacionais</td></tr>
+        <tr><td><strong>Autoridades competentes</strong></td><td>Brasil</td><td>Apenas mediante ordem judicial</td></tr>
+      </tbody>
+    </table>
+
+    <h2>5.1. Transferência internacional de dados</h2>
+    <p>Alguns dos nossos prestadores de serviço operam servidores fora do Brasil. Essa transferência internacional é realizada conforme o <strong>Art. 33 da LGPD</strong>, observando-se cláusulas contratuais padrão e o nível adequado de proteção de dados oferecido por cada fornecedor.</p>
+
+    <h1>6. Por quanto tempo guardamos seus dados</h1>
+    <table>
+      <thead>
+        <tr><th>Tipo de dado</th><th>Prazo de retenção</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Dados do quiosque ativo</td><td>Enquanto a conta estiver ativa</td></tr>
+        <tr><td>Dados do quiosque inativo ou excluído</td><td>Até 5 anos após o encerramento (Art. 7º, II, LGPD)</td></tr>
+        <tr><td>Dados de pedidos do cliente final</td><td>1 ano, após o que são anonimizados</td></tr>
+        <tr><td>Dados técnicos (logs de acesso)</td><td>6 meses (Art. 15, Marco Civil da Internet)</td></tr>
+        <tr><td>Backups do banco de dados</td><td>7 dias após exclusão</td></tr>
+      </tbody>
+    </table>
+
+    <h1>7. Seus direitos como titular dos dados</h1>
+    <p>De acordo com a LGPD (Art. 18), você tem direito a:</p>
+    <ul>
+      <li><strong>Confirmar</strong> se tratamos seus dados pessoais;</li>
+      <li><strong>Acessar</strong> os dados que tratamos sobre você;</li>
+      <li><strong>Corrigir</strong> dados incompletos, inexatos ou desatualizados;</li>
+      <li><strong>Solicitar a anonimização, bloqueio ou eliminação</strong> de dados desnecessários ou tratados em desconformidade;</li>
+      <li><strong>Solicitar a portabilidade</strong> dos dados para outro fornecedor de serviço;</li>
+      <li><strong>Solicitar a eliminação</strong> dos dados tratados com seu consentimento;</li>
+      <li><strong>Obter informação</strong> sobre com quem compartilhamos seus dados;</li>
+      <li><strong>Revogar o consentimento</strong>, quando aplicável.</li>
+    </ul>
+
+    <h2>7.1. Como exercer seus direitos</h2>
+    <p>Para exercer qualquer um desses direitos, envie um e-mail para <strong><a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a></strong> com o assunto <strong>"LGPD — exercício de direitos"</strong>, contendo:</p>
+    <ol>
+      <li>Seu nome completo;</li>
+      <li>E-mail cadastrado na plataforma;</li>
+      <li>Descrição clara da solicitação;</li>
+      <li>Cópia simples de documento de identidade (para validação).</li>
+    </ol>
+    <p><strong>Prazo de resposta:</strong> Até 15 dias úteis, conforme Art. 18, §3º da LGPD.</p>
+
+    <h2>7.2. Processo de exclusão de dados</h2>
+    <p>Mediante solicitação válida, o Recebaa:</p>
+    <ol>
+      <li>Verifica a identidade do solicitante em até 24h;</li>
+      <li>Cria backup de segurança antes da exclusão;</li>
+      <li><strong>Anonimiza</strong> os dados pessoais (preferencialmente) ou <strong>exclui</strong> completamente;</li>
+      <li>Mantém os dados em backup criptografado por 7 dias adicionais (recuperação em caso de erro);</li>
+      <li>Confirma a exclusão ao solicitante por e-mail.</li>
+    </ol>
+
+    <h1>8. Como protegemos seus dados</h1>
+    <p>Adotamos medidas técnicas e administrativas razoáveis para proteger seus dados pessoais contra acesso não autorizado, perda, destruição ou alteração, incluindo:</p>
+    <ul>
+      <li><strong>Criptografia em trânsito</strong> (HTTPS/TLS) em todo o tráfego do site;</li>
+      <li><strong>Senhas armazenadas</strong> com técnicas de proteção criptográfica (bcrypt);</li>
+      <li><strong>Controle de acesso</strong> ao banco de dados restrito a pessoal autorizado;</li>
+      <li><strong>Autenticação em duas etapas (2FA)</strong> em todas as contas administrativas;</li>
+      <li><strong>Backup automático diário</strong> do banco de dados, com retenção de 7 dias;</li>
+      <li><strong>Monitoramento de segurança contínuo</strong> via UptimeRobot e logs do banco;</li>
+      <li><strong>Headers HTTP de segurança</strong> (X-Frame-Options, X-Content-Type-Options, Referrer-Policy);</li>
+      <li><strong>Políticas de acesso (RLS)</strong> no banco de dados para isolamento de informações.</li>
+    </ul>
+    <p>Apesar das medidas adotadas, <strong>nenhuma plataforma é 100% segura</strong>, especialmente em fase Beta. Caso identifique uma vulnerabilidade ou suspeita de incidente, comunique-nos imediatamente pelo e-mail <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a>.</p>
+
+    <h1>9. Cookies e armazenamento local</h1>
+    <p>Atualmente, o Recebaa utiliza apenas <strong>armazenamento local</strong> (localStorage e sessionStorage) do navegador para guardar informações da sessão do cliente, como o quiosque atual e o guarda-sol vinculado ao pedido. Esses dados expiram automaticamente após 4 horas e ficam armazenados exclusivamente no dispositivo do usuário.</p>
+    <p><strong>Não utilizamos cookies de rastreamento, publicidade ou perfilamento de terceiros.</strong></p>
+
+    <h1>10. Comunicação de incidentes</h1>
+    <p>Em caso de incidente de segurança que possa acarretar risco ou dano relevante aos titulares, comunicaremos:</p>
+    <ol>
+      <li>A <strong>Autoridade Nacional de Proteção de Dados (ANPD)</strong> em prazo razoável;</li>
+      <li>Os <strong>titulares afetados</strong> por e-mail e/ou aviso no painel;</li>
+      <li><strong>Em até 72 horas</strong> da identificação do incidente, conforme determinado pelo Art. 48 da LGPD.</li>
+    </ol>
+    <p>A comunicação incluirá:</p>
+    <ul>
+      <li>Natureza dos dados afetados;</li>
+      <li>Riscos potenciais;</li>
+      <li>Medidas tomadas para mitigar o incidente;</li>
+      <li>Medidas recomendadas aos titulares.</li>
+    </ul>
+
+    <h1>11. Alterações nesta política</h1>
+    <p>Esta Política de Privacidade pode ser atualizada para refletir mudanças no serviço, na legislação ou em melhores práticas de proteção de dados. A data da última atualização sempre estará indicada no início do documento.</p>
+    <p>Alterações substanciais serão comunicadas com pelo menos <strong>15 dias de antecedência</strong> por e-mail ou aviso no site.</p>
+
+    <h1>12. Encarregados pelo Tratamento de Dados (DPO)</h1>
+    <p>Conforme exigido pelo <strong>Art. 41 da LGPD</strong>, o Recebaa designa formalmente seus Encarregados pelo Tratamento de Dados Pessoais:</p>
+    <table>
+      <tr><th>Nome (DPO 1)</th><td>Leandro Correia Giorgio</td></tr>
+      <tr><th>Nome (DPO 2)</th><td>Dorival Vizaco Netto</td></tr>
+      <tr><th>E-mail (canal único)</th><td><a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a></td></tr>
+      <tr><th>Telefone (canal único)</th><td>(11) 97207-0079</td></tr>
+    </table>
+
+    <h2>12.1. Atribuições dos Encarregados</h2>
+    <ul>
+      <li>Aceitar reclamações e comunicações dos titulares de dados;</li>
+      <li>Prestar esclarecimentos e adotar providências;</li>
+      <li>Receber comunicações da ANPD e adotar providências;</li>
+      <li>Orientar funcionários e contratados sobre práticas a serem tomadas;</li>
+      <li>Atuar como ponto de contato entre o controlador e os titulares;</li>
+      <li>Executar demais atribuições determinadas pelo controlador ou estabelecidas em normas complementares.</li>
+    </ul>
+
+    <h2>12.2. Mudanças futuras</h2>
+    <p>Conforme o Recebaa cresça e evolua, esta função poderá ser assumida por:</p>
+    <ul>
+      <li>DPO externo contratado (consultoria especializada);</li>
+      <li>Profissional dedicado em tempo integral;</li>
+      <li>Estrutura interna de governança de dados.</li>
+    </ul>
+    <p>Qualquer mudança será comunicada nesta política com 15 dias de antecedência.</p>
+
+    <h1>13. Contato</h1>
+    <p>Para dúvidas, solicitações ou exercício de direitos relacionados aos seus dados pessoais:</p>
+    <ul>
+      <li><strong>E-mail:</strong> <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a></li>
+      <li><strong>Site:</strong> <a href="https://www.recebaa.com.br">https://www.recebaa.com.br</a></li>
+    </ul>
+
+    <div class="footer-note">
+      Esta política está em conformidade com a Lei nº 13.709/2018 (LGPD).
+    </div>
   </div>
-</header>
-<main>
-  <h1>Política de Privacidade</h1>
-  <p class="subtitle">Como o Recebaa coleta, usa e protege seus dados pessoais.</p>
-
-  <div class="meta">
-    <b>Versão:</b> <span>1.0</span>
-    <b>Vigência a partir de:</b> <span>[25/05/2026]</span>
-    <b>Última atualização:</b> <span>[25/05/2026]</span>
-    <b>Controlador:</b> <span>Recebaa (operação em fase de constituição formal)</span>
-    <b>Contato:</b> <span><a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a></span>
-    <b>Base legal:</b> <span>Lei nº 13.709/2018 (LGPD)</span>
-  </div>
-
-  <h2>1. Quem somos</h2>
-  <p>Recebaa é uma plataforma de tecnologia que conecta clientes de quiosques de praia ao estabelecimento por meio de QR Code, permitindo realizar pedidos diretamente do guarda-sol. O serviço está acessível em www.recebaa.com.br e atende quiosques em território brasileiro e, futuramente, em outros países da América Latina.</p>
-  <p>Esta Política de Privacidade descreve como o Recebaa coleta, usa, armazena, compartilha e protege os dados pessoais dos seus usuários, em conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD — Lei nº 13.709/2018) e demais legislações aplicáveis.</p>
-
-  <h2>2. Quem é o titular dos dados</h2>
-  <p>Esta política se aplica a três grupos de pessoas:</p>
-  <ul>
-    <li><b>Quiosques cadastrados</b> — estabelecimentos comerciais que utilizam o Recebaa para gerenciar pedidos.</li>
-    <li><b>Responsáveis pelos quiosques</b> — pessoas físicas que cadastram e administram a conta do estabelecimento.</li>
-    <li><b>Clientes finais</b> — banhistas que utilizam o aplicativo do cliente para fazer pedidos.</li>
-  </ul>
-
-  <h2>3. Quais dados coletamos</h2>
-
-  <h3>3.1. Dados do responsável pelo quiosque (no cadastro)</h3>
-  <ul>
-    <li>Nome completo</li>
-    <li>Endereço de e-mail</li>
-    <li>Senha de acesso (armazenada de forma criptografada)</li>
-    <li>Telefone ou WhatsApp</li>
-    <li>CPF ou CNPJ</li>
-    <li>Nome do quiosque, cidade e praia onde opera</li>
-  </ul>
-
-  <h3>3.2. Dados do cliente final (a cada pedido)</h3>
-  <ul>
-    <li>Apenas o nome informado pelo cliente no momento do pedido.</li>
-    <li>Não coletamos CPF, e-mail, telefone ou qualquer outro dado de identificação do cliente final.</li>
-    <li>Não há cadastro persistente do cliente — cada pedido é tratado como uma sessão pontual.</li>
-  </ul>
-
-  <h3>3.3. Dados técnicos coletados automaticamente</h3>
-  <ul>
-    <li>Endereço IP de acesso</li>
-    <li>Tipo e versão do navegador</li>
-    <li>Sistema operacional do dispositivo</li>
-    <li>Data e hora do acesso</li>
-    <li>Páginas visitadas dentro do site</li>
-  </ul>
-  <p>Esses dados são utilizados exclusivamente para fins de segurança, prevenção a fraude e melhoria do serviço.</p>
-
-  <h2>4. Como usamos seus dados</h2>
-
-  <h3>4.1. Para o quiosque cadastrado</h3>
-  <ul>
-    <li>Autenticação no painel administrativo do quiosque</li>
-    <li>Comunicação operacional (suporte, atualizações de sistema)</li>
-    <li>Faturamento e cobrança da assinatura, quando aplicável</li>
-    <li>Cumprimento de obrigações legais e fiscais</li>
-  </ul>
-
-  <h3>4.2. Para o cliente final</h3>
-  <ul>
-    <li>Identificar o pedido vinculado ao guarda-sol correspondente</li>
-    <li>Mostrar o status do pedido em tempo real</li>
-    <li>Permitir o fechamento da conta junto ao quiosque</li>
-  </ul>
-
-  <h3>4.3. Base legal para o tratamento</h3>
-  <p>Tratamos seus dados com base nas seguintes hipóteses previstas pela LGPD:</p>
-  <ul>
-    <li><b>Execução de contrato</b> (Art. 7º, V) — necessário para que o serviço funcione.</li>
-    <li><b>Cumprimento de obrigação legal</b> (Art. 7º, II) — emissão fiscal, retenção contábil.</li>
-    <li><b>Legítimo interesse</b> (Art. 7º, IX) — segurança da plataforma, prevenção a fraude.</li>
-    <li><b>Consentimento</b> (Art. 7º, I) — quando aplicável, solicitado de forma destacada.</li>
-  </ul>
-
-  <h2>5. Com quem compartilhamos seus dados</h2>
-  <p>Não vendemos nem alugamos seus dados pessoais. Compartilhamos com terceiros apenas quando estritamente necessário, com prestadores de serviço que operam sob nossa instrução e em conformidade com a LGPD.</p>
-  <ul>
-    <li><b>Supabase</b> (Estados Unidos) — armazenamento de banco de dados e infraestrutura de back-end.</li>
-    <li><b>Netlify</b> (Estados Unidos) — hospedagem do site e entrega de conteúdo.</li>
-    <li><b>GitHub</b> (Estados Unidos) — armazenamento do código-fonte da aplicação.</li>
-    <li><b>Autoridades competentes</b> — apenas quando exigido por ordem judicial ou obrigação legal.</li>
-  </ul>
-
-  <h3>5.1. Transferência internacional de dados</h3>
-  <p>Alguns dos nossos prestadores de serviço operam servidores fora do Brasil. Essa transferência internacional é realizada conforme o Art. 33 da LGPD, observando-se cláusulas contratuais padrão e o nível adequado de proteção de dados oferecido por cada fornecedor.</p>
-
-  <h2>6. Por quanto tempo guardamos seus dados</h2>
-  <ul>
-    <li><b>Dados do quiosque ativo</b> — mantidos enquanto a conta estiver ativa na plataforma.</li>
-    <li><b>Dados do quiosque inativo ou excluído</b> — mantidos por até 5 anos após o encerramento, para fins fiscais e legais (Art. 7º, II, LGPD).</li>
-    <li><b>Dados de pedidos do cliente final</b> — mantidos por 1 ano para fins estatísticos e suporte ao quiosque, após o que são anonimizados.</li>
-    <li><b>Dados técnicos (logs de acesso)</b> — mantidos por 6 meses (Art. 15, Marco Civil da Internet).</li>
-  </ul>
-
-  <h2>7. Seus direitos como titular dos dados</h2>
-  <p>De acordo com a LGPD (Art. 18), você tem direito a:</p>
-  <ul>
-    <li>Confirmar se tratamos seus dados pessoais</li>
-    <li>Acessar os dados que tratamos sobre você</li>
-    <li>Corrigir dados incompletos, inexatos ou desatualizados</li>
-    <li>Solicitar a anonimização, bloqueio ou eliminação de dados desnecessários ou tratados em desconformidade</li>
-    <li>Solicitar a portabilidade dos dados para outro fornecedor de serviço</li>
-    <li>Solicitar a eliminação dos dados tratados com seu consentimento</li>
-    <li>Obter informação sobre com quem compartilhamos seus dados</li>
-    <li>Revogar o consentimento, quando aplicável</li>
-  </ul>
-  <p>Para exercer qualquer um desses direitos, envie um e-mail para <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a> com o assunto "LGPD — exercício de direitos". Responderemos em até 15 dias.</p>
-
-  <h2>8. Como protegemos seus dados</h2>
-  <p>Adotamos medidas técnicas e administrativas razoáveis para proteger seus dados pessoais contra acesso não autorizado, perda, destruição ou alteração, incluindo:</p>
-  <ul>
-    <li>Criptografia em trânsito (HTTPS/TLS) em todo o tráfego do site</li>
-    <li>Senhas armazenadas com técnicas de proteção criptográfica</li>
-    <li>Controle de acesso ao banco de dados restrito a pessoal autorizado</li>
-    <li>Backup automático diário do banco de dados</li>
-    <li>Monitoramento de segurança contínuo</li>
-  </ul>
-  <p>Apesar das medidas adotadas, nenhuma plataforma é 100% segura. Caso identifique uma vulnerabilidade ou suspeita de incidente, comunique-nos imediatamente pelo e-mail <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a>.</p>
-
-  <h2>9. Cookies</h2>
-  <p>Atualmente, o Recebaa utiliza apenas armazenamento local (localStorage e sessionStorage) do navegador para guardar informações da sessão do cliente, como o quiosque atual e o guarda-sol vinculado ao pedido. Esses dados expiram automaticamente após 4 horas e ficam armazenados exclusivamente no dispositivo do usuário.</p>
-  <p>Não utilizamos cookies de rastreamento, publicidade ou perfilamento de terceiros.</p>
-
-  <h2>10. Comunicação de incidentes</h2>
-  <p>Em caso de incidente de segurança que possa acarretar risco ou dano relevante aos titulares, comunicaremos a Autoridade Nacional de Proteção de Dados (ANPD) e os titulares afetados em prazo razoável, conforme determinado pelo Art. 48 da LGPD.</p>
-
-  <h2>11. Alterações nesta política</h2>
-  <p>Esta Política de Privacidade pode ser atualizada para refletir mudanças no serviço, na legislação ou em melhores práticas de proteção de dados. A data da última atualização sempre estará indicada no início do documento.</p>
-  <p>Alterações substanciais serão comunicadas com pelo menos 15 dias de antecedência por e-mail ou aviso no site.</p>
-
-  <h2>12. Contato</h2>
-  <p>Para dúvidas, solicitações ou exercício de direitos relacionados aos seus dados pessoais:</p>
-  <ul>
-    <li>E-mail: <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a></li>
-    <li>Site: <a href="https://www.recebaa.com.br">https://www.recebaa.com.br</a></li>
-  </ul>
-  <p>Responsável pelo tratamento de dados (Encarregado / DPO): será designado formalmente quando da constituição jurídica do Recebaa.</p>
-
-  <div class="footer-note">Esta política está em conformidade com a Lei nº 13.709/2018 (LGPD).</div>
-</main>
 </body>
 </html>
