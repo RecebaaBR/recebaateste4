@@ -2347,6 +2347,54 @@ tr:hover td{background:var(--sand-50)}
 <script>
 
 // ══════════════════════════════════════════════════════
+// PREVENIR PULL-TO-REFRESH (Safari iOS / WebKit)
+// overscroll-behavior é ignorado no Safari iOS; precisamos interceptar
+// o gesto touchmove quando o scroll está no topo da página.
+// ══════════════════════════════════════════════════════
+(function(){
+  var touchStartY = 0;
+  var touchStartX = 0;
+
+  document.addEventListener('touchstart', function(e){
+    if(e.touches.length !== 1) return;
+    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
+  }, {passive: true});
+
+  document.addEventListener('touchmove', function(e){
+    if(e.touches.length !== 1) return;
+    var currentY = e.touches[0].clientY;
+    var currentX = e.touches[0].clientX;
+    var deltaY = currentY - touchStartY;
+    var deltaX = currentX - touchStartX;
+
+    // Só interceptar se o gesto for predominantemente VERTICAL para BAIXO
+    // (evita conflito com swipe horizontal em carrosséis/abas)
+    if(deltaY <= 0) return;
+    if(Math.abs(deltaX) > Math.abs(deltaY)) return;
+
+    // Detectar elemento que faz scroll na cadeia até o body.
+    // Se algum ancestral tem scroll vertical e NÃO está no topo, deixa o navegador rolar.
+    var el = e.target;
+    while(el && el !== document.body && el !== document.documentElement){
+      var style = window.getComputedStyle(el);
+      var overflowY = style.overflowY;
+      if((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight){
+        if(el.scrollTop > 0) return; // tem scroll interno e não está no topo
+        break;
+      }
+      el = el.parentElement;
+    }
+
+    // Página principal: bloqueia se estiver no topo do scroll do documento
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    if(scrollTop <= 0){
+      e.preventDefault();
+    }
+  }, {passive: false});
+})();
+
+// ══════════════════════════════════════════════════════
 // INTERNACIONALIZAÇÃO PT / EN
 // ══════════════════════════════════════════════════════
 var LANG_CURRENT = 'pt';
