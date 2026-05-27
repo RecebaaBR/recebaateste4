@@ -6246,10 +6246,20 @@ var reportPeriod = 'today';
 var reportDateFrom = null;
 var reportDateTo = null;
 
-async function exportToExcel(){
-  // Reutiliza o período selecionado nos filtros de relatório
-  var dates = getReportDates();
-  if(!dates){ return; }
+function exportToExcel(){
+  // Exportar a Análise de Margem por Produto (tabela do relatório)
+  if(!marginTableData || !marginTableData.length){
+    toast('Carregue os relatórios primeiro.');
+    return;
+  }
+
+  // Aplicar a mesma ordenação que está ativa na tela
+  var sorted = marginTableData.slice().sort(function(a,b){
+    if(marginSortBy === 'margin') return b.marginPct - a.marginPct;
+    if(marginSortBy === 'revenue') return b.revenue - a.revenue;
+    if(marginSortBy === 'qty') return b.qty - a.qty;
+    return 0;
+  });
 
   var kioskName = (currentKiosk && currentKiosk.name) || 'Quiosque';
   var periodLabel = '';
@@ -6263,30 +6273,6 @@ async function exportToExcel(){
     periodLabel = (df && dt) ? (df + ' a ' + dt) : 'Personalizado';
   }
 
-  // Buscar pedidos do período
-  var pedidos = [];
-  if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
-    var resp = await sb.from('orders')
-      .select('*,order_items(*)')
-      .eq('kiosk_id', currentKiosk.id)
-      .gte('created_at', dates.from)
-      .lte('created_at', dates.to)
-      .order('created_at', {ascending: false});
-    pedidos = (resp.data || []);
-  } else {
-    // Demo: usar orders em memória
-    pedidos = (orders || []).filter(function(o){
-      var d = new Date(o.created_at || Date.now());
-      return d >= new Date(dates.from) && d <= new Date(dates.to);
-    });
-  }
-
-  if(!pedidos.length){
-    toast('Nenhum pedido encontrado no período.');
-    return;
-  }
-
-  // Helpers CSV
   var sep = ';';
   var nl = String.fromCharCode(10);
   var q = function(v){
@@ -6294,94 +6280,72 @@ async function exportToExcel(){
     var s = String(v).replace(/"/g, '""');
     return '"' + s + '"';
   };
-  var fmtDate = function(iso){
-    if(!iso) return '';
-    try {
-      var d = new Date(iso);
-      return d.toLocaleString('pt-BR');
-    } catch(e){ return iso; }
+  // Número formatado em pt-BR (vírgula decimal, sem símbolo) — abre certo no Excel
+  var num = function(v){
+    var n = Number(v) || 0;
+    return q(n.toFixed(2).replace('.', ','));
   };
-  var statusLabel = function(s){
-    return ({pending:'Pendente', accepted:'Aceito', preparing:'Em preparo',
-             delivering:'A caminho', delivered:'Entregue', cancelled:'Cancelado',
-             billed:'Faturado'})[s] || s || '';
+  var pct = function(v){
+    var n = Number(v) || 0;
+    return q(n.toFixed(1).replace('.', ',') + '%');
   };
 
-  // Calcular métricas (faturamento = PEDIDO DE CONTA entregues)
-  var contasFaturadas = pedidos.filter(function(o){
-    return o.customer_name === 'PEDIDO DE CONTA' && o.status === 'delivered';
-  });
-  var rev = contasFaturadas.reduce(function(s,o){ return s + Number(o.total||0); }, 0);
-  var ticket = contasFaturadas.length ? rev / contasFaturadas.length : 0;
-
-  var isSpecial = function(o){
-    return o.customer_name === 'PEDIDO DE CONTA'
-      || o.customer_name === 'ENCERRAMENTO'
-      || o.customer_name === 'CHAMADA DE ATENDENTE';
-  };
-  var realOrders = pedidos.filter(function(o){ return !isSpecial(o); });
-  var delivered = realOrders.filter(function(o){ return o.status === 'delivered'; });
-  var cancelled = realOrders.filter(function(o){ return o.status === 'cancelled'; });
-
-  // Custo / lucro a partir dos itens
-  var totalCost = 0;
-  delivered.forEach(function(o){
-    (o.order_items || []).forEach(function(it){
-      var c = Number(it.cost_price);
-      var qty = Number(it.quantity || 1);
-      if(!isNaN(c) && c > 0) totalCost += c * qty;
-    });
-  });
-  var profit = rev - totalCost;
-  var margin = rev > 0 ? Math.round(profit / rev * 100) : 0;
-
-  // Montar CSV
   var lines = [];
 
   // Cabeçalho
-  lines.push(q('Relatório Recebaa - ' + kioskName));
+  lines.push(q('Análise de Margem por Produto - ' + kioskName));
   lines.push(q('Período: ' + periodLabel));
   lines.push(q('Gerado em: ' + new Date().toLocaleString('pt-BR')));
   lines.push('');
 
-  // Resumo de métricas
+  // Métricas gerais do topo (mesmas da tela)
+  var revTop = $('r-rev') ? $('r-rev').textContent : '';
+  var costTop = $('r-cost') ? $('r-cost').textContent : '';
+  var profitTop = $('r-profit') ? $('r-profit').textContent : '';
+  var ordersTop = $('r-orders') ? $('r-orders').textContent : '';
+  var ticketTop = $('r-ticket') ? $('r-ticket').textContent : '';
+  var cancelTop = $('r-cancel') ? $('r-cancel').textContent : '';
+
   lines.push([q('Faturamento'), q('Custo total'), q('Lucro'),
-              q('Margem'), q('Total pedidos'), q('Ticket médio'),
-              q('Cancelamentos')].join(sep));
-  lines.push([q(fmt(rev)), q(fmt(totalCost)), q(fmt(profit)),
-              q(margin + '%'), q(realOrders.length), q(fmt(ticket)),
-              q(cancelled.length)].join(sep));
+              q('Total pedidos'), q('Ticket médio'), q('Cancelamentos')].join(sep));
+  lines.push([q(revTop), q(costTop), q(profitTop),
+              q(ordersTop), q(ticketTop), q(cancelTop)].join(sep));
   lines.push('');
 
-  // Tabela detalhada de pedidos
-  lines.push([q('Nº Pedido'), q('Data/Hora'), q('Guarda-sol'),
-              q('Cliente'), q('Status'), q('Total'),
-              q('Itens'), q('Observações')].join(sep));
+  // Tabela detalhada de margem por produto
+  lines.push([q('Produto'), q('Qtd'), q('Receita'),
+              q('Custo'), q('Lucro'), q('Margem')].join(sep));
 
-  pedidos.forEach(function(o){
-    var itens = (o.order_items || []).map(function(it){
-      return (it.quantity || 1) + 'x ' + (it.product_name || '');
-    }).join(' | ');
+  sorted.forEach(function(p){
     lines.push([
-      q(o.order_number || ''),
-      q(fmtDate(o.created_at)),
-      q(o.umbrella_num || ''),
-      q(o.customer_name || ''),
-      q(statusLabel(o.status)),
-      q(fmt(Number(o.total || 0))),
-      q(itens),
-      q(o.notes || '')
+      q(p.name),
+      q(p.qty),
+      num(p.revenue),
+      num(p.cost),
+      num(p.profit),
+      pct(p.marginPct)
     ].join(sep));
   });
 
-  // BOM UTF-8 + conteúdo
+  // Totais no rodapé
+  var totalRev = sorted.reduce(function(s,p){ return s + (p.revenue||0); }, 0);
+  var totalCost = sorted.reduce(function(s,p){ return s + (p.cost||0); }, 0);
+  var totalProfit = totalRev - totalCost;
+  var avgMargin = totalRev > 0 ? (totalProfit/totalRev*100) : 0;
+  var totalQty = sorted.reduce(function(s,p){ return s + (p.qty||0); }, 0);
+
+  lines.push('');
+  lines.push([q('TOTAL'), q(totalQty), num(totalRev),
+              num(totalCost), num(totalProfit), pct(avgMargin)].join(sep));
+
+  // BOM UTF-8 + escrever
   var csv = '\uFEFF' + lines.join(nl);
   var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
   var stamp = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-  a.download = 'recebaa-relatorio-' + kioskName.replace(/\s+/g, '-') + '-' + stamp + '.csv';
+  a.download = 'recebaa-margem-' + kioskName.replace(/\s+/g, '-') + '-' + stamp + '.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -6389,66 +6353,15 @@ async function exportToExcel(){
   toast('📊 Exportado para Excel!');
 }
 
-async function printReports(){
+function printReports(){
   var kioskName = (currentKiosk && currentKiosk.name) || 'Quiosque';
   var period = document.querySelector('.hf-btn.active') ? document.querySelector('.hf-btn.active').textContent : '';
   var rev = $('r-rev') ? $('r-rev').textContent : 'R$ 0';
   var ordersCount = $('r-orders') ? $('r-orders').textContent : '0';
   var ticket = $('r-ticket') ? $('r-ticket').textContent : 'R$ 0';
   var cancel = $('r-cancel') ? $('r-cancel').textContent : '0';
-
-  // Buscar pedidos do período pra montar tabela
-  var dates = getReportDates();
-  var pedidos = [];
-  if(dates){
-    if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
-      var resp = await sb.from('orders')
-        .select('*,order_items(*)')
-        .eq('kiosk_id', currentKiosk.id)
-        .gte('created_at', dates.from)
-        .lte('created_at', dates.to)
-        .order('created_at', {ascending: false});
-      pedidos = (resp.data || []);
-    } else {
-      pedidos = (orders || []).filter(function(o){
-        var d = new Date(o.created_at || Date.now());
-        return d >= new Date(dates.from) && d <= new Date(dates.to);
-      });
-    }
-  }
-
-  var statusLabelP = function(s){
-    return ({pending:'Pendente', accepted:'Aceito', preparing:'Em preparo',
-             delivering:'A caminho', delivered:'Entregue', cancelled:'Cancelado',
-             billed:'Faturado'})[s] || s || '';
-  };
-
-  var tableHtml;
-  if(pedidos.length){
-    var rows = pedidos.map(function(o){
-      var itens = (o.order_items || []).map(function(it){
-        return (it.quantity || 1) + 'x ' + (it.product_name || '');
-      }).join(', ');
-      var d = '';
-      try { d = new Date(o.created_at).toLocaleString('pt-BR'); } catch(e){}
-      return '<tr>'
-        + '<td>'+esc(o.order_number || '')+'</td>'
-        + '<td>'+esc(d)+'</td>'
-        + '<td>'+esc(o.umbrella_num || '')+'</td>'
-        + '<td>'+esc(o.customer_name || '')+'</td>'
-        + '<td>'+esc(statusLabelP(o.status))+'</td>'
-        + '<td>'+esc(fmt(Number(o.total || 0)))+'</td>'
-        + '<td>'+esc(itens)+'</td>'
-        + '</tr>';
-    }).join('');
-    tableHtml = '<table><thead><tr>'
-      + '<th>Nº</th><th>Data/Hora</th><th>Guarda-sol</th><th>Cliente</th>'
-      + '<th>Status</th><th>Total</th><th>Itens</th>'
-      + '</tr></thead><tbody>'+rows+'</tbody></table>';
-  } else {
-    tableHtml = '<p>Sem pedidos no período.</p>';
-  }
-
+  var tableEl = $('r-orders-table');
+  var tableHtml = tableEl ? tableEl.innerHTML : '<p>Sem dados</p>';
   var topProds = $('r-top-products') ? $('r-top-products').innerHTML : '';
   var now = new Date().toLocaleString('pt-BR');
 
