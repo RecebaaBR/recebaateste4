@@ -4503,7 +4503,7 @@ async function enterDash(){
   await loadKioskData();
   subscribeRealtime();
   loadMuteState();
-  // Verificar acesso periodicamente a cada 30 segundos
+  // Verificar acesso periodicamente a cada 2 minutos
   if(window._accessChecker) clearInterval(window._accessChecker);
   window._accessChecker = setInterval(checkKioskAccess, 120000);
 }
