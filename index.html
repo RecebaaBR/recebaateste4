@@ -3340,6 +3340,17 @@ async function goToMenu(){
               toast('🧾 Conta solicitada para este guarda-sol.');
             }
           }
+          // PEDIDO DE CONTA inserido já como delivered → quiosque encerrou
+          // antes do cliente pedir conta. Bloquear sessão IMEDIATAMENTE para
+          // evitar pedido duplicado caso o ENCERRAMENTO atrase ou falhe.
+          if(payload.new.customer_name === 'PEDIDO DE CONTA' &&
+             payload.new.umbrella_num === String(window._umb||'?') &&
+             payload.new.status === 'delivered'){
+            window._billRequested = true;
+            applyBillBlock();
+            toast('💰 Conta faturada pelo quiosque! Obrigado pela visita. 🌊');
+            setTimeout(function(){ encerrarSessaoCliente(); }, 2000);
+          }
         })
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',
         filter:'kiosk_id=eq.'+currentKiosk.id+'&umbrella_num=eq.'+String(window._umb||'?')},
@@ -4111,6 +4122,40 @@ async function requestBill(type, personName, personTotal){
   var notasCompletas = msg+' · '+detalhes+' · ☂️ '+(window._umb||'?');
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    // Proteção anti-duplicidade: verificar no banco se já existe PEDIDO DE CONTA
+    // ativa ou faturada desde o último ENCERRAMENTO deste guarda-sol.
+    // Isso evita duplicar quando o quiosque já encerrou mas o cliente não recebeu o evento.
+    var umbStrRb = String(window._umb||'?');
+    var lastEncRb = await sb.from('orders')
+      .select('created_at')
+      .eq('kiosk_id', currentKiosk.id)
+      .eq('umbrella_num', umbStrRb)
+      .eq('customer_name', 'ENCERRAMENTO')
+      .order('created_at', {ascending: false})
+      .limit(1);
+    var sessionStartRb = (lastEncRb.data && lastEncRb.data[0]) ? lastEncRb.data[0].created_at : null;
+
+    var checkQ = sb.from('orders')
+      .select('id, status, total, created_at')
+      .eq('kiosk_id', currentKiosk.id)
+      .eq('umbrella_num', umbStrRb)
+      .eq('customer_name', 'PEDIDO DE CONTA')
+      .not('status', 'eq', 'cancelled');
+    if(sessionStartRb) checkQ = checkQ.gt('created_at', sessionStartRb);
+    var existingBill = await checkQ.limit(1);
+
+    if(existingBill.data && existingBill.data.length){
+      var existing = existingBill.data[0];
+      if(existing.status === 'delivered' || existing.status === 'billed'){
+        toast('💰 Esta conta já foi faturada pelo quiosque.');
+        setTimeout(function(){ encerrarSessaoCliente(); }, 1500);
+      } else {
+        toast('🧾 A conta já foi solicitada. Aguarde o atendente.');
+      }
+      closeBillModal();
+      return;
+    }
+
     var insertRes = await sb.from('orders').insert({
       kiosk_id: currentKiosk.id,
       umbrella_num: String(window._umb||'?'),
