@@ -4706,7 +4706,7 @@ function subscribeRealtime(){
   // Atualizar dashboard a cada 30 segundos automaticamente
   setInterval(function(){
     updateDashMetrics();
-  }, 30000);
+  }, 60000);
   realtimeChannel=sb.channel('kiosk-'+currentKiosk.id)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',filter:'kiosk_id=eq.'+currentKiosk.id},
       async payload=>{
