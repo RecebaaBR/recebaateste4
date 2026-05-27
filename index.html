@@ -22,8 +22,8 @@
   --font:'DM Sans',sans-serif;--font-d:'Playfair Display',serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;overscroll-behavior-y:contain}
-body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webkit-font-smoothing:antialiased;overscroll-behavior-y:contain}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webkit-font-smoothing:antialiased}
 .hidden{display:none!important}
 
 /* NAV */
@@ -1237,8 +1237,8 @@ tr:hover td{background:var(--sand-50)}
   --font:'DM Sans',sans-serif;--font-d:'Playfair Display',serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;overscroll-behavior-y:contain}
-body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webkit-font-smoothing:antialiased;overscroll-behavior-y:contain}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webkit-font-smoothing:antialiased}
 .hidden{display:none!important}
 
 /* NAV */
@@ -3340,17 +3340,6 @@ async function goToMenu(){
               toast('🧾 Conta solicitada para este guarda-sol.');
             }
           }
-          // PEDIDO DE CONTA inserido já como delivered → quiosque encerrou
-          // antes do cliente pedir conta. Bloquear sessão IMEDIATAMENTE para
-          // evitar pedido duplicado caso o ENCERRAMENTO atrase ou falhe.
-          if(payload.new.customer_name === 'PEDIDO DE CONTA' &&
-             payload.new.umbrella_num === String(window._umb||'?') &&
-             payload.new.status === 'delivered'){
-            window._billRequested = true;
-            applyBillBlock();
-            toast('💰 Conta faturada pelo quiosque! Obrigado pela visita. 🌊');
-            setTimeout(function(){ encerrarSessaoCliente(); }, 2000);
-          }
         })
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'orders',
         filter:'kiosk_id=eq.'+currentKiosk.id+'&umbrella_num=eq.'+String(window._umb||'?')},
@@ -4122,40 +4111,6 @@ async function requestBill(type, personName, personTotal){
   var notasCompletas = msg+' · '+detalhes+' · ☂️ '+(window._umb||'?');
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-    // Proteção anti-duplicidade: verificar no banco se já existe PEDIDO DE CONTA
-    // ativa ou faturada desde o último ENCERRAMENTO deste guarda-sol.
-    // Isso evita duplicar quando o quiosque já encerrou mas o cliente não recebeu o evento.
-    var umbStrRb = String(window._umb||'?');
-    var lastEncRb = await sb.from('orders')
-      .select('created_at')
-      .eq('kiosk_id', currentKiosk.id)
-      .eq('umbrella_num', umbStrRb)
-      .eq('customer_name', 'ENCERRAMENTO')
-      .order('created_at', {ascending: false})
-      .limit(1);
-    var sessionStartRb = (lastEncRb.data && lastEncRb.data[0]) ? lastEncRb.data[0].created_at : null;
-
-    var checkQ = sb.from('orders')
-      .select('id, status, total, created_at')
-      .eq('kiosk_id', currentKiosk.id)
-      .eq('umbrella_num', umbStrRb)
-      .eq('customer_name', 'PEDIDO DE CONTA')
-      .not('status', 'eq', 'cancelled');
-    if(sessionStartRb) checkQ = checkQ.gt('created_at', sessionStartRb);
-    var existingBill = await checkQ.limit(1);
-
-    if(existingBill.data && existingBill.data.length){
-      var existing = existingBill.data[0];
-      if(existing.status === 'delivered' || existing.status === 'billed'){
-        toast('💰 Esta conta já foi faturada pelo quiosque.');
-        setTimeout(function(){ encerrarSessaoCliente(); }, 1500);
-      } else {
-        toast('🧾 A conta já foi solicitada. Aguarde o atendente.');
-      }
-      closeBillModal();
-      return;
-    }
-
     var insertRes = await sb.from('orders').insert({
       kiosk_id: currentKiosk.id,
       umbrella_num: String(window._umb||'?'),
@@ -6340,53 +6295,105 @@ var reportDateFrom = null;
 var reportDateTo = null;
 
 function exportToExcel(){
-  // Buscar dados da tabela de relatórios
-  var tableEl = $('r-orders-table');
-  if(!tableEl || !tableEl.querySelector('table')){
-    toast('Carregue os relatórios primeiro.'); return;
+  // Exportar a Análise de Margem por Produto (tabela do relatório)
+  if(!marginTableData || !marginTableData.length){
+    toast('Carregue os relatórios primeiro.');
+    return;
   }
 
-  // Montar CSV com BOM para Excel reconhecer UTF-8
-  var rows = [];
-  var headers = [];
-  var ths = tableEl.querySelectorAll('thead th');
-  ths.forEach(function(th){ headers.push('"'+th.textContent.trim()+'"'); });
-  rows.push(headers.join(';'));
-
-  var trs = tableEl.querySelectorAll('tbody tr');
-  trs.forEach(function(tr){
-    var cols = [];
-    tr.querySelectorAll('td').forEach(function(td){
-      var val = td.textContent.trim().replace(/"/g,'""');
-      cols.push('"'+val+'"');
-    });
-    rows.push(cols.join(';'));
+  // Aplicar a mesma ordenação que está ativa na tela
+  var sorted = marginTableData.slice().sort(function(a,b){
+    if(marginSortBy === 'margin') return b.marginPct - a.marginPct;
+    if(marginSortBy === 'revenue') return b.revenue - a.revenue;
+    if(marginSortBy === 'qty') return b.qty - a.qty;
+    return 0;
   });
 
-  // Adicionar métricas no topo
-  var rev = $('r-rev') ? $('r-rev').textContent : '';
-  var orders = $('r-orders') ? $('r-orders').textContent : '';
-  var ticket = $('r-ticket') ? $('r-ticket').textContent : '';
-  var cancel = $('r-cancel') ? $('r-cancel').textContent : '';
   var kioskName = (currentKiosk && currentKiosk.name) || 'Quiosque';
-  var period = document.querySelector('.hf-btn.active') ? document.querySelector('.hf-btn.active').textContent : '';
+  var periodLabel = '';
+  if(reportPeriod === 'today') periodLabel = 'Hoje';
+  else if(reportPeriod === 'week') periodLabel = 'Últimos 7 dias';
+  else if(reportPeriod === 'month') periodLabel = 'Este mês';
+  else if(reportPeriod === 'year') periodLabel = 'Este ano';
+  else if(reportPeriod === 'custom'){
+    var df = $('r-date-from') ? $('r-date-from').value : '';
+    var dt = $('r-date-to') ? $('r-date-to').value : '';
+    periodLabel = (df && dt) ? (df + ' a ' + dt) : 'Personalizado';
+  }
 
-  var meta = [
-    '"Relatório Recebaa - '+kioskName+'"',
-    '"Período: '+period+'"',
-    '"Faturamento;"+Pedidos;Ticket médio;Cancelamentos"',
-    '"'+rev+'";"'+orders+'";"'+ticket+'";"'+cancel+'"',
-    '""',
-  ];
-
+  var sep = ';';
   var nl = String.fromCharCode(10);
-  var csv = '\uFEFF' + meta.join(nl) + nl + rows.join(nl);
+  var q = function(v){
+    if(v == null) v = '';
+    var s = String(v).replace(/"/g, '""');
+    return '"' + s + '"';
+  };
+  // Número formatado em pt-BR (vírgula decimal, sem símbolo) — abre certo no Excel
+  var num = function(v){
+    var n = Number(v) || 0;
+    return q(n.toFixed(2).replace('.', ','));
+  };
+  var pct = function(v){
+    var n = Number(v) || 0;
+    return q(n.toFixed(1).replace('.', ',') + '%');
+  };
+
+  var lines = [];
+
+  // Cabeçalho
+  lines.push(q('Análise de Margem por Produto - ' + kioskName));
+  lines.push(q('Período: ' + periodLabel));
+  lines.push(q('Gerado em: ' + new Date().toLocaleString('pt-BR')));
+  lines.push('');
+
+  // Métricas gerais do topo (mesmas da tela)
+  var revTop = $('r-rev') ? $('r-rev').textContent : '';
+  var costTop = $('r-cost') ? $('r-cost').textContent : '';
+  var profitTop = $('r-profit') ? $('r-profit').textContent : '';
+  var ordersTop = $('r-orders') ? $('r-orders').textContent : '';
+  var ticketTop = $('r-ticket') ? $('r-ticket').textContent : '';
+  var cancelTop = $('r-cancel') ? $('r-cancel').textContent : '';
+
+  lines.push([q('Faturamento'), q('Custo total'), q('Lucro'),
+              q('Total pedidos'), q('Ticket médio'), q('Cancelamentos')].join(sep));
+  lines.push([q(revTop), q(costTop), q(profitTop),
+              q(ordersTop), q(ticketTop), q(cancelTop)].join(sep));
+  lines.push('');
+
+  // Tabela detalhada de margem por produto
+  lines.push([q('Produto'), q('Qtd'), q('Receita'),
+              q('Custo'), q('Lucro'), q('Margem')].join(sep));
+
+  sorted.forEach(function(p){
+    lines.push([
+      q(p.name),
+      q(p.qty),
+      num(p.revenue),
+      num(p.cost),
+      num(p.profit),
+      pct(p.marginPct)
+    ].join(sep));
+  });
+
+  // Totais no rodapé
+  var totalRev = sorted.reduce(function(s,p){ return s + (p.revenue||0); }, 0);
+  var totalCost = sorted.reduce(function(s,p){ return s + (p.cost||0); }, 0);
+  var totalProfit = totalRev - totalCost;
+  var avgMargin = totalRev > 0 ? (totalProfit/totalRev*100) : 0;
+  var totalQty = sorted.reduce(function(s,p){ return s + (p.qty||0); }, 0);
+
+  lines.push('');
+  lines.push([q('TOTAL'), q(totalQty), num(totalRev),
+              num(totalCost), num(totalProfit), pct(avgMargin)].join(sep));
+
+  // BOM UTF-8 + escrever
+  var csv = '\uFEFF' + lines.join(nl);
   var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
-  var filename = 'recebaa-'+kioskName.replace(/\s+/g,'-')+'-'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.csv';
-  a.download = filename;
+  var stamp = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+  a.download = 'recebaa-margem-' + kioskName.replace(/\s+/g, '-') + '-' + stamp + '.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
