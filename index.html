@@ -3128,6 +3128,114 @@ window.addEventListener('load', async function(){
   }
 });
 
+// ══════════════════════════════════════════════════════
+// SINCRONIZAR PEDIDOS DO CLIENTE
+// Função reutilizável que busca o estado atual dos pedidos
+// do guarda-sol no banco. Usada no carregamento inicial e
+// quando a aba volta a ficar visível (após tela bloqueada).
+// ══════════════════════════════════════════════════════
+function refreshClientOrders(){
+  if(!(isConfigured && currentKiosk && currentKiosk.id!=='demo' && window._umb)) return;
+  // Primeiro: descobrir quando começou a sessão atual desse guarda-sol
+  // (created_at do último ENCERRAMENTO). Tudo antes pertence a sessões anteriores.
+  sb.from('orders')
+    .select('created_at')
+    .eq('kiosk_id', currentKiosk.id)
+    .eq('umbrella_num', String(window._umb))
+    .eq('customer_name', 'ENCERRAMENTO')
+    .order('created_at', {ascending: false})
+    .limit(1)
+    .then(function(rEnc){
+      var sessionStart = (rEnc.data && rEnc.data[0]) ? rEnc.data[0].created_at : null;
+
+      // Busca os pedidos da sessão atual.
+      // Inclui TODOS os status normais (pending, accepted, preparing,
+      // delivering, delivered) + cancelados, para o cliente ver o histórico
+      // completo da sessão. Exclui apenas billed e pedidos especiais.
+      var q = sb.from('orders')
+        .select('*,order_items(*)')
+        .eq('kiosk_id', currentKiosk.id)
+        .eq('umbrella_num', String(window._umb))
+        .not('customer_name', 'eq', 'CHAMADA DE ATENDENTE')
+        .not('customer_name', 'eq', 'PEDIDO DE CONTA')
+        .not('customer_name', 'eq', 'ENCERRAMENTO')
+        .not('status', 'eq', 'billed')
+        .order('created_at', {ascending: false})
+        .limit(1000);
+      if(sessionStart) q = q.gt('created_at', sessionStart);
+
+      q.then(function(r){
+        var allOrders = (r.data || []).map(function(o){
+          return Object.assign({}, o, {
+            items: (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; }),
+            umb: o.umbrella_num,
+            time: new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+          });
+        });
+        // Substituir totalmente os arrays — esta é a "fonte da verdade"
+        window._allUmbOrders = allOrders;
+        myOrders = allOrders;
+        updateOrdersBadge();
+        // Re-renderizar a tela de pedidos se estiver aberta
+        var vo = $('view-orders');
+        if(vo && !vo.classList.contains('hidden')) renderMyOrders();
+      });
+
+      // Checar se já existe PEDIDO DE CONTA ativo nesta sessão
+      var qBill = sb.from('orders')
+        .select('id,status')
+        .eq('kiosk_id', currentKiosk.id)
+        .eq('umbrella_num', String(window._umb))
+        .eq('customer_name', 'PEDIDO DE CONTA')
+        .not('status', 'eq', 'cancelled')
+        .not('status', 'eq', 'delivered')
+        .not('status', 'eq', 'billed')
+        .order('created_at', {ascending: false})
+        .limit(1);
+      if(sessionStart) qBill = qBill.gt('created_at', sessionStart);
+      qBill.then(function(rBill){
+        window._billRequested = !!(rBill.data && rBill.data.length);
+        applyBillBlock();
+      });
+
+      // Checar também se a sessão JÁ FOI ENCERRADA enquanto a aba estava em background.
+      // Procura PEDIDO DE CONTA já faturado (delivered) ou ENCERRAMENTO posterior à sessão atual.
+      // Se encontrar, encerra a sessão do cliente automaticamente.
+      var qClosed = sb.from('orders')
+        .select('id,customer_name,status')
+        .eq('kiosk_id', currentKiosk.id)
+        .eq('umbrella_num', String(window._umb))
+        .in('customer_name', ['PEDIDO DE CONTA','ENCERRAMENTO'])
+        .order('created_at', {ascending: false})
+        .limit(5);
+      if(sessionStart) qClosed = qClosed.gt('created_at', sessionStart);
+      qClosed.then(function(rC){
+        if(!rC.data || !rC.data.length) return;
+        var encerrada = rC.data.some(function(o){
+          return (o.customer_name === 'ENCERRAMENTO')
+            || (o.customer_name === 'PEDIDO DE CONTA' && o.status === 'delivered');
+        });
+        if(encerrada && !window._sessionClosedHandled){
+          window._sessionClosedHandled = true;
+          toast('💰 Mesa encerrada! Obrigado pela visita. 🌊');
+          setTimeout(function(){ encerrarSessaoCliente(); }, 1500);
+        }
+      });
+    });
+}
+
+// Detectar quando o cliente volta para a aba (após tela bloqueada,
+// trocou de app, etc.) e ressincronizar com o banco.
+// Sem isso, eventos de Realtime perdidos enquanto a aba estava em
+// background não são recuperados e o cliente vê estado desatualizado.
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState !== 'visible') return;
+  // Só ressincroniza se o cliente está na tela do cardápio
+  var clientMenu = $('client-menu');
+  if(!clientMenu || clientMenu.classList.contains('hidden')) return;
+  refreshClientOrders();
+});
+
 async function goToMenu(){
   const v=$('umbrella-input').value.trim();
   if(!v||isNaN(v)||+v<1){ toast('Informe o número do seu guarda-sol ☂️'); return; }
@@ -3198,69 +3306,7 @@ async function goToMenu(){
   buildCatTabs();
   buildMenu();
   // Carregar pedidos existentes do guarda-sol do banco (sessão atual)
-  if(isConfigured && currentKiosk && currentKiosk.id!=='demo' && window._umb){
-    // Primeiro: descobrir quando começou a sessão atual desse guarda-sol
-    // (created_at do último ENCERRAMENTO). Tudo antes pertence a sessões anteriores.
-    sb.from('orders')
-      .select('created_at')
-      .eq('kiosk_id', currentKiosk.id)
-      .eq('umbrella_num', String(window._umb))
-      .eq('customer_name', 'ENCERRAMENTO')
-      .order('created_at', {ascending: false})
-      .limit(1)
-      .then(function(rEnc){
-        var sessionStart = (rEnc.data && rEnc.data[0]) ? rEnc.data[0].created_at : null;
-
-        // Agora busca os pedidos da sessão atual.
-        // Inclui TODOS os status normais (pending, accepted, preparing,
-        // delivering, delivered) + cancelados, para o cliente ver o histórico
-        // completo da sessão. Exclui apenas billed e pedidos especiais.
-        var q = sb.from('orders')
-          .select('*,order_items(*)')
-          .eq('kiosk_id', currentKiosk.id)
-          .eq('umbrella_num', String(window._umb))
-          .not('customer_name', 'eq', 'CHAMADA DE ATENDENTE')
-          .not('customer_name', 'eq', 'PEDIDO DE CONTA')
-          .not('customer_name', 'eq', 'ENCERRAMENTO')
-          .not('status', 'eq', 'billed')
-          .order('created_at', {ascending: false})
-          .limit(1000);
-        if(sessionStart) q = q.gt('created_at', sessionStart);
-
-        q.then(function(r){
-          if(r.data && r.data.length){
-            var allOrders = r.data.map(function(o){
-              return Object.assign({}, o, {
-                items: (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; }),
-                umb: o.umbrella_num,
-                time: new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
-              });
-            });
-            // Todos os pedidos do guarda-sol visíveis para todos
-            window._allUmbOrders = allOrders;
-            myOrders = allOrders;
-            updateOrdersBadge();
-          }
-        });
-
-        // Checar se já existe PEDIDO DE CONTA ativo nesta sessão
-        var qBill = sb.from('orders')
-          .select('id,status')
-          .eq('kiosk_id', currentKiosk.id)
-          .eq('umbrella_num', String(window._umb))
-          .eq('customer_name', 'PEDIDO DE CONTA')
-          .not('status', 'eq', 'cancelled')
-          .not('status', 'eq', 'delivered')
-          .not('status', 'eq', 'billed')
-          .order('created_at', {ascending: false})
-          .limit(1);
-        if(sessionStart) qBill = qBill.gt('created_at', sessionStart);
-        qBill.then(function(rBill){
-          window._billRequested = !!(rBill.data && rBill.data.length);
-          applyBillBlock();
-        });
-      });
-  }
+  refreshClientOrders();
   // Iniciar escuta realtime para atualizações de pedidos deste guarda-sol
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     var chName = 'client-'+currentKiosk.id+'-'+String(window._umb||'0');
