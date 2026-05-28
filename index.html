@@ -3184,6 +3184,15 @@ function refreshClientOrders(){
         // Substituir totalmente os arrays — esta é a "fonte da verdade"
         window._allUmbOrders = allOrders;
         myOrders = allOrders;
+        // Também atualizar a variável global `orders` (renderMyOrders consulta ela
+        // pra pegar o status mais recente — se estiver desatualizada, mostra status antigo)
+        if(typeof orders !== 'undefined' && Array.isArray(orders)){
+          allOrders.forEach(function(newO){
+            var idx = orders.findIndex(function(o){ return o.id === newO.id; });
+            if(idx >= 0){ orders[idx] = newO; }
+            else { orders.push(newO); }
+          });
+        }
         updateOrdersBadge();
         // Re-renderizar SEMPRE (mesmo se a tela parecer fechada — pode estar oculta atrás de modal)
         try { if(typeof renderMyOrders === 'function') renderMyOrders(); } catch(e){}
@@ -3277,6 +3286,31 @@ window.addEventListener('focus', function(){
 window.addEventListener('online', function(){
   maybeResyncClient('online');
 });
+
+// ══════════════════════════════════════════════════════
+// POLLING DE BACKUP (FALLBACK ROBUSTO)
+// Alguns navegadores (especialmente Safari iOS após sleep longo)
+// não disparam visibilitychange/pageshow/focus de forma confiável.
+// Polling a cada 10s garante que o cliente sempre veja o estado atual,
+// mesmo se TODOS os eventos do navegador falharem.
+//
+// Só roda quando:
+//   - cliente está na tela do cardápio
+//   - aba está visível (document.visibilityState === 'visible')
+//   - não rodou nos últimos 5s (evita conflito com eventos)
+// ══════════════════════════════════════════════════════
+setInterval(function(){
+  // Só roda se cliente estiver no cardápio
+  var clientMenu = $('client-menu');
+  if(!clientMenu || clientMenu.classList.contains('hidden')) return;
+  // Não roda se a aba está em background (economia de bateria/dados)
+  if(document.visibilityState !== 'visible') return;
+  // Não roda se já rodou recentemente
+  if(Date.now() - _lastResync < 5000) return;
+  _lastResync = Date.now();
+  try { console.log('[recebaa] resync cliente: polling 10s'); } catch(e){}
+  refreshClientOrders();
+}, 10000);
 
 async function goToMenu(){
   const v=$('umbrella-input').value.trim();
