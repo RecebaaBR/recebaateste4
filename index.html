@@ -3135,7 +3135,15 @@ window.addEventListener('load', async function(){
 // quando a aba volta a ficar visível (após tela bloqueada).
 // ══════════════════════════════════════════════════════
 function refreshClientOrders(){
-  if(!(isConfigured && currentKiosk && currentKiosk.id!=='demo' && window._umb)) return;
+  if(!(isConfigured && currentKiosk && currentKiosk.id!=='demo' && window._umb)){
+    try { console.log('[recebaa] refreshClientOrders SKIP — estado:', {
+      isConfigured: isConfigured,
+      currentKiosk: !!currentKiosk,
+      umb: window._umb
+    }); } catch(e){}
+    return;
+  }
+  try { console.log('[recebaa] refreshClientOrders INÍCIO — umb:', window._umb); } catch(e){}
   // Primeiro: descobrir quando começou a sessão atual desse guarda-sol
   // (created_at do último ENCERRAMENTO). Tudo antes pertence a sessões anteriores.
   sb.from('orders')
@@ -3172,13 +3180,14 @@ function refreshClientOrders(){
             time: new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
           });
         });
+        try { console.log('[recebaa] refreshClientOrders OK —', allOrders.length, 'pedidos'); } catch(e){}
         // Substituir totalmente os arrays — esta é a "fonte da verdade"
         window._allUmbOrders = allOrders;
         myOrders = allOrders;
         updateOrdersBadge();
-        // Re-renderizar a tela de pedidos se estiver aberta
-        var vo = $('view-orders');
-        if(vo && !vo.classList.contains('hidden')) renderMyOrders();
+        // Re-renderizar SEMPRE (mesmo se a tela parecer fechada — pode estar oculta atrás de modal)
+        try { if(typeof renderMyOrders === 'function') renderMyOrders(); } catch(e){}
+        try { if(typeof renderCart === 'function') renderCart(); } catch(e){}
       });
 
       // Checar se já existe PEDIDO DE CONTA ativo nesta sessão
@@ -3228,12 +3237,45 @@ function refreshClientOrders(){
 // trocou de app, etc.) e ressincronizar com o banco.
 // Sem isso, eventos de Realtime perdidos enquanto a aba estava em
 // background não são recuperados e o cliente vê estado desatualizado.
-document.addEventListener('visibilitychange', function(){
-  if(document.visibilityState !== 'visible') return;
+//
+// Cobrimos múltiplos eventos porque o Safari iOS é inconsistente:
+// - visibilitychange: padrão moderno, funciona na maioria dos casos
+// - pageshow: cobre BFCache (back-forward cache) do Safari
+// - focus: cobre quando a janela volta a ganhar foco
+// - online: cobre quando conexão volta após perda
+var _lastResync = 0;
+function maybeResyncClient(trigger){
   // Só ressincroniza se o cliente está na tela do cardápio
   var clientMenu = $('client-menu');
   if(!clientMenu || clientMenu.classList.contains('hidden')) return;
+  // Debounce: evita múltiplos eventos disparando o fetch em sequência
+  var now = Date.now();
+  if(now - _lastResync < 800) return;
+  _lastResync = now;
+  try { console.log('[recebaa] resync cliente:', trigger); } catch(e){}
   refreshClientOrders();
+  // Também reconecta o canal Realtime se ele estiver fechado
+  try {
+    var ch = window._clientRealtimeChannel;
+    if(ch && ch.state && ch.state !== 'joined' && typeof ch.subscribe === 'function'){
+      console.log('[recebaa] canal estava em estado', ch.state, '- reconectando');
+      ch.subscribe();
+    }
+  } catch(e){}
+}
+
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible') maybeResyncClient('visibilitychange');
+});
+window.addEventListener('pageshow', function(e){
+  // persisted=true significa que veio do BFCache (Safari)
+  maybeResyncClient('pageshow' + (e.persisted ? ' (bfcache)' : ''));
+});
+window.addEventListener('focus', function(){
+  maybeResyncClient('focus');
+});
+window.addEventListener('online', function(){
+  maybeResyncClient('online');
 });
 
 async function goToMenu(){
