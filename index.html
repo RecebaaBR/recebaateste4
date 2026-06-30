@@ -837,6 +837,7 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-sub">Entre com suas credenciais</div>
       <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
       <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
+      <div style="text-align:right;margin:-8px 0 14px"><a class="auth-link" href="#" style="font-size:12.5px" onclick="openForgotPasswordModal();return false">Esqueci minha senha</a></div>
       <button class="btn btn-dark" id="login-btn" style="width:100%" onclick="doLogin()">Entrar</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:16px">
         Não tem conta? <a class="auth-link" href="#" onclick="showCard('register');return false">Criar conta grátis</a>
@@ -2577,6 +2578,14 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 // ── Supabase client ──────────────────────────────────
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ══════════════════════════════════════════════════════
+// ⚙️  CONFIGURAÇÃO — EmailJS (envio de código de verificação)
+// ══════════════════════════════════════════════════════
+const EMAILJS_SERVICE_ID = 'service_taexcqb';
+const EMAILJS_TEMPLATE_ID = 'template_u367kvi';
+const EMAILJS_PUBLIC_KEY = 'o7WPjTOpN1ONa9Phx';
+if(typeof emailjs !== 'undefined'){ emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
 
 // ── Verificar configuração ───────────────────────────
 var isConfigured = true;
@@ -4851,6 +4860,199 @@ function doLogout(){
   $('kiosk-dash').classList.add('hidden');
   $('kiosk-auth').classList.remove('hidden');
   showCard('login');
+}
+
+// ══════════════════════════════════════════════════════
+// QUIOSQUE — ESQUECI MINHA SENHA (reconfiguração por e-mail)
+// ══════════════════════════════════════════════════════
+var fpEmail = null;
+var fpCode = null;
+var fpCodeExpiresAt = null;
+
+function openForgotPasswordModal(){
+  var old = document.getElementById('dyn-forgot-pwd');
+  if(old) old.remove();
+  fpEmail = null;
+  fpCode = null;
+  fpCodeExpiresAt = null;
+
+  var div = document.createElement('div');
+  div.id = 'dyn-forgot-pwd';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto';
+  div.onclick = function(e){ if(e.target===div) closeForgotPasswordModal(); };
+  document.body.appendChild(div);
+  renderForgotStep1();
+}
+
+function closeForgotPasswordModal(){
+  var d = document.getElementById('dyn-forgot-pwd');
+  if(d) d.remove();
+  fpEmail = null;
+  fpCode = null;
+  fpCodeExpiresAt = null;
+}
+
+function fpShell(title, bodyHtml){
+  return '<div style="background:#fff;border-radius:16px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9">'
+    +'<div style="font-size:15px;font-weight:600">🔑 '+title+'</div>'
+    +'<button onclick="closeForgotPasswordModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
+    +'</div>'
+    +'<div style="padding:20px;display:flex;flex-direction:column;gap:14px">'+bodyHtml+'</div></div>';
+}
+
+// ── Etapa 1: informar e-mail e enviar código ──
+function renderForgotStep1(){
+  var div = document.getElementById('dyn-forgot-pwd');
+  if(!div) return;
+  div.innerHTML = fpShell('Recuperar senha',
+    '<div style="font-size:12.5px;color:#64748b">Informe o e-mail cadastrado no seu quiosque. Vamos enviar um código de verificação para ele.</div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">E-mail cadastrado *</label>'
+    +'<input id="fp-email" type="email" class="input" style="width:100%" placeholder="seu@email.com"/></div>'
+    +'<div style="display:flex;gap:8px;margin-top:6px">'
+    +'<button class="btn btn-ghost" style="flex:1" onclick="closeForgotPasswordModal()">Cancelar</button>'
+    +'<button class="btn btn-ocean" id="fp-send-btn" style="flex:1" onclick="submitForgotSendCode()">Enviar código</button>'
+    +'</div>');
+  setTimeout(function(){ var el=document.getElementById('fp-email'); if(el) el.focus(); }, 50);
+}
+
+async function submitForgotSendCode(){
+  var email = (($('fp-email')||{}).value || '').trim();
+  if(!email){ toast('⚠️ Informe o e-mail cadastrado'); return; }
+
+  setLoading('fp-send-btn', true, 'Enviar código');
+
+  if(!isConfigured){
+    setLoading('fp-send-btn', false, 'Enviar código');
+    fpEmail = email;
+    fpCode = '000000';
+    fpCodeExpiresAt = Date.now() + 10*60*1000;
+    toast('✅ Código enviado (modo demo) — use 000000');
+    renderForgotStep2();
+    return;
+  }
+
+  // Confirma que existe um quiosque com este e-mail antes de enviar o código
+  var check = await sb.from('kiosks').select('id, owner_name, name').eq('owner_email', email).limit(1);
+  if(check.error || !check.data || !check.data.length){
+    setLoading('fp-send-btn', false, 'Enviar código');
+    toast('❌ E-mail não encontrado em nosso cadastro');
+    return;
+  }
+  var kioskInfo = check.data[0];
+
+  if(typeof emailjs === 'undefined'){
+    setLoading('fp-send-btn', false, 'Enviar código');
+    toast('❌ Serviço de e-mail não carregou. Verifique sua conexão e tente novamente.');
+    return;
+  }
+
+  // Gera um código de 6 dígitos localmente e envia por e-mail via EmailJS
+  var code = String(Math.floor(100000 + Math.random()*900000));
+
+  try{
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: email,
+      name: kioskInfo.owner_name || kioskInfo.name || 'Cliente Recebaa',
+      code: code
+    });
+  } catch(err){
+    setLoading('fp-send-btn', false, 'Enviar código');
+    toast('❌ Erro ao enviar código: ' + ((err && err.text) || (err && err.message) || 'tente novamente'));
+    return;
+  }
+
+  setLoading('fp-send-btn', false, 'Enviar código');
+  fpEmail = email;
+  fpCode = code;
+  fpCodeExpiresAt = Date.now() + 10*60*1000; // expira em 10 minutos
+  toast('📧 Código enviado! Confira sua caixa de entrada.');
+  renderForgotStep2();
+}
+
+// ── Etapa 2: confirmar código recebido por e-mail ──
+function renderForgotStep2(){
+  var div = document.getElementById('dyn-forgot-pwd');
+  if(!div) return;
+  div.innerHTML = fpShell('Confirme o código',
+    '<div style="font-size:12.5px;color:#64748b">Enviamos um código de 6 dígitos para <b>'+fpEmail+'</b>. Informe-o abaixo.</div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Código de verificação *</label>'
+    +'<input id="fp-code" inputmode="numeric" maxlength="6" class="input" style="width:100%;text-align:center;letter-spacing:4px;font-size:18px" placeholder="000000"/></div>'
+    +'<div style="display:flex;gap:8px;margin-top:6px">'
+    +'<button class="btn btn-ghost" style="flex:1" onclick="renderForgotStep1()">Voltar</button>'
+    +'<button class="btn btn-ocean" id="fp-confirm-btn" style="flex:1" onclick="submitForgotVerifyCode()">Confirmar</button>'
+    +'</div>'
+    +'<p style="text-align:center;font-size:12.5px;color:var(--sl-400);margin:0">Não recebeu? <a class="auth-link" href="#" onclick="submitForgotSendCode();return false">Reenviar código</a></p>');
+  setTimeout(function(){ var el=document.getElementById('fp-code'); if(el) el.focus(); }, 50);
+}
+
+async function submitForgotVerifyCode(){
+  var code = (($('fp-code')||{}).value || '').trim();
+  if(!code || code.length < 6){ toast('⚠️ Informe o código de 6 dígitos'); return; }
+
+  setLoading('fp-confirm-btn', true, 'Confirmar');
+
+  if(!fpCode || !fpCodeExpiresAt || Date.now() > fpCodeExpiresAt){
+    setLoading('fp-confirm-btn', false, 'Confirmar');
+    toast('❌ Código expirado. Solicite um novo.');
+    return;
+  }
+  if(code !== fpCode){
+    setLoading('fp-confirm-btn', false, 'Confirmar');
+    toast('❌ Código incorreto');
+    return;
+  }
+
+  setLoading('fp-confirm-btn', false, 'Confirmar');
+  toast('✅ Código confirmado!');
+  renderForgotStep3();
+}
+
+// ── Etapa 3: definir nova senha ──
+function renderForgotStep3(){
+  var div = document.getElementById('dyn-forgot-pwd');
+  if(!div) return;
+  div.innerHTML = fpShell('Nova senha',
+    '<div style="font-size:12.5px;color:#64748b">✅ E-mail verificado. Defina sua nova senha.</div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Nova senha * (mín. 6 caracteres)</label>'
+    +'<input id="fp-new" type="password" class="input" style="width:100%" autocomplete="new-password"/></div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Confirmar nova senha *</label>'
+    +'<input id="fp-new2" type="password" class="input" style="width:100%" autocomplete="new-password"/></div>'
+    +'<div style="display:flex;gap:8px;margin-top:6px">'
+    +'<button class="btn btn-ghost" style="flex:1" onclick="closeForgotPasswordModal()">Cancelar</button>'
+    +'<button class="btn btn-ocean" id="fp-save-btn" style="flex:1" onclick="submitForgotPasswordReset()">Salvar nova senha</button>'
+    +'</div>');
+  setTimeout(function(){ var el=document.getElementById('fp-new'); if(el) el.focus(); }, 50);
+}
+
+async function submitForgotPasswordReset(){
+  var newPw = ($('fp-new')||{}).value || '';
+  var newPw2 = ($('fp-new2')||{}).value || '';
+  if(newPw.length < 6){ toast('⚠️ Nova senha deve ter pelo menos 6 caracteres'); return; }
+  if(newPw !== newPw2){ toast('⚠️ As senhas não conferem'); return; }
+  if(!fpEmail){ toast('❌ Sessão de verificação expirada. Tente novamente.'); closeForgotPasswordModal(); return; }
+
+  setLoading('fp-save-btn', true, 'Salvar nova senha');
+
+  if(!isConfigured){
+    setLoading('fp-save-btn', false, 'Salvar nova senha');
+    toast('✅ Senha redefinida (modo demo)');
+    closeForgotPasswordModal();
+    return;
+  }
+
+  // O código de e-mail confirmado na etapa anterior já comprova posse do e-mail; agora gravamos a nova senha
+  var upd = await sb.from('kiosks').update({ password: newPw }).eq('owner_email', fpEmail);
+  setLoading('fp-save-btn', false, 'Salvar nova senha');
+  if(upd.error){
+    toast('❌ Erro ao redefinir senha: ' + upd.error.message);
+    return;
+  }
+  fpEmail = null;
+  fpCode = null;
+  fpCodeExpiresAt = null;
+  closeForgotPasswordModal();
+  toast('✅ Senha redefinida com sucesso! Faça login com a nova senha.');
 }
 
 // ══════════════════════════════════════════════════════
