@@ -5042,7 +5042,8 @@ async function submitForgotPasswordReset(){
   }
 
   // O código de e-mail confirmado na etapa anterior já comprova posse do e-mail; agora gravamos a nova senha
-  var upd = await sb.from('kiosks').update({ password: newPw }).eq('owner_email', fpEmail);
+  // via RPC, que gera o hash bcrypt no banco (compatível com login_kiosk)
+  var upd = await sb.rpc('reset_kiosk_password', { p_email: fpEmail, p_new_password: newPw });
   setLoading('fp-save-btn', false, 'Salvar nova senha');
   if(upd.error){
     toast('❌ Erro ao redefinir senha: ' + upd.error.message);
