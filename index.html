@@ -3585,7 +3585,25 @@ function buildCatTabs(){
     const id=c.id||c.id; const emoji=c.emoji||'🍴';
     return '<button class="cat-tab'+(i===0?' active':'')+'" onclick="scrollCat(\''+id+'\',this)">'+emoji+' '+c.name+'</button>';
   }).join('');
+  adjustCatTabsSticky();
 }
+
+// Recalcula o "top" da barra de categorias com base na altura real do cabeçalho,
+// pois em telas estreitas o cabeçalho pode quebrar em 2 linhas e mudar de altura
+function adjustCatTabsSticky(){
+  var mh = document.querySelector('.menu-header');
+  var ct = document.getElementById('cat-tabs');
+  if(!mh || !ct) return;
+  // requestAnimationFrame garante que o layout já foi recalculado antes de medir
+  requestAnimationFrame(function(){
+    ct.style.top = (52 + mh.offsetHeight) + 'px'; // 52px = topo fixo do site (nav Cliente/Quiosque/Admin)
+  });
+}
+window.addEventListener('resize', function(){
+  if(document.getElementById('client-menu') && !document.getElementById('client-menu').classList.contains('hidden')){
+    adjustCatTabsSticky();
+  }
+});
 
 function scrollCat(id,btn){
   document.querySelectorAll('.cat-tab').forEach(t=>t.classList.remove('active'));
@@ -3613,21 +3631,110 @@ function buildMenu(){
 }
 
 function productCard(p){
-  const qty=cart[p.id]?cart[p.id].qty:0;
+  const hasOpts = p.options && p.options.length;
+  const qty = hasOpts ? cartQtyForProduct(p.id) : (cart[p.id]?cart[p.id].qty:0);
   const imgUrl=p.image_url||p.photoUrl;
   const img=imgUrl
     ?'<div class="product-img"><img src="'+esc(imgUrl)+'" alt="'+esc(p.name)+'"/></div>'
     :'<div class="product-img">'+esc(p.emoji||'🍴')+'</div>';
-  const ctrl=qty===0
-    ?'<button class="add-btn" onclick="addItem(\''+p.id+'\')">+</button>'
-    :'<div class="qty-ctrl"><button class="qty-btn" onclick="changeItem(\''+p.id+'\',-1)">−</button>'
-      +'<span class="qty-num">'+qty+'</span>'
-      +'<button class="qty-btn" onclick="changeItem(\''+p.id+'\',1)">+</button></div>';
+  const ctrl = hasOpts
+    ? '<button class="add-btn" onclick="openProductOptionsModal(\''+p.id+'\')">'+(qty>0?qty+' ✓':'+')+'</button>'
+    : (qty===0
+        ?'<button class="add-btn" onclick="addItem(\''+p.id+'\')">+</button>'
+        :'<div class="qty-ctrl"><button class="qty-btn" onclick="changeItem(\''+p.id+'\',-1)">−</button>'
+          +'<span class="qty-num">'+qty+'</span>'
+          +'<button class="qty-btn" onclick="changeItem(\''+p.id+'\',1)">+</button></div>');
   return '<div class="product-card" id="pc-'+p.id+'">'+img
     +'<div class="product-body"><div class="product-name">'+esc(p.name)+'</div>'
     +'<div class="product-desc">'+esc(p.description||p.desc||'')+'</div>'
-    +'<div class="product-footer"><div class="product-price">'+fmt(p.price)+'</div>'+ctrl+'</div>'
+    +'<div class="product-footer"><div class="product-price">'+(hasOpts?'a partir de ':'')+fmt(p.price)+'</div>'+ctrl+'</div>'
     +'</div></div>';
+}
+
+// Soma a quantidade de todas as variações de um produto que estão no carrinho
+function cartQtyForProduct(pid){
+  var total = 0;
+  Object.keys(cart).forEach(function(k){ if(cart[k].id === pid) total += cart[k].qty; });
+  return total;
+}
+
+// ══════════════════════════════════════════════════════
+// CLIENTE — SELEÇÃO DE OPÇÕES/VARIAÇÕES DO PRODUTO
+// ══════════════════════════════════════════════════════
+function openProductOptionsModal(pid){
+  var p = catalog.find(function(x){ return x.id===pid; });
+  if(!p || !p.options || !p.options.length) return;
+  var old = document.getElementById('dyn-prod-opts');
+  if(old) old.remove();
+
+  var div = document.createElement('div');
+  div.id = 'dyn-prod-opts';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99999;display:flex;align-items:flex-end;justify-content:center';
+  div.onclick = function(e){ if(e.target===div) closeProductOptionsModal(); };
+
+  var groupsHtml = p.options.map(function(g, gi){
+    var choicesHtml = g.choices.map(function(c, ci){
+      var priceTxt = c.price_delta ? ' (+'+fmt(c.price_delta)+')' : '';
+      return '<label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;margin-top:6px;cursor:pointer">'
+        +'<input type="radio" name="popt-g'+gi+'" value="'+ci+'"'+(ci===0?' checked':'')+' style="accent-color:#0ea5e9"/>'
+        +'<span style="font-size:13.5px">'+esc(c.name)+priceTxt+'</span>'
+        +'</label>';
+    }).join('');
+    return '<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:2px">'+esc(g.name)+'</div>'+choicesHtml+'</div>';
+  }).join('');
+
+  div.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(0,0,0,.2)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9">'
+    +'<div style="font-size:15px;font-weight:600">'+esc(p.name)+'</div>'
+    +'<button onclick="closeProductOptionsModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
+    +'</div>'
+    +'<div style="padding:20px" id="popt-groups" data-pid="'+pid+'">'+groupsHtml+'</div>'
+    +'<div style="padding:0 20px 20px">'
+    +'<button onclick="confirmProductOptions(\''+pid+'\')" style="width:100%;padding:14px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Adicionar ao carrinho</button>'
+    +'</div></div>';
+
+  document.body.appendChild(div);
+}
+
+function closeProductOptionsModal(){
+  var d = document.getElementById('dyn-prod-opts');
+  if(d) d.remove();
+}
+
+function confirmProductOptions(pid){
+  var p = catalog.find(function(x){ return x.id===pid; });
+  if(!p) return;
+
+  var selections = p.options.map(function(g, gi){
+    var checked = document.querySelector('input[name="popt-g'+gi+'"]:checked');
+    var ci = checked ? parseInt(checked.value, 10) : 0;
+    var choice = g.choices[ci];
+    return { group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0 };
+  });
+
+  var deltaSum = selections.reduce(function(s, sel){ return s + sel.delta; }, 0);
+  var unitPrice = Number(p.price) + deltaSum;
+  var label = selections.map(function(s){ return s.group+': '+s.choice; }).join(', ');
+  var key = pid + '::' + selections.map(function(s){ return s.choice; }).join('|');
+
+  if(cart[key]){
+    cart[key].qty += 1;
+  } else {
+    cart[key] = {
+      id: pid,
+      name: p.name + ' — ' + label,
+      price: unitPrice,
+      qty: 1,
+      emoji: p.emoji,
+      image_url: p.image_url,
+      optionsLabel: label
+    };
+  }
+
+  refreshCart();
+  refreshCard(pid);
+  closeProductOptionsModal();
+  toast('✅ Adicionado ao carrinho');
 }
 
 function addItem(id){
@@ -3638,19 +3745,24 @@ function addItem(id){
 function changeItem(id,d){
   if(!cart[id]) return;
   cart[id].qty+=d;
+  var baseId = cart[id].id || String(id).split('::')[0];
   if(cart[id].qty<=0) delete cart[id];
-  refreshCart(); refreshCard(id);
+  refreshCart(); refreshCard(baseId);
 }
 function refreshCard(id){
-  const el=$('pc-'+id); if(!el) return;
-  const p=catalog.find(x=>x.id===id); if(!p) return;
-  const qty=cart[id]?cart[id].qty:0;
-  const ctrl=qty===0
-    ?'<button class="add-btn" onclick="addItem(\''+id+'\')">+</button>'
-    :'<div class="qty-ctrl"><button class="qty-btn" onclick="changeItem(\''+id+'\',-1)">−</button>'
-      +'<span class="qty-num">'+qty+'</span>'
-      +'<button class="qty-btn" onclick="changeItem(\''+id+'\',1)">+</button></div>';
-  el.querySelector('.product-footer').innerHTML='<div class="product-price">'+fmt(p.price)+'</div>'+ctrl;
+  var baseId = String(id).split('::')[0];
+  const el=$('pc-'+baseId); if(!el) return;
+  const p=catalog.find(x=>x.id===baseId); if(!p) return;
+  const hasOpts = p.options && p.options.length;
+  const qty = hasOpts ? cartQtyForProduct(baseId) : (cart[baseId]?cart[baseId].qty:0);
+  const ctrl = hasOpts
+    ? '<button class="add-btn" onclick="openProductOptionsModal(\''+baseId+'\')">'+(qty>0?qty+' ✓':'+')+'</button>'
+    : (qty===0
+        ?'<button class="add-btn" onclick="addItem(\''+baseId+'\')">+</button>'
+        :'<div class="qty-ctrl"><button class="qty-btn" onclick="changeItem(\''+baseId+'\',-1)">−</button>'
+          +'<span class="qty-num">'+qty+'</span>'
+          +'<button class="qty-btn" onclick="changeItem(\''+baseId+'\',1)">+</button></div>');
+  el.querySelector('.product-footer').innerHTML='<div class="product-price">'+(hasOpts?'a partir de ':'')+fmt(p.price)+'</div>'+ctrl;
 }
 function refreshCart(){
   const items=Object.values(cart);
@@ -3666,11 +3778,13 @@ function refreshCart(){
 // CLIENTE — CARRINHO
 // ══════════════════════════════════════════════════════
 function openCart(){
-  const items=Object.values(cart);
-  const total=items.reduce((s,i)=>s+i.price*i.qty,0);
-  $('cart-items').innerHTML=items.map(i=>'<div class="cart-item">'
+  const entries=Object.entries(cart);
+  const total=entries.reduce((s,[k,i])=>s+i.price*i.qty,0);
+  $('cart-items').innerHTML=entries.map(([k,i])=>'<div class="cart-item">'
     +'<div class="cart-item-emoji">'+esc(i.emoji||'🍴')+'</div>'
-    +'<div class="cart-item-info"><div class="cart-item-name">'+i.qty+'× '+esc(i.name)+'</div></div>'
+    +'<div class="cart-item-info"><div class="cart-item-name">'+i.qty+'× '+esc(i.name.split(' — ')[0])+'</div>'
+    +(i.optionsLabel?'<div style="font-size:11px;color:var(--sl-400);margin-top:2px">'+esc(i.optionsLabel)+'</div>':'')
+    +'</div>'
     +'<div class="cart-item-price">'+fmt(i.price*i.qty)+'</div></div>').join('');
   $('cart-total').textContent=fmt(total);
   $('cart-overlay').classList.add('open');
@@ -5875,9 +5989,18 @@ function openEditProdModal(p){
     +'</div>'
     +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Status</label><select id="epstatus" class="select" style="width:100%"><option value="on"'+(p.is_available!==false?' selected':'')+'>✅ Ativo</option><option value="off"'+(p.is_available===false?' selected':'')+'>⏸️ Inativo</option></select></div>'
     +'</div>'
+    // Opções/variações do produto
+    +'<div style="border-top:1px solid #f1f5f9;padding-top:14px">'
+    +'<label style="font-size:12px;font-weight:600;color:#334155;display:block;margin-bottom:6px">Opções do produto (opcional)</label>'
+    +'<div style="font-size:11px;color:#94a3b8;margin-bottom:10px">Ex: sabor, tipo de drink, tamanho da porção — assim não precisa cadastrar um produto pra cada variação.</div>'
+    +'<div id="ep-opt-groups"></div>'
+    +'<button type="button" onclick="addOptGroup(\'ep\')" style="margin-top:6px;background:#f1f5f9;border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:500;color:#475569;cursor:pointer;width:100%">+ Adicionar grupo de opções</button>'
+    +'</div>'
     +'<button id="ep-save-btn" onclick="saveEditProd()" style="width:100%;padding:14px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Salvar alterações</button>'
     +'</div></div>';
   document.body.appendChild(div);
+  window._optGroups_ep = (p.options && Array.isArray(p.options)) ? JSON.parse(JSON.stringify(p.options)) : [];
+  renderOptGroups('ep');
 }
 
 function closeEditProdModal(){
@@ -5920,13 +6043,13 @@ async function saveEditProd(){
       var {data:ud,error:ue}=await sb.storage.from('product-images').upload(path,window._epPhotoFile,{upsert:true});
       if(!ue&&ud){var {data:url}=sb.storage.from('product-images').getPublicUrl(path);imageUrl=url.publicUrl;}
     }
-    var updates={name,description:desc,price,cost_price:cost||null,category_id:catId,is_available:available};
+    var updates={name,description:desc,price,cost_price:cost||null,category_id:catId,is_available:available,options:buildOptGroupsPayload('ep')};
     if(imageUrl) updates.image_url=imageUrl;
     var {error}=await sb.from('products').update(updates).eq('id',id);
     if(error){toast('Erro: '+error.message);if(btn){btn.textContent='Salvar alterações';btn.disabled=false;}return;}
   }
   var p=catalog.find(function(x){return x.id===id;});
-  if(p){p.name=name;p.description=desc;p.price=price;p.cost_price=cost||null;p.category_id=catId;p.cat=catId;p.is_available=available;if(imageUrl)p.image_url=imageUrl;}
+  if(p){p.name=name;p.description=desc;p.price=price;p.cost_price=cost||null;p.category_id=catId;p.cat=catId;p.is_available=available;p.options=buildOptGroupsPayload('ep');if(imageUrl)p.image_url=imageUrl;}
   window._epPhotoFile=null;
   closeEditProdModal();
   renderMgmt();
@@ -6009,12 +6132,23 @@ function openAddModal(){
     +'</div>'
     +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Status</label>'
     +'<select id="dyn-prod-status" class="select" style="width:100%"><option value="on">✅ Ativo</option><option value="off">⏸️ Inativo</option></select></div>'
+    // Opções/variações do produto
+    +'<div style="border-top:1px solid #f1f5f9;padding-top:14px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+    +'<label style="font-size:12px;font-weight:600;color:#334155">Opções do produto (opcional)</label>'
+    +'</div>'
+    +'<div style="font-size:11px;color:#94a3b8;margin-bottom:10px">Ex: sabor, tipo de drink, tamanho da porção — assim não precisa cadastrar um produto pra cada variação.</div>'
+    +'<div id="dyn-opt-groups"></div>'
+    +'<button type="button" onclick="addOptGroup(\'dyn\')" style="margin-top:6px;background:#f1f5f9;border:1px dashed #cbd5e1;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:500;color:#475569;cursor:pointer;width:100%">+ Adicionar grupo de opções</button>'
+    +'</div>'
     // Botão salvar
     +'<button id="dyn-save-btn" onclick="saveDynProduct()" style="width:100%;padding:14px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Salvar produto</button>'
     +'</div>'
     +'</div>';
 
   document.body.appendChild(div);
+  window._optGroups_dyn = [];
+  renderOptGroups('dyn');
   setTimeout(function(){ var n=document.getElementById('dyn-prod-name'); if(n) n.focus(); }, 100);
 }
 
@@ -6041,6 +6175,83 @@ function selectEmoji(btn){
 function closeDynProdModal(){
   var d = document.getElementById('dynamic-prod-modal');
   if(d) d.remove();
+}
+
+// ══════════════════════════════════════════════════════
+// PRODUTO — GRUPOS DE OPÇÕES (variações: sabor, tamanho, etc)
+// window._optGroups_dyn / window._optGroups_ep guardam o estado
+// enquanto o modal de novo/editar produto está aberto.
+// ══════════════════════════════════════════════════════
+function addOptGroup(ns){
+  var key = '_optGroups_'+ns;
+  if(!window[key]) window[key] = [];
+  window[key].push({ name:'', choices:[{ name:'', price_delta:0 }] });
+  renderOptGroups(ns);
+}
+
+function removeOptGroup(ns, gi){
+  window['_optGroups_'+ns].splice(gi,1);
+  renderOptGroups(ns);
+}
+
+function addOptChoice(ns, gi){
+  window['_optGroups_'+ns][gi].choices.push({ name:'', price_delta:0 });
+  renderOptGroups(ns);
+}
+
+function removeOptChoice(ns, gi, ci){
+  window['_optGroups_'+ns][gi].choices.splice(ci,1);
+  renderOptGroups(ns);
+}
+
+function updateOptGroupName(ns, gi, val){
+  window['_optGroups_'+ns][gi].name = val;
+}
+
+function updateOptChoiceName(ns, gi, ci, val){
+  window['_optGroups_'+ns][gi].choices[ci].name = val;
+}
+
+function updateOptChoiceDelta(ns, gi, ci, val){
+  window['_optGroups_'+ns][gi].choices[ci].price_delta = parseFloat(val)||0;
+}
+
+function renderOptGroups(ns){
+  var container = document.getElementById(ns+'-opt-groups');
+  if(!container) return;
+  var groups = window['_optGroups_'+ns] || [];
+  container.innerHTML = groups.map(function(g, gi){
+    var choicesHtml = g.choices.map(function(c, ci){
+      return '<div style="display:flex;gap:6px;align-items:center;margin-top:6px">'
+        +'<input placeholder="Ex: Morango" value="'+esc(c.name)+'" oninput="updateOptChoiceName(\''+ns+'\','+gi+','+ci+',this.value)" style="flex:2;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px"/>'
+        +'<input type="number" step="0.50" placeholder="+R$0,00" value="'+(c.price_delta||'')+'" oninput="updateOptChoiceDelta(\''+ns+'\','+gi+','+ci+',this.value)" title="Acréscimo no preço (deixe em branco se não mudar o preço)" style="width:80px;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px"/>'
+        +'<button type="button" onclick="removeOptChoice(\''+ns+'\','+gi+','+ci+')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;padding:2px 4px" title="Remover opção">✕</button>'
+        +'</div>';
+    }).join('');
+    return '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:8px;background:#fafbfc">'
+      +'<div style="display:flex;gap:6px;align-items:center">'
+      +'<input placeholder="Nome do grupo (ex: Fruta, Drink, Tamanho)" value="'+esc(g.name)+'" oninput="updateOptGroupName(\''+ns+'\','+gi+',this.value)" style="flex:1;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;font-weight:500"/>'
+      +'<button type="button" onclick="removeOptGroup(\''+ns+'\','+gi+')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;padding:2px 4px" title="Remover grupo">🗑️</button>'
+      +'</div>'
+      +choicesHtml
+      +'<button type="button" onclick="addOptChoice(\''+ns+'\','+gi+')" style="margin-top:6px;background:none;border:none;color:#0ea5e9;font-size:12px;font-weight:500;cursor:pointer;padding:2px 0">+ Adicionar opção</button>'
+      +'</div>';
+  }).join('');
+}
+
+// Monta o array final de opções (limpo, sem linhas vazias) pronto para salvar no banco
+function buildOptGroupsPayload(ns){
+  var groups = window['_optGroups_'+ns] || [];
+  return groups
+    .filter(function(g){ return (g.name||'').trim() && g.choices.some(function(c){ return (c.name||'').trim(); }); })
+    .map(function(g){
+      return {
+        name: g.name.trim(),
+        choices: g.choices
+          .filter(function(c){ return (c.name||'').trim(); })
+          .map(function(c){ return { name: c.name.trim(), price_delta: parseFloat(c.price_delta)||0 }; })
+      };
+    });
 }
 
 var dynPhotoFile = null;
@@ -6088,7 +6299,7 @@ async function saveDynProduct(){
     var {data,error} = await sb.from('products').insert({
       kiosk_id:currentKiosk.id, category_id:catId,
       name, description:desc, price, cost_price:cost||null, emoji, image_url:imageUrl,
-      is_available:available, sort_order:catalog.length
+      is_available:available, sort_order:catalog.length, options: buildOptGroupsPayload('dyn')
     }).select().single();
     if(error){
       toast('Erro: '+error.message);
@@ -6099,7 +6310,7 @@ async function saveDynProduct(){
   } else {
     var prevEl = document.getElementById('dyn-photo-preview');
     var src = prevEl ? prevEl.src : null;
-    catalog.unshift({id:'local-'+Date.now(),cat:catId,category_id:catId,name,description:desc,price,emoji,is_available:available,image_url:src&&src.startsWith('data:')?src:null});
+    catalog.unshift({id:'local-'+Date.now(),cat:catId,category_id:catId,name,description:desc,price,emoji,is_available:available,image_url:src&&src.startsWith('data:')?src:null,options:buildOptGroupsPayload('dyn')});
   }
 
   dynPhotoFile = null;
