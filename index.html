@@ -3676,7 +3676,7 @@ function openProductOptionsModal(pid){
     var choicesHtml = g.choices.map(function(c, ci){
       var priceTxt = c.price_delta ? ' (+'+fmt(c.price_delta)+')' : '';
       return '<label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;margin-top:6px;cursor:pointer">'
-        +'<input type="radio" name="popt-g'+gi+'" value="'+ci+'"'+(ci===0?' checked':'')+' style="accent-color:#0ea5e9"/>'
+        +'<input type="radio" name="popt-'+pid+'-g'+gi+'" value="'+ci+'" onchange="updatePoptTotal(\''+pid+'\')"'+(ci===0?' checked':'')+' style="accent-color:#0ea5e9"/>'
         +'<span style="font-size:13.5px">'+esc(c.name)+priceTxt+'</span>'
         +'</label>';
     }).join('');
@@ -3689,6 +3689,10 @@ function openProductOptionsModal(pid){
     +'<button onclick="closeProductOptionsModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
     +'</div>'
     +'<div style="padding:20px" id="popt-groups" data-pid="'+pid+'">'+groupsHtml+'</div>'
+    +'<div style="padding:0 20px 12px;display:flex;justify-content:space-between;align-items:center;font-size:14px">'
+    +'<span style="color:#64748b">Total</span>'
+    +'<span id="popt-total" style="font-weight:700;font-size:17px;color:#0f172a">'+fmt(p.price)+'</span>'
+    +'</div>'
     +'<div style="padding:0 20px 20px">'
     +'<button onclick="confirmProductOptions(\''+pid+'\')" style="width:100%;padding:14px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Adicionar ao carrinho</button>'
     +'</div></div>';
@@ -3701,12 +3705,29 @@ function closeProductOptionsModal(){
   if(d) d.remove();
 }
 
+// Recalcula e mostra o total (preço base + acréscimos das opções marcadas) em tempo real
+function updatePoptTotal(pid){
+  var p = catalog.find(function(x){ return x.id===pid; });
+  var container = document.getElementById('popt-groups');
+  var totalEl = document.getElementById('popt-total');
+  if(!p || !container || !totalEl) return;
+  var deltaSum = p.options.reduce(function(sum, g, gi){
+    var checked = container.querySelector('input[name="popt-'+pid+'-g'+gi+'"]:checked');
+    var ci = checked ? parseInt(checked.value, 10) : 0;
+    var choice = g.choices[ci];
+    return sum + (Number(choice.price_delta)||0);
+  }, 0);
+  totalEl.textContent = fmt(Number(p.price) + deltaSum);
+}
+
 function confirmProductOptions(pid){
   var p = catalog.find(function(x){ return x.id===pid; });
   if(!p) return;
+  var container = document.getElementById('popt-groups');
+  if(!container) return;
 
   var selections = p.options.map(function(g, gi){
-    var checked = document.querySelector('input[name="popt-g'+gi+'"]:checked');
+    var checked = container.querySelector('input[name="popt-'+pid+'-g'+gi+'"]:checked');
     var ci = checked ? parseInt(checked.value, 10) : 0;
     var choice = g.choices[ci];
     return { group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0 };
