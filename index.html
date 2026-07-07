@@ -3837,7 +3837,10 @@ function closeCart(){
 // Detecta o grupo de um item: 'drinks' (bebidas), 'others' (outros) ou 'foods' (comida).
 // Baseado no nome da categoria do produto.
 function getOrderGroup(item){
-  var prod = catalog.find(function(p){ return p.id === item.id || p.name === item.name; });
+  // Itens com opções/variações vêm com o nome no formato "Produto — Grupo: Escolha, ...";
+  // usamos o nome base (antes do "—") como alternativa de busca no cardápio.
+  var baseName = String(item.name||'').split(' — ')[0];
+  var prod = catalog.find(function(p){ return p.id === item.id || p.name === item.name || p.name === baseName; });
   if(!prod) return 'foods';
   var catId = prod.category_id;
   if(!catId) return 'foods';
