@@ -6277,6 +6277,7 @@ function orderCard(o){
     +'<span style="font-size:12px;background:var(--sand-100);padding:2px 8px;border-radius:99px">&#x2602;&#xFE0F; '+(o.umb||o.umbrella_num||'?')+'</span>'
     +'<span class="pill '+p.c+'">'+p.l+'</span></div></div>'
     +'<div class="oc-body"><div class="oc-customer">&#x1F464; '+esc(o.customer_name||o.customer||'?')+' &middot; <span style="font-size:10px;color:var(--sl-400)">&#x1F550; '+(o.time||'')+'</span></div>'
+    +(o.created_by?'<div style="font-size:11px;color:#7c3aed;background:#f5f3ff;display:inline-block;padding:2px 8px;border-radius:99px;margin-bottom:6px">🧑‍🍳 Lançado por '+esc(o.created_by)+'</div>':'<div style="font-size:11px;color:#0891b2;background:#ecfeff;display:inline-block;padding:2px 8px;border-radius:99px;margin-bottom:6px">📱 Pedido do cliente</div>')
     +(o.items||[]).map(i=>'<div class="oc-item-row"><span>'+i.qty+'\xd7 '+esc(i.name)+'</span><span>'+fmt(i.qty*i.price)+'</span></div>').join('')
     +(rawNotes?'<div class="oc-note">&#x1F4DD; '+esc(rawNotes)+'</div>':'')
     +(isBill?'<div style="background:#8b5cf6;color:#fff;border-radius:8px;padding:8px 12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:500">💰 Valor a cobrar</span><span style="font-size:18px;font-weight:700">'+fmt(o.total)+'</span></div>':'<div class="oc-total"><span>Total</span><span>'+fmt(o.total)+'</span></div>')
@@ -6484,6 +6485,7 @@ function renderHistTable(list, skipFilterSetup){
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'cliente\')">Cliente '+histSortIcon('cliente')+'</th>'
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'hora\')">Hora '+histSortIcon('hora')+'</th>'
       +'<th>Itens</th>'
+      +'<th>Origem</th>'
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'total\')">Total '+histSortIcon('total')+'</th>'
       +'<th>Status</th>'
       +'<th>Ação</th>'
@@ -6491,7 +6493,7 @@ function renderHistTable(list, skipFilterSetup){
     +'</thead>';
 
   if(!list.length){
-    el.innerHTML='<table>'+thead+'<tbody><tr><td colspan="8" style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum pedido encontrado.</td></tr></tbody></table>';
+    el.innerHTML='<table>'+thead+'<tbody><tr><td colspan="9" style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum pedido encontrado.</td></tr></tbody></table>';
     return;
   }
 
@@ -6518,6 +6520,7 @@ function renderHistTable(list, skipFilterSetup){
         +'<td>'+esc(o.customer_name||'?')+'</td>'
         +'<td>'+(o.time||'—')+'</td>'
         +'<td style="color:var(--sl-500);font-size:11px">'+(isSpecial?esc(notesClean.split(' · ')[0]):(o.items||[]).map(i=>i.qty+'× '+esc(i.name)).join(', '))+'</td>'
+        +'<td style="font-size:11px">'+(o.created_by?'🧑‍🍳 '+esc(o.created_by):'<span style="color:var(--sl-400)">📱 Cliente</span>')+'</td>'
         +'<td><b>'+fmt(o.total)+'</b></td>'
         +(function(){
           var isConta = o.customer_name==='PEDIDO DE CONTA';
