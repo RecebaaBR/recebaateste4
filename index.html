@@ -5262,6 +5262,60 @@ function subscribeRealtime(){
 // ── Mute de alertas ──────────────────────
 var isMuted = false;
 
+// ══════════════════════════════════════════════════════
+// QUIOSQUE — RESYNC AO VOLTAR DE SEGUNDO PLANO
+// Mesmo problema que já resolvemos no lado Cliente: quando o dispositivo
+// do quiosque trava a aba (tela bloqueada, app em segundo plano, troca de
+// wifi, notebook suspenso), a conexão Realtime cai silenciosamente NAQUELE
+// aparelho. Sem isso, só o outro dispositivo logado continua recebendo
+// atualizações, dando a impressão de que "só atualiza em um dos dois".
+// ══════════════════════════════════════════════════════
+var _lastKioskResync = 0;
+function maybeResyncKiosk(trigger){
+  if(!isConfigured || !currentKiosk || currentKiosk.id==='demo') return;
+  // Só ressincroniza se o quiosque já passou da tela de login (dashboard visível)
+  var kioskDash = document.getElementById('kiosk-dash');
+  if(!kioskDash || kioskDash.classList.contains('hidden')) return;
+  var now = Date.now();
+  if(now - _lastKioskResync < 800) return;
+  _lastKioskResync = now;
+  try { console.log('[recebaa] resync quiosque:', trigger); } catch(e){}
+  loadKioskData();
+  // Reconecta o canal Realtime se ele estiver fechado
+  try {
+    if(realtimeChannel && realtimeChannel.state && realtimeChannel.state !== 'joined' && typeof realtimeChannel.subscribe === 'function'){
+      console.log('[recebaa] canal do quiosque estava em estado', realtimeChannel.state, '- reconectando');
+      realtimeChannel.subscribe();
+    }
+  } catch(e){}
+}
+
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible') maybeResyncKiosk('visibilitychange');
+});
+window.addEventListener('pageshow', function(e){
+  maybeResyncKiosk('pageshow' + (e.persisted ? ' (bfcache)' : ''));
+});
+window.addEventListener('focus', function(){
+  maybeResyncKiosk('focus');
+});
+window.addEventListener('online', function(){
+  maybeResyncKiosk('online');
+});
+
+// Polling de backup: garante atualização mesmo se os eventos acima
+// falharem em algum navegador (ex: Safari iOS após suspensão longa)
+setInterval(function(){
+  if(document.visibilityState !== 'visible') return;
+  if(Date.now() - _lastKioskResync < 15000) return;
+  if(!isConfigured || !currentKiosk || currentKiosk.id==='demo') return;
+  var kioskDash = document.getElementById('kiosk-dash');
+  if(!kioskDash || kioskDash.classList.contains('hidden')) return;
+  _lastKioskResync = Date.now();
+  try { console.log('[recebaa] resync quiosque: polling 20s'); } catch(e){}
+  loadKioskData();
+}, 20000);
+
 function toggleMute(){
   isMuted = !isMuted;
   var btn = $('mute-btn');
