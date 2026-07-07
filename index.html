@@ -1126,6 +1126,10 @@ tr:hover td{background:var(--sand-50)}
             <div class="report-title">Pedidos por status</div>
             <div id="r-by-status"><div style="color:var(--sl-400);font-size:13px">Selecione um período.</div></div>
           </div>
+          <div class="report-card" style="grid-column:1/-1">
+            <div class="report-title">🏆 Melhores vendedores (garçons)</div>
+            <div id="r-waiters-ranking"><div style="color:var(--sl-400);font-size:13px">Selecione um período.</div></div>
+          </div>
         </div>
 
 
@@ -7995,6 +7999,36 @@ async function loadReports(){
       || o.customer_name==='CHAMADA DE ATENDENTE';
   };
   var realOrdersReport = filteredOrders.filter(function(o){ return !isSpecialReport(o); });
+
+  // ── Ranking de garçons por valor vendido (pedidos lançados via "Novo Pedido") ──
+  var waiterSalesReport = realOrdersReport.filter(function(o){ return o.status!=='cancelled' && o.created_by; });
+  var waiterTotals = {};
+  waiterSalesReport.forEach(function(o){
+    var w = o.created_by;
+    if(!waiterTotals[w]) waiterTotals[w] = { total: 0, count: 0 };
+    waiterTotals[w].total += Number(o.total)||0;
+    waiterTotals[w].count += 1;
+  });
+  var waiterRanking = Object.keys(waiterTotals)
+    .map(function(name){ return { name:name, total:waiterTotals[name].total, count:waiterTotals[name].count }; })
+    .sort(function(a,b){ return b.total - a.total; });
+
+  var waitersEl = $('r-waiters-ranking');
+  if(waitersEl){
+    if(!waiterRanking.length){
+      waitersEl.innerHTML = '<div style="color:var(--sl-400);font-size:13px">Nenhum pedido lançado por garçom nesse período.</div>';
+    } else {
+      var maxWaiterTotal = waiterRanking[0].total || 1;
+      waitersEl.innerHTML = waiterRanking.map(function(w, idx){
+        var medal = idx===0 ? '🥇' : idx===1 ? '🥈' : idx===2 ? '🥉' : (idx+1)+'º';
+        return '<div class="bar-row">'
+          +'<div class="bar-lbl" style="width:220px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+medal+' '+esc(w.name)+'</div>'
+          +'<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(w.total/maxWaiterTotal*100)+'%"></div></div>'
+          +'<div class="bar-val" style="min-width:110px;text-align:right">'+fmt(w.total)+' <span style="color:var(--sl-400);font-weight:400">('+w.count+')</span></div>'
+          +'</div>';
+      }).join('');
+    }
+  }
 
   // Métricas
   var delivered = realOrdersReport.filter(function(o){ return o.status==='delivered'; });
