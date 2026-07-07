@@ -258,9 +258,9 @@ td{padding:11px 14px;border-bottom:1px solid var(--sand-50);color:var(--sl-700);
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sand-50)}
 
-.reports-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px}
-.report-card{background:#fff;border-radius:var(--r);padding:18px;border:1px solid var(--sand-100)}
-.report-title{font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}
+.reports-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:18px;margin-top:16px}
+.report-card{background:#fff;border-radius:var(--r);padding:26px;border:1px solid var(--sand-100);min-height:280px}
+.report-title{font-size:13px;font-weight:600;color:var(--sl-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:18px}
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
 .bar-lbl{font-size:11px;color:var(--sl-600);min-width:90px}
 .bar-track{flex:1;height:7px;background:var(--sand-100);border-radius:99px;overflow:hidden}
@@ -1475,9 +1475,9 @@ td{padding:11px 14px;border-bottom:1px solid var(--sand-50);color:var(--sl-700);
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sand-50)}
 
-.reports-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px}
-.report-card{background:#fff;border-radius:var(--r);padding:18px;border:1px solid var(--sand-100)}
-.report-title{font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}
+.reports-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:18px;margin-top:16px}
+.report-card{background:#fff;border-radius:var(--r);padding:26px;border:1px solid var(--sand-100);min-height:280px}
+.report-title{font-size:13px;font-weight:600;color:var(--sl-400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:18px}
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
 .bar-lbl{font-size:11px;color:var(--sl-600);min-width:90px}
 .bar-track{flex:1;height:7px;background:var(--sand-100);border-radius:99px;overflow:hidden}
@@ -6511,6 +6511,36 @@ async function renderContas(){
 
   // Guardar dados brutos para filtros
   window._contasRawList = contasOrders;
+
+  // Para cada conta AINDA PENDENTE, buscar os pedidos reais da sessão
+  // (itens + nome do cliente) pra permitir conferência antes de faturar.
+  if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
+    var kid = currentKiosk.id;
+    await Promise.all(contasOrders.map(async function(o){
+      if(['delivered','cancelled','billed'].includes(o.status)) return; // só detalha pendentes
+      var umbStr = String(o.umbrella_num || o.umb || '');
+      var {data: lastEnc} = await sb.from('orders')
+        .select('created_at')
+        .eq('kiosk_id', kid)
+        .eq('umbrella_num', umbStr)
+        .eq('customer_name', 'ENCERRAMENTO')
+        .order('created_at', {ascending:false})
+        .limit(1);
+      var sessionStart = (lastEnc && lastEnc[0]) ? lastEnc[0].created_at : null;
+      var q = sb.from('orders')
+        .select('*, order_items(*)')
+        .eq('kiosk_id', kid)
+        .eq('umbrella_num', umbStr)
+        .not('customer_name','eq','ENCERRAMENTO')
+        .not('customer_name','eq','CHAMADA DE ATENDENTE')
+        .not('customer_name','eq','PEDIDO DE CONTA')
+        .not('status','eq','cancelled');
+      if(sessionStart) q = q.gt('created_at', sessionStart);
+      var {data: pedidos} = await q;
+      o._sessionOrders = (pedidos||[]).sort(function(a,b){ return new Date(a.created_at) - new Date(b.created_at); });
+    }));
+  }
+
   applyContasFilters();
 }
 
@@ -6602,14 +6632,33 @@ function applyContasFilters(){
   if(contasAtivas.length){
     html += '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--sl-400);margin-bottom:8px">Aguardando pagamento ('+contasAtivas.length+')</div>';
     html += contasAtivas.map(function(o){
-      var detalhes = (o.notes||'').split(' · ');
+      var sessionOrders = o._sessionOrders || [];
+      var conferenciaHtml;
+      if(sessionOrders.length){
+        conferenciaHtml = sessionOrders.map(function(so){
+          var itensTxt = (so.order_items||[]).map(function(i){
+            return '<div style="font-size:12px;color:#5b21b6;padding:1px 0">• '+i.quantity+'× '+esc(i.product_name)+'</div>';
+          }).join('');
+          return '<div style="padding:8px 0;border-bottom:1px dashed #ddd6fe">'
+            +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'
+            +'<div style="font-size:12.5px;font-weight:700;color:#6d28d9">👤 '+esc(so.customer_name||'Cliente')+'</div>'
+            +'<div style="font-size:12px;font-weight:600;color:#6d28d9">'+fmt(so.total)+'</div>'
+            +'</div>'
+            +itensTxt
+            +'</div>';
+        }).join('');
+      } else {
+        // Fallback: resumo antigo (só usado se não achou os pedidos detalhados)
+        var detalhes = (o.notes||'').split(' · ');
+        conferenciaHtml = detalhes.map(function(d){ return '<div style="font-size:12px;color:#5b21b6;padding:2px 0">'+esc(d)+'</div>'; }).join('');
+      }
       return '<div style="background:#fff;border-radius:var(--r);border:2px solid #8b5cf6;padding:16px;position:relative;margin-bottom:10px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">'
         +'<div style="font-size:14px;font-weight:700;color:#6d28d9">🧾 ☂️ Guarda-sol '+esc(o.umbrella_num||o.umb||'?')+'</div>'
         +'<div style="font-size:12px;color:var(--sl-400)">🕐 '+(o.time||'')+'</div>'
         +'</div>'
-        +'<div style="background:#f5f3ff;border-radius:8px;padding:10px 12px;margin-bottom:12px">'
-        +detalhes.map(function(d){ return '<div style="font-size:12px;color:#5b21b6;padding:2px 0">'+esc(d)+'</div>'; }).join('')
+        +'<div style="background:#f5f3ff;border-radius:8px;padding:10px 12px;margin-bottom:12px;max-height:260px;overflow-y:auto">'
+        +conferenciaHtml
         +'</div>'
         +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
         +'<div style="font-size:22px;font-weight:700;color:#6d28d9">💰 '+fmt(o.total)+'</div>'
