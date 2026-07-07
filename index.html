@@ -836,19 +836,14 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:80%;max-height:80%;object-fit:contain"/></div>
       <div class="auth-title">Painel Recebaa</div>
       <div class="auth-sub">Entre com suas credenciais</div>
-      <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
-      <label style="display:flex;align-items:center;gap:8px;margin:4px 0 14px;cursor:pointer;font-size:13px;color:var(--sl-600)">
-        <input type="checkbox" id="login-waiter-check" onchange="toggleWaiterPinField()" style="accent-color:var(--ocean-500)"/>
-        Entrar como garçom (acesso restrito)
+      <label style="display:flex;align-items:center;gap:8px;margin:0 0 14px;cursor:pointer;font-size:13px;color:var(--sl-600)">
+        <input type="checkbox" id="login-waiter-check" onchange="toggleWaiterLoginMode()" style="accent-color:var(--ocean-500)"/>
+        Sou garçom (login com meu e-mail próprio)
       </label>
+      <div class="field"><label class="label" id="login-email-label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
       <div id="login-pass-wrap">
         <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
-        <div style="text-align:right;margin:-8px 0 14px"><a class="auth-link" href="#" style="font-size:12.5px" onclick="openForgotPasswordModal();return false">Esqueci minha senha</a></div>
-      </div>
-      <div class="field hidden" id="login-waiter-pin-field">
-        <label class="label">PIN do garçom</label>
-        <input class="input" id="login-waiter-pin" type="password" inputmode="numeric" placeholder="Ex: 1234"/>
-        <div style="font-size:11.5px;color:var(--sl-400);margin-top:4px">Peça o PIN ao responsável pelo quiosque — não é a senha da conta.</div>
+        <div style="text-align:right;margin:-8px 0 14px" id="login-forgot-wrap"><a class="auth-link" href="#" style="font-size:12.5px" onclick="openForgotPasswordModal();return false">Esqueci minha senha</a></div>
       </div>
       <button class="btn btn-dark" id="login-btn" style="width:100%" onclick="doLogin()">Entrar</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:16px">
@@ -906,12 +901,12 @@ tr:hover td{background:var(--sand-50)}
         <button class="s-item" onclick="kPage('umbrellas',this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
         <button class="s-item" onclick="kPage('contas',this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
         <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
+        <button class="s-item" id="waiters-nav-btn" onclick="kPage('waiters',this)"><span class="s-icon">🧑‍🍳</span>Garçons</button>
       </nav>
       <div class="sidebar-foot">
         <button class="s-item" id="mute-btn" onclick="toggleMute()" style="margin-bottom:4px">
           <span class="s-icon">🔔</span>Sons ativos
         </button>
-        <button class="s-item" id="waiter-pin-config-btn" onclick="openWaiterPinModal()" style="margin-bottom:4px"><span class="s-icon">🧑‍🍳</span>PIN do garçom</button>
         <button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button>
       </div>
     </aside>
@@ -1133,6 +1128,15 @@ tr:hover td{background:var(--sand-50)}
           </div>
           <div id="r-margin-table"><div style="color:var(--sl-400);font-size:13px;padding:16px">Selecione um período para ver a análise de margem.</div></div>
         </div>
+      </div>
+
+      <div class="kpage" id="kpage-waiters">
+        <div class="page-header">
+          <div class="page-title">Garçons</div>
+          <button class="btn btn-ocean btn-sm" onclick="openAddWaiterModal()">+ Novo garçom</button>
+        </div>
+        <div style="font-size:12.5px;color:var(--sl-400);margin-bottom:16px">Cadastre um login individual (e-mail e senha) para cada garçom. Eles terão acesso restrito (Ao vivo, Cardápio, Guarda-sóis e Contas), e toda alteração de pedido feita por eles fica registrada com o nome deles.</div>
+        <div id="waiters-list"><div class="page-loading" style="padding:20px"></div></div>
       </div>
     </main>
   </div>
@@ -4664,100 +4668,188 @@ function showCard(name){
   $('card-register').classList.toggle('hidden',name!=='register');
 }
 
-function toggleWaiterPinField(){
-  var check = $('login-waiter-check');
-  var field = $('login-waiter-pin-field');
-  var passWrap = $('login-pass-wrap');
-  if(!check || !field) return;
-  if(check.checked){
-    field.classList.remove('hidden');
-    if(passWrap) passWrap.classList.add('hidden');
-  } else {
-    field.classList.add('hidden');
-    if(passWrap) passWrap.classList.remove('hidden');
+// Retorna quem está executando a ação agora: nome do garçom logado, ou o
+// dono/gerente do quiosque. Usado para rastrear quem alterou cada pedido.
+function getCurrentActorName(){
+  if(window._isWaiterMode && window._currentWaiter && window._currentWaiter.name){
+    return window._currentWaiter.name;
   }
+  return (currentKiosk && currentKiosk.owner_name) ? currentKiosk.owner_name : 'Dono/Gerente';
 }
 
 // ══════════════════════════════════════════════════════
-// QUIOSQUE — CONFIGURAR PIN DO GARÇOM
+// QUIOSQUE — GERENCIAR GARÇONS
 // ══════════════════════════════════════════════════════
-async function openWaiterPinModal(){
-  if(window._isWaiterMode){ toast('⛔ Acesso restrito no modo garçom.'); return; }
-  var old = document.getElementById('dyn-waiter-pin');
+async function renderWaiters(){
+  var list = $('waiters-list');
+  if(!list) return;
+  list.innerHTML = '<div class="page-loading" style="padding:20px"></div>';
+
+  if(!isConfigured || !currentKiosk || currentKiosk.id === 'demo'){
+    list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--sl-400)">Cadastro de garçons não disponível no modo demo.</div>';
+    return;
+  }
+
+  var resp = await sb.rpc('list_waiters', { p_kiosk_id: currentKiosk.id });
+  if(resp.error){
+    list.innerHTML = '<div style="padding:24px;text-align:center;color:#ef4444">Erro ao carregar garçons: '+esc(resp.error.message)+'</div>';
+    return;
+  }
+  var waiters = resp.data || [];
+  if(!waiters.length){
+    list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--sl-400)"><div style="font-size:40px;margin-bottom:12px">🧑‍🍳</div><div>Nenhum garçom cadastrado ainda.</div></div>';
+    return;
+  }
+
+  list.innerHTML = waiters.map(function(w){
+    return '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
+      +'<div>'
+      +'<div style="font-size:14px;font-weight:600">'+esc(w.name)+' '+(w.is_active?'<span class="pill pill-delivered" style="font-size:10px;margin-left:6px">Ativo</span>':'<span class="pill pill-cancelled" style="font-size:10px;margin-left:6px">Inativo</span>')+'</div>'
+      +'<div style="font-size:12px;color:var(--sl-400);margin-top:2px">'+esc(w.email)+'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button class="btn btn-ghost btn-sm" onclick="toggleWaiterActive(\''+w.id+'\','+(!w.is_active)+')">'+(w.is_active?'⏸️ Desativar':'▶️ Reativar')+'</button>'
+      +'<button class="btn btn-ghost btn-sm" style="color:#ef4444" onclick="confirmDeleteWaiter(\''+w.id+'\',\''+esc(w.name).replace(/'/g,"\\'")+'\')">🗑️ Excluir</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+async function toggleWaiterActive(waiterId, newState){
+  var resp = await sb.rpc('set_waiter_active', { p_waiter_id: waiterId, p_active: newState });
+  if(resp.error){ toast('❌ Erro: '+resp.error.message); return; }
+  toast(newState ? '✅ Garçom reativado' : '⏸️ Garçom desativado');
+  renderWaiters();
+}
+
+function confirmDeleteWaiter(waiterId, waiterName){
+  if(!confirm('Excluir o garçom "'+waiterName+'"? Essa ação não pode ser desfeita.')) return;
+  deleteWaiterConfirmed(waiterId);
+}
+
+async function deleteWaiterConfirmed(waiterId){
+  var resp = await sb.rpc('delete_waiter', { p_waiter_id: waiterId });
+  if(resp.error){ toast('❌ Erro: '+resp.error.message); return; }
+  toast('🗑️ Garçom removido');
+  renderWaiters();
+}
+
+function openAddWaiterModal(){
+  var old = document.getElementById('dyn-add-waiter');
   if(old) old.remove();
 
-  var currentPin = '';
-  if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
-    var resp = await sb.from('kiosks').select('waiter_pin').eq('id', currentKiosk.id).single();
-    currentPin = (resp.data && resp.data.waiter_pin) ? resp.data.waiter_pin : '';
-  }
-
   var div = document.createElement('div');
-  div.id = 'dyn-waiter-pin';
+  div.id = 'dyn-add-waiter';
   div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
-  div.onclick = function(e){ if(e.target===div) closeWaiterPinModal(); };
-  div.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2)">'
+  div.onclick = function(e){ if(e.target===div) closeAddWaiterModal(); };
+  div.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2)">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9">'
-    +'<div style="font-size:15px;font-weight:600">🧑‍🍳 PIN do garçom</div>'
-    +'<button onclick="closeWaiterPinModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
+    +'<div style="font-size:15px;font-weight:600">🧑‍🍳 Novo garçom</div>'
+    +'<button onclick="closeAddWaiterModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
     +'</div>'
     +'<div style="padding:20px;display:flex;flex-direction:column;gap:12px">'
-    +'<div style="font-size:12.5px;color:#64748b">Defina um PIN simples para que os garçons acessem uma versão restrita do painel (só Ao vivo, Cardápio, Guarda-sóis e Contas — sem Dashboard, Histórico ou Relatórios).</div>'
-    +(currentPin ? '<div style="font-size:12px;color:#059669;background:#ecfdf5;padding:8px 10px;border-radius:8px">✅ Já existe um PIN configurado. Você pode trocá-lo abaixo.</div>' : '<div style="font-size:12px;color:#b45309;background:#fffbeb;padding:8px 10px;border-radius:8px">⚠️ Nenhum PIN configurado ainda — o login como garçom não vai funcionar até definir um.</div>')
-    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Novo PIN (números, mín. 4 dígitos)</label>'
-    +'<input id="waiter-pin-input" type="text" inputmode="numeric" class="input" style="width:100%" placeholder="Ex: 1234"/></div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Nome do garçom *</label>'
+    +'<input id="new-waiter-name" class="input" style="width:100%" placeholder="Ex: João Silva"/></div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">E-mail (login) *</label>'
+    +'<input id="new-waiter-email" type="email" class="input" style="width:100%" placeholder="joao@email.com"/></div>'
+    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Senha (mín. 6 caracteres) *</label>'
+    +'<input id="new-waiter-password" type="password" class="input" style="width:100%" placeholder="••••••••"/></div>'
     +'<div style="display:flex;gap:8px;margin-top:6px">'
-    +'<button class="btn btn-ghost" style="flex:1" onclick="closeWaiterPinModal()">Cancelar</button>'
-    +'<button class="btn btn-ocean" id="waiter-pin-save-btn" style="flex:1" onclick="saveWaiterPin()">Salvar PIN</button>'
+    +'<button class="btn btn-ghost" style="flex:1" onclick="closeAddWaiterModal()">Cancelar</button>'
+    +'<button class="btn btn-ocean" id="add-waiter-save-btn" style="flex:1" onclick="saveNewWaiter()">Cadastrar</button>'
     +'</div></div></div>';
   document.body.appendChild(div);
-  setTimeout(function(){ var el=document.getElementById('waiter-pin-input'); if(el) el.focus(); }, 50);
+  setTimeout(function(){ var el=document.getElementById('new-waiter-name'); if(el) el.focus(); }, 50);
 }
 
-function closeWaiterPinModal(){
-  var d = document.getElementById('dyn-waiter-pin');
+function closeAddWaiterModal(){
+  var d = document.getElementById('dyn-add-waiter');
   if(d) d.remove();
 }
 
-async function saveWaiterPin(){
-  var pin = (($('waiter-pin-input')||{}).value || '').trim();
-  if(!/^\d{4,}$/.test(pin)){ toast('⚠️ O PIN deve ter pelo menos 4 números'); return; }
+async function saveNewWaiter(){
+  var name = (($('new-waiter-name')||{}).value || '').trim();
+  var email = (($('new-waiter-email')||{}).value || '').trim();
+  var pass = (($('new-waiter-password')||{}).value || '').trim();
 
-  setLoading('waiter-pin-save-btn', true, 'Salvar PIN');
+  if(!name){ toast('⚠️ Informe o nome do garçom'); return; }
+  if(!email){ toast('⚠️ Informe o e-mail'); return; }
+  if(pass.length < 6){ toast('⚠️ A senha deve ter pelo menos 6 caracteres'); return; }
+
+  setLoading('add-waiter-save-btn', true, 'Cadastrar');
 
   if(!isConfigured || currentKiosk.id === 'demo'){
-    setLoading('waiter-pin-save-btn', false, 'Salvar PIN');
-    toast('✅ PIN salvo (modo demo)');
-    closeWaiterPinModal();
+    setLoading('add-waiter-save-btn', false, 'Cadastrar');
+    toast('✅ Garçom cadastrado (modo demo)');
+    closeAddWaiterModal();
     return;
   }
 
-  var upd = await sb.from('kiosks').update({ waiter_pin: pin }).eq('id', currentKiosk.id);
-  setLoading('waiter-pin-save-btn', false, 'Salvar PIN');
-  if(upd.error){
-    toast('❌ Erro ao salvar PIN: ' + upd.error.message);
+  var resp = await sb.rpc('register_waiter', {
+    p_kiosk_id: currentKiosk.id, p_name: name, p_email: email, p_password: pass
+  });
+  setLoading('add-waiter-save-btn', false, 'Cadastrar');
+  if(resp.error){
+    if(/duplicate|unique/i.test(resp.error.message)){
+      toast('❌ Já existe um garçom cadastrado com esse e-mail.');
+    } else {
+      toast('❌ Erro ao cadastrar: ' + resp.error.message);
+    }
     return;
   }
-  closeWaiterPinModal();
-  toast('✅ PIN do garçom salvo com sucesso!');
+  closeAddWaiterModal();
+  toast('✅ Garçom cadastrado com sucesso!');
+  renderWaiters();
+}
+
+function toggleWaiterLoginMode(){
+  var check = $('login-waiter-check');
+  var forgotWrap = $('login-forgot-wrap');
+  var emailLabel = $('login-email-label');
+  if(!check) return;
+  if(check.checked){
+    if(forgotWrap) forgotWrap.style.display = 'none';
+    if(emailLabel) emailLabel.textContent = 'Seu e-mail de garçom';
+  } else {
+    if(forgotWrap) forgotWrap.style.display = '';
+    if(emailLabel) emailLabel.textContent = 'E-mail';
+  }
 }
 
 async function doLogin(){
   const email=$('login-email').value.trim();
+  const pass=$('login-pass').value.trim();
   var wantsWaiter = $('login-waiter-check') && $('login-waiter-check').checked;
 
-  if(!email){ toast('Informe o e-mail do quiosque'); return; }
+  if(!email||!pass){ toast('Preencha e-mail e senha'); return; }
 
-  // ── Fluxo GARÇOM: e-mail + PIN, nunca pede a senha real da conta ──
+  // ── Fluxo GARÇOM: e-mail e senha PRÓPRIOS do garçom (contas cadastradas pelo quiosque) ──
   if(wantsWaiter){
-    var waiterPinTyped = ($('login-waiter-pin').value||'').trim();
-    if(!waiterPinTyped){ toast('Informe o PIN do garçom'); return; }
     setLoading('login-btn',true,'Entrando...');
 
     if(isConfigured){
-      var kResp = await sb.from('kiosks').select('id,name,owner_email,owner_name,blocked,approved,is_active,waiter_pin').eq('owner_email', email).single();
+      var wResp = await sb.rpc('login_waiter', { p_email: email, p_password: pass });
+      if(wResp.error){
+        toast('Erro ao validar credenciais: '+(wResp.error.message||'tente novamente'));
+        setLoading('login-btn',false,'Entrar');
+        return;
+      }
+      var wRows = wResp.data || [];
+      if(!wRows.length){
+        toast('❌ E-mail ou senha incorretos.');
+        setLoading('login-btn',false,'Entrar');
+        return;
+      }
+      var w = wRows[0];
+      if(!w.is_active){
+        toast('⛔ Seu acesso de garçom foi desativado. Fale com o responsável pelo quiosque.');
+        setLoading('login-btn',false,'Entrar');
+        return;
+      }
+      // Buscar dados básicos do quiosque a que esse garçom pertence
+      var kResp = await sb.from('kiosks').select('id,name,owner_name,blocked,approved,is_active').eq('id', w.kiosk_id).single();
       if(kResp.error || !kResp.data){
-        toast('❌ E-mail não encontrado.');
+        toast('❌ Não foi possível localizar o quiosque vinculado.');
         setLoading('login-btn',false,'Entrar');
         return;
       }
@@ -4766,20 +4858,11 @@ async function doLogin(){
       if(k.approved === false){ toast('⏳ Cadastro aguardando aprovação do administrador.'); setLoading('login-btn',false,'Entrar'); return; }
       if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
-      var realPin = k.waiter_pin ? String(k.waiter_pin).trim() : '';
-      if(!realPin){
-        toast('⚠️ PIN do garçom ainda não foi configurado. Peça ao responsável pelo quiosque.');
-        setLoading('login-btn',false,'Entrar');
-        return;
-      }
-      if(realPin !== waiterPinTyped){
-        toast('❌ PIN do garçom incorreto.');
-        setLoading('login-btn',false,'Entrar');
-        return;
-      }
       currentKiosk = k;
+      window._currentWaiter = { id: w.id, name: w.name };
     } else {
-      currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo'};
+      currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_name:'Demo'};
+      window._currentWaiter = { id:'demo-waiter', name:'Garçom Demo' };
     }
     window._isWaiterMode = true;
     setLoading('login-btn',false,'Entrar');
@@ -4788,8 +4871,6 @@ async function doLogin(){
   }
 
   // ── Fluxo normal (dono/gerente): e-mail + senha ──
-  const pass=$('login-pass').value.trim();
-  if(!pass){ toast('Preencha e-mail e senha'); return; }
   setLoading('login-btn',true,'Entrando...');
 
   if(isConfigured){
@@ -4818,6 +4899,7 @@ async function doLogin(){
     currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo'};
   }
   window._isWaiterMode = false;
+  window._currentWaiter = null;
   setLoading('login-btn',false,'Entrar');
   enterDash();
 }
@@ -4984,8 +5066,8 @@ async function enterDash(){
   $('dash-kname').textContent=currentKiosk.name;
   document.querySelectorAll('.kpage').forEach(p=>p.classList.remove('active'));
 
-  // Modo garçom: esconder Dashboard, Histórico e Relatórios, e abrir direto em "Ao vivo"
-  var waiterHideNames = ['overview','history','reports'];
+  // Modo garçom: esconder Dashboard, Histórico, Relatórios e Garçons, e abrir direto em "Ao vivo"
+  var waiterHideNames = ['overview','history','reports','waiters'];
   $('kiosk-dash').querySelectorAll('.s-item[onclick]').forEach(function(b){
     var m = b.getAttribute('onclick').match(/kPage\('([a-z]+)'/);
     var pageName = m ? m[1] : null;
@@ -4996,8 +5078,6 @@ async function enterDash(){
       b.style.display = '';
     }
   });
-  var waiterPinBtn = $('waiter-pin-config-btn');
-  if(waiterPinBtn) waiterPinBtn.style.display = window._isWaiterMode ? 'none' : '';
 
   var startPage = window._isWaiterMode ? 'orders' : 'overview';
   $('kpage-'+startPage).classList.add('active');
@@ -5093,7 +5173,7 @@ async function closeUmbrellaSession(umbNum){
     if(pedidos.length){
       var ids = pedidos.map(function(o){ return o.id; });
       var {error: eUpd} = await sb.from('orders')
-        .update({status:'delivered'})
+        .update({status:'delivered', last_updated_by: getCurrentActorName()})
         .in('id', ids);
       if(eUpd) console.log('Erro ao atualizar pedidos:', eUpd.message);
     }
@@ -5123,7 +5203,7 @@ async function closeUmbrellaSession(umbNum){
       var newNotes = (contasExist[0].notes ? contasExist[0].notes + ' · ' : '')
         + 'FATURADO pelo quiosque · ' + resumo;
       await sb.from('orders')
-        .update({status:'delivered', total: totalConta, notes: newNotes})
+        .update({status:'delivered', total: totalConta, notes: newNotes, last_updated_by: getCurrentActorName()})
         .eq('id', contasExist[0].id);
     } else {
       // Não existia: criar pedido de conta retroativo
@@ -5186,14 +5266,10 @@ function doLogout(){
   if(realtimeChannel) sb.removeChannel(realtimeChannel);
   currentKiosk=null; catalog=[]; dbCategories=[]; orders=[];
   window._isWaiterMode = false;
+  window._currentWaiter = null;
   var waiterCheck = $('login-waiter-check');
   if(waiterCheck){ waiterCheck.checked = false; }
-  var waiterPinInput = $('login-waiter-pin');
-  if(waiterPinInput){ waiterPinInput.value = ''; }
-  var waiterPinField = $('login-waiter-pin-field');
-  if(waiterPinField){ waiterPinField.classList.add('hidden'); }
-  var passWrap = $('login-pass-wrap');
-  if(passWrap){ passWrap.classList.remove('hidden'); }
+  toggleWaiterLoginMode();
   $('kiosk-dash').classList.add('hidden');
   $('kiosk-auth').classList.remove('hidden');
   showCard('login');
@@ -5668,7 +5744,7 @@ function playAlert(){
 // QUIOSQUE — NAVEGAÇÃO
 // ══════════════════════════════════════════════════════
 function kPage(name,btn){
-  var waiterBlocked = ['overview','history','reports'];
+  var waiterBlocked = ['overview','history','reports','waiters'];
   if(window._isWaiterMode && waiterBlocked.indexOf(name) !== -1){
     toast('⛔ Acesso restrito no modo garçom.');
     return;
@@ -5683,6 +5759,7 @@ function kPage(name,btn){
   else if(name==='umbrellas') renderUmbrellas();
   else if(name==='contas') renderContas();
   else if(name==='reports') loadReports();
+  else if(name==='waiters') renderWaiters();
   closeSidebar(); // fechar menu no mobile após clicar
 }
 
@@ -5899,10 +5976,12 @@ function orderCard(o){
 
 async function advOrder(id,st){
   const o=orders.find(x=>x.id===id); if(!o) return;
+  var who = getCurrentActorName();
   if(isConfigured && !String(id).startsWith('local')){
-    await sb.from('orders').update({status:st}).eq('id',id);
+    await sb.from('orders').update({status:st, last_updated_by: who}).eq('id',id);
   }
   o.status=st;
+  o.last_updated_by=who;
   renderLiveOrders();
   renderHist();
   updateDashMetrics();
@@ -6220,8 +6299,10 @@ function changeHistStatusSel(sel){
 async function changeHistStatus(id,st){
   if(!st) return;
   const o=orders.find(x=>x.id===id); if(!o) return;
-  if(isConfigured && !String(id).startsWith('local')) await sb.from('orders').update({status:st}).eq('id',id);
+  var who = getCurrentActorName();
+  if(isConfigured && !String(id).startsWith('local')) await sb.from('orders').update({status:st, last_updated_by: who}).eq('id',id);
   o.status=st;
+  o.last_updated_by=who;
   renderHist();
   renderLiveOrders();
   updateDashMetrics();
