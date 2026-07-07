@@ -659,7 +659,7 @@ tr:hover td{background:var(--sand-50)}
       <div class="lp-section-tag">Acesse agora</div>
       <div class="lp-section-title" id="lp-access-title">Por onde você quer entrar?</div>
       <div class="lp-access">
-        <div class="lp-access-card client" onclick="openQrScanner()">
+        <div class="lp-access-card client" onclick="goToClient()">
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
           <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
@@ -1902,7 +1902,7 @@ tr:hover td{background:var(--sand-50)}
       <div class="lp-section-tag">Acesse agora</div>
       <div class="lp-section-title" id="lp-access-title">Por onde você quer entrar?</div>
       <div class="lp-access">
-        <div class="lp-access-card client" onclick="openQrScanner()">
+        <div class="lp-access-card client" onclick="goToClient()">
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
           <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
@@ -2740,7 +2740,18 @@ function goToClient(btn){
     }
     return;
   }
-  // Sem sessão — abrir scanner
+  // O quiosque já foi identificado pelo QR Code escaneado (URL com ?kiosk=ID)?
+  // Se sim, não faz sentido pedir pra escanear de novo — vai direto pra tela
+  // de "informe o número do guarda-sol", que já resolve o quiosque pela URL.
+  var kioskFromUrl = null;
+  try{
+    kioskFromUrl = new URLSearchParams(window.location.search).get('kiosk');
+  }catch(e){}
+  if(kioskFromUrl){
+    showScreen('client', btn || document.getElementById('nav-client'));
+    return;
+  }
+  // Sem nenhuma identificação de quiosque disponível — abrir scanner
   openQrScanner();
 }
 
