@@ -1015,6 +1015,18 @@ tr:hover td{background:var(--sand-50)}
             <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
           </div>
         </div>
+        <div id="hist-bulk-bar" class="hidden" style="background:#0f172a;color:#fff;border-radius:var(--r);padding:10px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span id="hist-bulk-count" style="font-size:13px;font-weight:600">0 selecionados</span>
+          <select class="select" id="hist-bulk-status" style="width:auto;font-size:12.5px;padding:6px 10px;color:#0f172a">
+            <option value="">Alterar status para...</option>
+            <option value="pending">Pendente</option>
+            <option value="preparing">Em produção</option>
+            <option value="delivered">Entregue</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+          <button class="btn btn-sm btn-ocean" onclick="applyBulkHistStatus()">Aplicar</button>
+          <button class="btn btn-sm btn-ghost" style="color:#fff" onclick="clearHistSelection()">Limpar seleção</button>
+        </div>
         <div class="hist-table" id="hist-table"></div>
       </div>
       <div class="kpage" id="kpage-menu">
@@ -6577,6 +6589,7 @@ function renderHistTable(list, skipFilterSetup){
   // Cabeçalho clicável (ordenação)
   var thead = '<thead>'
     +'<tr>'
+      +'<th style="width:32px"><input type="checkbox" id="hist-select-all" onchange="toggleAllHistSelection(this)"/></th>'
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'num\')"># '+histSortIcon('num')+'</th>'
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'umb\')">Guarda-sol '+histSortIcon('umb')+'</th>'
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'cliente\')">Cliente '+histSortIcon('cliente')+'</th>'
@@ -6590,7 +6603,7 @@ function renderHistTable(list, skipFilterSetup){
     +'</thead>';
 
   if(!list.length){
-    el.innerHTML='<table>'+thead+'<tbody><tr><td colspan="9" style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum pedido encontrado.</td></tr></tbody></table>';
+    el.innerHTML='<table>'+thead+'<tbody><tr><td colspan="10" style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum pedido encontrado.</td></tr></tbody></table>';
     return;
   }
 
@@ -6611,7 +6624,9 @@ function renderHistTable(list, skipFilterSetup){
       }
       // Remover marcador da nota antes de exibir
       var notesClean = notesRaw.replace(/\s*\[(BEBIDAS|COMIDA|OUTROS)\]\s*/g, '').trim();
+      var isChecked = window._histSelected && window._histSelected[o.id];
       return '<tr>'
+        +'<td>'+(isSpecial?'':'<input type="checkbox" class="hist-row-check" data-oid="'+o.id+'" '+(isChecked?'checked':'')+' onchange="toggleHistSelection(\''+o.id+'\',this.checked)"/>')+'</td>'
         +'<td><b>#'+(o.order_number||'—')+'</b>'+groupChip+'</td>'
         +'<td>☂️ '+esc(o.umb||o.umbrella_num||'?')+'</td>'
         +'<td>'+esc(o.customer_name||'?')+'</td>'
@@ -6657,6 +6672,80 @@ function renderHistTable(list, skipFilterSetup){
       }
     }, 0);
   }
+  updateHistBulkBar();
+}
+
+// ══════════════════════════════════════════════════════
+// HISTÓRICO — SELEÇÃO E AÇÃO EM MASSA
+// ══════════════════════════════════════════════════════
+window._histSelected = window._histSelected || {};
+
+function toggleHistSelection(orderId, checked){
+  if(checked) window._histSelected[orderId] = true;
+  else delete window._histSelected[orderId];
+  updateHistBulkBar();
+}
+
+function toggleAllHistSelection(checkbox){
+  var checks = document.querySelectorAll('#hist-table .hist-row-check');
+  checks.forEach(function(c){
+    c.checked = checkbox.checked;
+    if(checkbox.checked) window._histSelected[c.dataset.oid] = true;
+    else delete window._histSelected[c.dataset.oid];
+  });
+  updateHistBulkBar();
+}
+
+function clearHistSelection(){
+  window._histSelected = {};
+  document.querySelectorAll('#hist-table .hist-row-check').forEach(function(c){ c.checked = false; });
+  var selAll = $('hist-select-all');
+  if(selAll) selAll.checked = false;
+  updateHistBulkBar();
+}
+
+function updateHistBulkBar(){
+  var bar = $('hist-bulk-bar');
+  var countEl = $('hist-bulk-count');
+  if(!bar || !countEl) return;
+  var ids = Object.keys(window._histSelected).filter(function(id){ return window._histSelected[id]; });
+  if(!ids.length){
+    bar.classList.add('hidden');
+    return;
+  }
+  bar.classList.remove('hidden');
+  countEl.textContent = ids.length + ' selecionado' + (ids.length>1?'s':'');
+}
+
+async function applyBulkHistStatus(){
+  var newStatus = ($('hist-bulk-status')||{}).value;
+  if(!newStatus){ toast('⚠️ Selecione um status para aplicar'); return; }
+  var ids = Object.keys(window._histSelected).filter(function(id){ return window._histSelected[id]; });
+  if(!ids.length){ toast('⚠️ Nenhum pedido selecionado'); return; }
+
+  var statusLabels = { pending:'Pendente', preparing:'Em produção', delivered:'Entregue', cancelled:'Cancelado' };
+  if(!confirm('Alterar o status de '+ids.length+' pedido(s) para "'+(statusLabels[newStatus]||newStatus)+'"?')) return;
+
+  var who = getCurrentActorName();
+
+  if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
+    var resp = await sb.from('orders').update({ status:newStatus, last_updated_by:who }).in('id', ids);
+    if(resp.error){
+      toast('❌ Erro ao atualizar em massa: '+resp.error.message);
+      return;
+    }
+  }
+
+  ids.forEach(function(id){
+    var o = orders.find(function(x){ return x.id===id; });
+    if(o){ o.status = newStatus; o.last_updated_by = who; }
+  });
+
+  window._histSelected = {};
+  toast('✅ Status atualizado para '+ids.length+' pedido(s)');
+  renderHist();
+  renderLiveOrders();
+  updateDashMetrics();
 }
 
 
