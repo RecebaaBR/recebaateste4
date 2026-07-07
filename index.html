@@ -837,15 +837,18 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-title">Painel Recebaa</div>
       <div class="auth-sub">Entre com suas credenciais</div>
       <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
-      <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
-      <div style="text-align:right;margin:-8px 0 14px"><a class="auth-link" href="#" style="font-size:12.5px" onclick="openForgotPasswordModal();return false">Esqueci minha senha</a></div>
-      <label style="display:flex;align-items:center;gap:8px;margin:-4px 0 14px;cursor:pointer;font-size:13px;color:var(--sl-600)">
+      <label style="display:flex;align-items:center;gap:8px;margin:4px 0 14px;cursor:pointer;font-size:13px;color:var(--sl-600)">
         <input type="checkbox" id="login-waiter-check" onchange="toggleWaiterPinField()" style="accent-color:var(--ocean-500)"/>
         Entrar como garçom (acesso restrito)
       </label>
+      <div id="login-pass-wrap">
+        <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
+        <div style="text-align:right;margin:-8px 0 14px"><a class="auth-link" href="#" style="font-size:12.5px" onclick="openForgotPasswordModal();return false">Esqueci minha senha</a></div>
+      </div>
       <div class="field hidden" id="login-waiter-pin-field">
         <label class="label">PIN do garçom</label>
         <input class="input" id="login-waiter-pin" type="password" inputmode="numeric" placeholder="Ex: 1234"/>
+        <div style="font-size:11.5px;color:var(--sl-400);margin-top:4px">Peça o PIN ao responsável pelo quiosque — não é a senha da conta.</div>
       </div>
       <button class="btn btn-dark" id="login-btn" style="width:100%" onclick="doLogin()">Entrar</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:16px">
@@ -4664,9 +4667,15 @@ function showCard(name){
 function toggleWaiterPinField(){
   var check = $('login-waiter-check');
   var field = $('login-waiter-pin-field');
+  var passWrap = $('login-pass-wrap');
   if(!check || !field) return;
-  if(check.checked) field.classList.remove('hidden');
-  else field.classList.add('hidden');
+  if(check.checked){
+    field.classList.remove('hidden');
+    if(passWrap) passWrap.classList.add('hidden');
+  } else {
+    field.classList.add('hidden');
+    if(passWrap) passWrap.classList.remove('hidden');
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -4734,11 +4743,53 @@ async function saveWaiterPin(){
 }
 
 async function doLogin(){
-  const email=$('login-email').value.trim(), pass=$('login-pass').value.trim();
-  if(!email||!pass){ toast('Preencha e-mail e senha'); return; }
+  const email=$('login-email').value.trim();
   var wantsWaiter = $('login-waiter-check') && $('login-waiter-check').checked;
-  var waiterPinTyped = wantsWaiter ? ($('login-waiter-pin').value||'').trim() : '';
-  if(wantsWaiter && !waiterPinTyped){ toast('Informe o PIN do garçom'); return; }
+
+  if(!email){ toast('Informe o e-mail do quiosque'); return; }
+
+  // ── Fluxo GARÇOM: e-mail + PIN, nunca pede a senha real da conta ──
+  if(wantsWaiter){
+    var waiterPinTyped = ($('login-waiter-pin').value||'').trim();
+    if(!waiterPinTyped){ toast('Informe o PIN do garçom'); return; }
+    setLoading('login-btn',true,'Entrando...');
+
+    if(isConfigured){
+      var kResp = await sb.from('kiosks').select('id,name,owner_email,owner_name,blocked,approved,is_active,waiter_pin').eq('owner_email', email).single();
+      if(kResp.error || !kResp.data){
+        toast('❌ E-mail não encontrado.');
+        setLoading('login-btn',false,'Entrar');
+        return;
+      }
+      const k = kResp.data;
+      if(k.blocked){ toast('⛔ Quiosque bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+      if(k.approved === false){ toast('⏳ Cadastro aguardando aprovação do administrador.'); setLoading('login-btn',false,'Entrar'); return; }
+      if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+
+      var realPin = k.waiter_pin ? String(k.waiter_pin).trim() : '';
+      if(!realPin){
+        toast('⚠️ PIN do garçom ainda não foi configurado. Peça ao responsável pelo quiosque.');
+        setLoading('login-btn',false,'Entrar');
+        return;
+      }
+      if(realPin !== waiterPinTyped){
+        toast('❌ PIN do garçom incorreto.');
+        setLoading('login-btn',false,'Entrar');
+        return;
+      }
+      currentKiosk = k;
+    } else {
+      currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo'};
+    }
+    window._isWaiterMode = true;
+    setLoading('login-btn',false,'Entrar');
+    enterDash();
+    return;
+  }
+
+  // ── Fluxo normal (dono/gerente): e-mail + senha ──
+  const pass=$('login-pass').value.trim();
+  if(!pass){ toast('Preencha e-mail e senha'); return; }
   setLoading('login-btn',true,'Entrando...');
 
   if(isConfigured){
@@ -4762,26 +4813,11 @@ async function doLogin(){
     if(k.approved === false){ toast('⏳ Seu cadastro está aguardando aprovação do administrador.'); setLoading('login-btn',false,'Entrar'); return; }
     if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
-    if(wantsWaiter){
-      var pinResp = await sb.from('kiosks').select('waiter_pin').eq('id', k.id).single();
-      var realPin = (pinResp.data && pinResp.data.waiter_pin) ? String(pinResp.data.waiter_pin).trim() : '';
-      if(!realPin){
-        toast('⚠️ PIN do garçom ainda não foi configurado. Peça ao responsável pelo quiosque.');
-        setLoading('login-btn',false,'Entrar');
-        return;
-      }
-      if(realPin !== waiterPinTyped){
-        toast('❌ PIN do garçom incorreto.');
-        setLoading('login-btn',false,'Entrar');
-        return;
-      }
-    }
-
     currentKiosk=k;
   } else {
     currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo'};
   }
-  window._isWaiterMode = !!wantsWaiter;
+  window._isWaiterMode = false;
   setLoading('login-btn',false,'Entrar');
   enterDash();
 }
@@ -5156,6 +5192,8 @@ function doLogout(){
   if(waiterPinInput){ waiterPinInput.value = ''; }
   var waiterPinField = $('login-waiter-pin-field');
   if(waiterPinField){ waiterPinField.classList.add('hidden'); }
+  var passWrap = $('login-pass-wrap');
+  if(passWrap){ passWrap.classList.remove('hidden'); }
   $('kiosk-dash').classList.add('hidden');
   $('kiosk-auth').classList.remove('hidden');
   showCard('login');
