@@ -797,6 +797,7 @@ tr:hover td{background:var(--sand-50)}
     <div class="drawer-body">
       <div id="cart-items"></div>
       <div class="cart-total-row"><span>Total</span><span id="cart-total">R$ 0,00</span></div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:10px" onclick="closeCart()">➕ Adicionar mais itens</button>
       <div class="field" style="margin-top:12px">
         <label class="label">Seu nome *</label>
         <input class="input" id="customer-name" placeholder="Como você se chama?"/>
@@ -3638,7 +3639,11 @@ function productCard(p){
     ?'<div class="product-img"><img src="'+esc(imgUrl)+'" alt="'+esc(p.name)+'"/></div>'
     :'<div class="product-img">'+esc(p.emoji||'🍴')+'</div>';
   const ctrl = hasOpts
-    ? '<button class="add-btn" onclick="openProductOptionsModal(\''+p.id+'\')">'+(qty>0?qty+' ✓':'+')+'</button>'
+    ? (qty===0
+        ?'<button class="add-btn" onclick="openProductOptionsModal(\''+p.id+'\')">+</button>'
+        :'<div class="qty-ctrl"><button class="qty-btn" onclick="decrementProductVariant(\''+p.id+'\')">−</button>'
+          +'<span class="qty-num">'+qty+'</span>'
+          +'<button class="qty-btn" onclick="openProductOptionsModal(\''+p.id+'\')">+</button></div>')
     : (qty===0
         ?'<button class="add-btn" onclick="addItem(\''+p.id+'\')">+</button>'
         :'<div class="qty-ctrl"><button class="qty-btn" onclick="changeItem(\''+p.id+'\',-1)">−</button>'
@@ -3656,6 +3661,18 @@ function cartQtyForProduct(pid){
   var total = 0;
   Object.keys(cart).forEach(function(k){ if(cart[k].id === pid) total += cart[k].qty; });
   return total;
+}
+
+// Remove 1 unidade da variação MAIS RECENTE desse produto no carrinho
+// (usado pelo botão "−" de produtos com opções, pra ficar consistente com os sem opções)
+function decrementProductVariant(pid){
+  var keys = Object.keys(cart).filter(function(k){ return cart[k].id === pid; });
+  if(!keys.length) return;
+  var lastKey = keys[keys.length - 1];
+  cart[lastKey].qty -= 1;
+  if(cart[lastKey].qty <= 0) delete cart[lastKey];
+  refreshCart();
+  refreshCard(pid);
 }
 
 // ══════════════════════════════════════════════════════
@@ -3777,7 +3794,11 @@ function refreshCard(id){
   const hasOpts = p.options && p.options.length;
   const qty = hasOpts ? cartQtyForProduct(baseId) : (cart[baseId]?cart[baseId].qty:0);
   const ctrl = hasOpts
-    ? '<button class="add-btn" onclick="openProductOptionsModal(\''+baseId+'\')">'+(qty>0?qty+' ✓':'+')+'</button>'
+    ? (qty===0
+        ?'<button class="add-btn" onclick="openProductOptionsModal(\''+baseId+'\')">+</button>'
+        :'<div class="qty-ctrl"><button class="qty-btn" onclick="decrementProductVariant(\''+baseId+'\')">−</button>'
+          +'<span class="qty-num">'+qty+'</span>'
+          +'<button class="qty-btn" onclick="openProductOptionsModal(\''+baseId+'\')">+</button></div>')
     : (qty===0
         ?'<button class="add-btn" onclick="addItem(\''+baseId+'\')">+</button>'
         :'<div class="qty-ctrl"><button class="qty-btn" onclick="changeItem(\''+baseId+'\',-1)">−</button>'
