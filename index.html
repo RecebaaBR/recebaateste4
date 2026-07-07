@@ -896,6 +896,7 @@ tr:hover td{background:var(--sand-50)}
       <nav class="sidebar-nav">
         <button class="s-item active" onclick="kPage('overview',this)"><span class="s-icon">📊</span>Dashboard</button>
         <button class="s-item" onclick="kPage('orders',this)"><span class="s-icon">📋</span>Ao vivo<span class="s-badge" id="live-badge">0</span></button>
+        <button class="s-item" onclick="kPage('waiterorder',this)"><span class="s-icon">➕</span>Novo Pedido</button>
         <button class="s-item" onclick="kPage('history',this)"><span class="s-icon">🗂️</span>Histórico</button>
         <button class="s-item" onclick="kPage('menu',this)"><span class="s-icon">🍔</span>Cardápio</button>
         <button class="s-item" onclick="kPage('umbrellas',this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
@@ -948,6 +949,34 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </div>
         <div class="orders-grid" id="live-orders-grid"></div>
+      </div>
+
+      <div class="kpage" id="kpage-waiterorder">
+        <div class="page-header">
+          <div class="page-title">Novo Pedido (balcão)</div>
+        </div>
+        <div style="font-size:12.5px;color:var(--sl-400);margin-bottom:14px">Use esta tela para lançar um pedido em nome do cliente. O pedido fica registrado com o nome de quem lançou.</div>
+
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:16px;margin-bottom:16px">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+            <div style="flex:1;min-width:140px">
+              <label class="label">Número do guarda-sol *</label>
+              <input class="input" id="wo-umbrella" type="number" min="1" placeholder="Ex: 7"/>
+            </div>
+            <div style="flex:2;min-width:200px">
+              <label class="label">Nome do cliente (opcional)</label>
+              <input class="input" id="wo-customer-name" placeholder="Ex: Marcos"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="cat-tabs" id="wo-cat-tabs" style="margin-bottom:14px;position:static;padding:0 0 10px 0"></div>
+        <div class="products-grid" id="wo-products-grid" style="padding-bottom:100px"></div>
+
+        <div id="wo-cart-bar" style="position:fixed;bottom:0;left:0;right:0;background:#0f172a;color:#fff;padding:14px 20px;display:none;align-items:center;justify-content:space-between;gap:12px;z-index:500;box-shadow:0 -6px 20px rgba(0,0,0,.2)">
+          <div style="font-size:13px" id="wo-cart-summary">0 itens · R$ 0,00</div>
+          <button class="btn btn-ocean btn-sm" id="wo-submit-btn" onclick="submitWaiterOrder()">Enviar pedido 🚀</button>
+        </div>
       </div>
       <div class="kpage" id="kpage-history">
         <div class="page-header">
@@ -3906,6 +3935,287 @@ function isDrink(item){
   return getOrderGroup(item) === 'drinks';
 }
 
+// ══════════════════════════════════════════════════════
+// QUIOSQUE — NOVO PEDIDO (BALCÃO)
+// Tela usada pelo garçom (ou dono) para lançar um pedido em nome do
+// cliente, sem precisar do QR Code. Carrinho isolado (waiterCart) pra
+// não interferir em nada do fluxo do cliente.
+// ══════════════════════════════════════════════════════
+var waiterCart = {};
+var woCurrentCat = null;
+
+function renderWaiterOrderPage(){
+  buildWoCatTabs();
+  renderWoProductsGrid();
+  updateWoCartBar();
+}
+
+function buildWoCatTabs(){
+  var cats = (dbCategories && dbCategories.length) ? dbCategories : [];
+  var container = $('wo-cat-tabs');
+  if(!container) return;
+  if(!woCurrentCat && cats.length) woCurrentCat = cats[0].id;
+  container.innerHTML = cats.map(function(c){
+    return '<button class="cat-tab'+(String(c.id)===String(woCurrentCat)?' active':'')+'" onclick="woSelectCat(\''+c.id+'\',this)">'+(c.emoji||'🍴')+' '+esc(c.name)+'</button>';
+  }).join('');
+}
+
+function woSelectCat(catId, btn){
+  woCurrentCat = catId;
+  $('wo-cat-tabs').querySelectorAll('.cat-tab').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  renderWoProductsGrid();
+}
+
+function renderWoProductsGrid(){
+  var grid = $('wo-products-grid');
+  if(!grid) return;
+  var items = (catalog||[]).filter(function(p){
+    return p.is_available !== false && String(p.category_id) === String(woCurrentCat);
+  });
+  if(!items.length){
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--sl-400)">Nenhum produto nessa categoria.</div>';
+    return;
+  }
+  grid.innerHTML = items.map(function(p){ return woProductCard(p); }).join('');
+}
+
+function woCartQtyForProduct(pid){
+  var total = 0;
+  Object.keys(waiterCart).forEach(function(k){ if(waiterCart[k].id === pid) total += waiterCart[k].qty; });
+  return total;
+}
+
+function woProductCard(p){
+  var hasOpts = p.options && p.options.length;
+  var qty = hasOpts ? woCartQtyForProduct(p.id) : (waiterCart[p.id] ? waiterCart[p.id].qty : 0);
+  var imgUrl = p.image_url || p.photoUrl;
+  var img = imgUrl
+    ? '<div class="product-img"><img src="'+esc(imgUrl)+'" alt="'+esc(p.name)+'"/></div>'
+    : '<div class="product-img">'+esc(p.emoji||'🍴')+'</div>';
+  var ctrl = hasOpts
+    ? (qty===0
+        ? '<button class="add-btn" onclick="openWoProductOptionsModal(\''+p.id+'\')">+</button>'
+        : '<div class="qty-ctrl"><button class="qty-btn" onclick="woDecrementVariant(\''+p.id+'\')">−</button><span class="qty-num">'+qty+'</span><button class="qty-btn" onclick="openWoProductOptionsModal(\''+p.id+'\')">+</button></div>')
+    : (qty===0
+        ? '<button class="add-btn" onclick="woAddItem(\''+p.id+'\')">+</button>'
+        : '<div class="qty-ctrl"><button class="qty-btn" onclick="woChangeItem(\''+p.id+'\',-1)">−</button><span class="qty-num">'+qty+'</span><button class="qty-btn" onclick="woChangeItem(\''+p.id+'\',1)">+</button></div>');
+  return '<div class="product-card" id="wo-pc-'+p.id+'">'+img
+    +'<div class="product-body"><div class="product-name">'+esc(p.name)+'</div>'
+    +'<div class="product-desc">'+esc(p.description||p.desc||'')+'</div>'
+    +'<div class="product-footer"><div class="product-price">'+(hasOpts?'a partir de ':'')+fmt(p.price)+'</div>'+ctrl+'</div>'
+    +'</div></div>';
+}
+
+function woRefreshCard(id){
+  var baseId = String(id).split('::')[0];
+  var el = $('wo-pc-'+baseId);
+  if(!el) return;
+  var p = catalog.find(function(x){ return x.id===baseId; });
+  if(!p) return;
+  var hasOpts = p.options && p.options.length;
+  var qty = hasOpts ? woCartQtyForProduct(baseId) : (waiterCart[baseId] ? waiterCart[baseId].qty : 0);
+  var ctrl = hasOpts
+    ? (qty===0
+        ? '<button class="add-btn" onclick="openWoProductOptionsModal(\''+baseId+'\')">+</button>'
+        : '<div class="qty-ctrl"><button class="qty-btn" onclick="woDecrementVariant(\''+baseId+'\')">−</button><span class="qty-num">'+qty+'</span><button class="qty-btn" onclick="openWoProductOptionsModal(\''+baseId+'\')">+</button></div>')
+    : (qty===0
+        ? '<button class="add-btn" onclick="woAddItem(\''+baseId+'\')">+</button>'
+        : '<div class="qty-ctrl"><button class="qty-btn" onclick="woChangeItem(\''+baseId+'\',-1)">−</button><span class="qty-num">'+qty+'</span><button class="qty-btn" onclick="woChangeItem(\''+baseId+'\',1)">+</button></div>');
+  el.querySelector('.product-footer').innerHTML = '<div class="product-price">'+(hasOpts?'a partir de ':'')+fmt(p.price)+'</div>'+ctrl;
+}
+
+function woAddItem(id){
+  var p = catalog.find(function(x){ return x.id===id; });
+  if(!p) return;
+  waiterCart[id] = Object.assign({}, p, { qty: 1 });
+  updateWoCartBar();
+  woRefreshCard(id);
+}
+
+function woChangeItem(id, d){
+  if(!waiterCart[id]) return;
+  waiterCart[id].qty += d;
+  if(waiterCart[id].qty <= 0) delete waiterCart[id];
+  updateWoCartBar();
+  woRefreshCard(id);
+}
+
+function woDecrementVariant(pid){
+  var keys = Object.keys(waiterCart).filter(function(k){ return waiterCart[k].id === pid; });
+  if(!keys.length) return;
+  var lastKey = keys[keys.length-1];
+  waiterCart[lastKey].qty -= 1;
+  if(waiterCart[lastKey].qty <= 0) delete waiterCart[lastKey];
+  updateWoCartBar();
+  woRefreshCard(pid);
+}
+
+function updateWoCartBar(){
+  var bar = $('wo-cart-bar');
+  var summary = $('wo-cart-summary');
+  if(!bar || !summary) return;
+  var items = Object.values(waiterCart);
+  var count = items.reduce(function(s,i){ return s+i.qty; }, 0);
+  var total = items.reduce(function(s,i){ return s+i.qty*i.price; }, 0);
+  if(!count){ bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  summary.textContent = count+' ite'+(count===1?'m':'ns')+' · '+fmt(total);
+}
+
+// ── Opções/variações do produto (versão isolada pro balcão) ──
+function openWoProductOptionsModal(pid){
+  var p = catalog.find(function(x){ return x.id===pid; });
+  if(!p || !p.options || !p.options.length) return;
+  var old = document.getElementById('wo-prod-opts');
+  if(old) old.remove();
+
+  var groupsHtml = p.options.map(function(g, gi){
+    var choicesHtml = g.choices.map(function(c, ci){
+      var priceTxt = c.price_delta ? ' (+'+fmt(c.price_delta)+')' : '';
+      return '<label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;margin-top:6px;cursor:pointer">'
+        +'<input type="radio" name="wopt-'+pid+'-g'+gi+'" value="'+ci+'"'+(ci===0?' checked':'')+' style="accent-color:var(--ocean-500)"/>'
+        +'<span style="font-size:13.5px">'+esc(c.name)+priceTxt+'</span></label>';
+    }).join('');
+    return '<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:2px">'+esc(g.name)+'</div>'+choicesHtml+'</div>';
+  }).join('');
+
+  var div = document.createElement('div');
+  div.id = 'wo-prod-opts';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+  div.onclick = function(e){ if(e.target===div) closeWoProductOptionsModal(); };
+  div.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9">'
+    +'<div style="font-size:15px;font-weight:600">'+esc(p.name)+'</div>'
+    +'<button onclick="closeWoProductOptionsModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
+    +'</div>'
+    +'<div style="padding:20px" id="wopt-groups">'+groupsHtml+'</div>'
+    +'<div style="padding:0 20px 20px">'
+    +'<button onclick="confirmWoProductOptions(\''+pid+'\')" style="width:100%;padding:14px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">Adicionar</button>'
+    +'</div></div>';
+  document.body.appendChild(div);
+}
+
+function closeWoProductOptionsModal(){
+  var d = document.getElementById('wo-prod-opts');
+  if(d) d.remove();
+}
+
+function confirmWoProductOptions(pid){
+  var p = catalog.find(function(x){ return x.id===pid; });
+  if(!p) return;
+  var container = document.getElementById('wopt-groups');
+  if(!container) return;
+
+  var selections = p.options.map(function(g, gi){
+    var checked = container.querySelector('input[name="wopt-'+pid+'-g'+gi+'"]:checked');
+    var ci = checked ? parseInt(checked.value, 10) : 0;
+    var choice = g.choices[ci];
+    return { group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0 };
+  });
+
+  var deltaSum = selections.reduce(function(s, sel){ return s + sel.delta; }, 0);
+  var unitPrice = Number(p.price) + deltaSum;
+  var label = selections.map(function(s){ return s.group+': '+s.choice; }).join(', ');
+  var key = pid + '::' + selections.map(function(s){ return s.choice; }).join('|');
+
+  if(waiterCart[key]){
+    waiterCart[key].qty += 1;
+  } else {
+    waiterCart[key] = { id: pid, name: p.name+' — '+label, price: unitPrice, qty: 1, emoji: p.emoji, optionsLabel: label };
+  }
+  updateWoCartBar();
+  woRefreshCard(pid);
+  closeWoProductOptionsModal();
+}
+
+// ── Envio do pedido de balcão ──
+async function submitWaiterOrder(){
+  var umb = ($('wo-umbrella').value||'').trim();
+  if(!umb || isNaN(umb) || +umb < 1){ toast('⚠️ Informe o número do guarda-sol'); return; }
+  var items = Object.values(waiterCart);
+  if(!items.length){ toast('⚠️ Adicione itens ao pedido'); return; }
+
+  var customerName = ($('wo-customer-name').value||'').trim() || ('Balcão · '+getCurrentActorName());
+  var actor = getCurrentActorName();
+
+  var drinks = items.filter(function(i){ return getOrderGroup(i) === 'drinks'; });
+  var others = items.filter(function(i){ return getOrderGroup(i) === 'others'; });
+  var foods  = items.filter(function(i){ return getOrderGroup(i) === 'foods'; });
+  var nonEmpty = [];
+  if(drinks.length) nonEmpty.push({ kind:'drinks', items:drinks });
+  if(others.length) nonEmpty.push({ kind:'others', items:others });
+  if(foods.length)  nonEmpty.push({ kind:'foods',  items:foods  });
+  var groups = nonEmpty.length > 1 ? nonEmpty : [{ kind:'single', items:items }];
+
+  setLoading('wo-submit-btn', true, 'Enviar pedido 🚀');
+  var idempotencyBase = 'wo-' + Date.now() + '-' + Math.random().toString(36).substr(2,9);
+  var createdNumbers = [];
+
+  for(var gi=0; gi<groups.length; gi++){
+    var g = groups[gi];
+    var groupTotal = g.items.reduce(function(s,i){ return s+i.price*i.qty; }, 0);
+    var noteSuffix = g.kind==='drinks' ? ' [BEBIDAS]' : (g.kind==='foods' ? ' [COMIDA]' : (g.kind==='others' ? ' [OUTROS]' : ''));
+
+    if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+      var idempKey = idempotencyBase+'-'+g.kind;
+      var insertResult = await sb.from('orders').insert({
+        kiosk_id: currentKiosk.id,
+        umbrella_num: String(umb),
+        order_number: 0,
+        customer_name: customerName,
+        notes: (noteSuffix||'').trim(),
+        status: 'pending',
+        total: groupTotal,
+        idempotency_key: idempKey,
+        created_by: actor,
+        last_updated_by: actor
+      }).select().single();
+      var ord = insertResult.data, e1 = insertResult.error;
+      if(e1 || !ord){
+        toast('❌ Erro ao enviar pedido: '+(e1 && e1.message));
+        setLoading('wo-submit-btn', false, 'Enviar pedido 🚀');
+        return;
+      }
+      await sb.from('order_items').insert(g.items.map(function(i){
+        var prod = catalog.find(function(p){ return p.id===i.id || p.name===i.name; });
+        var costAtTime = prod && prod.cost_price ? Number(prod.cost_price) : null;
+        return {
+          order_id: ord.id, product_name: i.name, quantity: i.qty, unit_price: i.price,
+          cost_price: costAtTime, notes: i.optionsLabel || null, emoji: i.emoji || null
+        };
+      }));
+      createdNumbers.push(ord.order_number);
+      var fullOrder = Object.assign({}, ord, {
+        items: g.items.map(function(i){ return {name:i.name, qty:i.qty, price:i.price}; }),
+        umb: String(umb), time: timeNow()
+      });
+      orders.unshift(fullOrder);
+    } else {
+      var num = orders.length ? Math.max.apply(null, orders.map(function(o){return o.order_number||0;}))+1 : 1;
+      var o = {
+        id:'local-wo-'+Date.now()+'-'+gi, order_number:num, umb:String(umb), customer_name:customerName,
+        notes:(noteSuffix||'').trim(), status:'pending', total:groupTotal,
+        items: g.items.map(function(i){ return {name:i.name, qty:i.qty, price:i.price}; }),
+        time: timeNow(), created_at: new Date().toISOString(), created_by: actor, last_updated_by: actor
+      };
+      orders.unshift(o);
+      createdNumbers.push(num);
+    }
+  }
+
+  setLoading('wo-submit-btn', false, 'Enviar pedido 🚀');
+  toast('✅ Pedido(s) criado(s): #'+createdNumbers.join(', #'));
+  waiterCart = {};
+  $('wo-umbrella').value = '';
+  $('wo-customer-name').value = '';
+  updateWoCartBar();
+  renderWoProductsGrid();
+  updateDashMetrics();
+  var liveDash = $('kpage-orders');
+  if(liveDash && liveDash.classList.contains('active')) renderLiveOrders();
+}
+
 async function placeOrder(){
   // Proteção: sessão bloqueada por PEDIDO DE CONTA ativo
   if(window._billRequested){
@@ -5760,6 +6070,7 @@ function kPage(name,btn){
   else if(name==='contas') renderContas();
   else if(name==='reports') loadReports();
   else if(name==='waiters') renderWaiters();
+  else if(name==='waiterorder') renderWaiterOrderPage();
   closeSidebar(); // fechar menu no mobile após clicar
 }
 
