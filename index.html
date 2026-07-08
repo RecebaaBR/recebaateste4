@@ -3819,10 +3819,11 @@ function confirmProductOptions(pid){
     var checked = container.querySelector('input[name="popt-'+pid+'-g'+gi+'"]:checked');
     var ci = checked ? parseInt(checked.value, 10) : 0;
     var choice = g.choices[ci];
-    return { group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0 };
+    return { group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0, costDelta: Number(choice.cost_delta)||0 };
   });
 
   var deltaSum = selections.reduce(function(s, sel){ return s + sel.delta; }, 0);
+  var costDeltaSum = selections.reduce(function(s, sel){ return s + sel.costDelta; }, 0);
   var unitPrice = Number(p.price) + deltaSum;
   var label = selections.map(function(s){ return s.group+': '+s.choice; }).join(', ');
   var key = pid + '::' + selections.map(function(s){ return s.choice; }).join('|');
@@ -3837,7 +3838,8 @@ function confirmProductOptions(pid){
       qty: 1,
       emoji: p.emoji,
       image_url: p.image_url,
-      optionsLabel: label
+      optionsLabel: label,
+      optionsCostDelta: costDeltaSum
     };
   }
 
@@ -4127,10 +4129,11 @@ function confirmWoProductOptions(pid){
     var checked = container.querySelector('input[name="wopt-'+pid+'-g'+gi+'"]:checked');
     var ci = checked ? parseInt(checked.value, 10) : 0;
     var choice = g.choices[ci];
-    return { group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0 };
+    return { group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0, costDelta: Number(choice.cost_delta)||0 };
   });
 
   var deltaSum = selections.reduce(function(s, sel){ return s + sel.delta; }, 0);
+  var costDeltaSum = selections.reduce(function(s, sel){ return s + sel.costDelta; }, 0);
   var unitPrice = Number(p.price) + deltaSum;
   var label = selections.map(function(s){ return s.group+': '+s.choice; }).join(', ');
   var key = pid + '::' + selections.map(function(s){ return s.choice; }).join('|');
@@ -4138,7 +4141,7 @@ function confirmWoProductOptions(pid){
   if(waiterCart[key]){
     waiterCart[key].qty += 1;
   } else {
-    waiterCart[key] = { id: pid, name: p.name+' — '+label, price: unitPrice, qty: 1, emoji: p.emoji, optionsLabel: label };
+    waiterCart[key] = { id: pid, name: p.name+' — '+label, price: unitPrice, qty: 1, emoji: p.emoji, optionsLabel: label, optionsCostDelta: costDeltaSum };
   }
   updateWoCartBar();
   woRefreshCard(pid);
@@ -4195,7 +4198,8 @@ async function submitWaiterOrder(){
       }
       await sb.from('order_items').insert(g.items.map(function(i){
         var prod = catalog.find(function(p){ return p.id===i.id || p.name===i.name; });
-        var costAtTime = prod && prod.cost_price ? Number(prod.cost_price) : null;
+        var baseCost = prod && prod.cost_price ? Number(prod.cost_price) : 0;
+        var costAtTime = (baseCost || i.optionsCostDelta) ? (baseCost + Number(i.optionsCostDelta||0)) : null;
         return {
           order_id: ord.id, product_name: i.name, quantity: i.qty, unit_price: i.price,
           cost_price: costAtTime, notes: i.optionsLabel || null, emoji: i.emoji || null
@@ -4348,7 +4352,8 @@ async function placeOrder(){
       }
       await sb.from('order_items').insert(groupItems.map(function(i){
         var prod = catalog.find(function(p){ return p.name===i.name || p.id===i.id; });
-        var costAtTime = prod && prod.cost_price ? Number(prod.cost_price) : null;
+        var baseCost = prod && prod.cost_price ? Number(prod.cost_price) : 0;
+        var costAtTime = (baseCost || i.optionsCostDelta) ? (baseCost + Number(i.optionsCostDelta||0)) : null;
         return {
           order_id: ord.id,
           product_name: i.name,
@@ -7107,16 +7112,27 @@ function updateOptChoiceDelta(ns, gi, ci, val){
   window['_optGroups_'+ns][gi].choices[ci].price_delta = parseFloat(val)||0;
 }
 
+function updateOptChoiceCostDelta(ns, gi, ci, val){
+  window['_optGroups_'+ns][gi].choices[ci].cost_delta = parseFloat(val)||0;
+}
+
 function renderOptGroups(ns){
   var container = document.getElementById(ns+'-opt-groups');
   if(!container) return;
   var groups = window['_optGroups_'+ns] || [];
   container.innerHTML = groups.map(function(g, gi){
     var choicesHtml = g.choices.map(function(c, ci){
-      return '<div style="display:flex;gap:6px;align-items:center;margin-top:6px">'
-        +'<input placeholder="Ex: Morango" value="'+esc(c.name)+'" oninput="updateOptChoiceName(\''+ns+'\','+gi+','+ci+',this.value)" style="flex:2;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px"/>'
-        +'<input type="number" step="0.50" placeholder="+R$0,00" value="'+(c.price_delta||'')+'" oninput="updateOptChoiceDelta(\''+ns+'\','+gi+','+ci+',this.value)" title="Acréscimo no preço (deixe em branco se não mudar o preço)" style="width:80px;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px"/>'
+      return '<div style="border-top:1px dashed #e2e8f0;padding-top:6px;margin-top:6px">'
+        +'<div style="display:flex;gap:6px;align-items:center">'
+        +'<input placeholder="Ex: Vodka" value="'+esc(c.name)+'" oninput="updateOptChoiceName(\''+ns+'\','+gi+','+ci+',this.value)" style="flex:2;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px"/>'
         +'<button type="button" onclick="removeOptChoice(\''+ns+'\','+gi+','+ci+')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;padding:2px 4px" title="Remover opção">✕</button>'
+        +'</div>'
+        +'<div style="display:flex;gap:6px;align-items:center;margin-top:4px">'
+        +'<div style="flex:1"><label style="font-size:10px;color:#94a3b8;display:block">Acréscimo no preço (cobrado do cliente)</label>'
+        +'<input type="number" step="0.50" placeholder="+R$0,00" value="'+(c.price_delta||'')+'" oninput="updateOptChoiceDelta(\''+ns+'\','+gi+','+ci+',this.value)" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px"/></div>'
+        +'<div style="flex:1"><label style="font-size:10px;color:#94a3b8;display:block">Custo extra (o que essa opção custa a mais pra você)</label>'
+        +'<input type="number" step="0.50" placeholder="+R$0,00" value="'+(c.cost_delta||'')+'" oninput="updateOptChoiceCostDelta(\''+ns+'\','+gi+','+ci+',this.value)" style="width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px"/></div>'
+        +'</div>'
         +'</div>';
     }).join('');
     return '<div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:8px;background:#fafbfc">'
@@ -7125,7 +7141,7 @@ function renderOptGroups(ns){
       +'<button type="button" onclick="removeOptGroup(\''+ns+'\','+gi+')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;padding:2px 4px" title="Remover grupo">🗑️</button>'
       +'</div>'
       +choicesHtml
-      +'<button type="button" onclick="addOptChoice(\''+ns+'\','+gi+')" style="margin-top:6px;background:none;border:none;color:#0ea5e9;font-size:12px;font-weight:500;cursor:pointer;padding:2px 0">+ Adicionar opção</button>'
+      +'<button type="button" onclick="addOptChoice(\''+ns+'\','+gi+')" style="margin-top:8px;background:none;border:none;color:#0ea5e9;font-size:12px;font-weight:500;cursor:pointer;padding:2px 0">+ Adicionar opção</button>'
       +'</div>';
   }).join('');
 }
@@ -7140,7 +7156,7 @@ function buildOptGroupsPayload(ns){
         name: g.name.trim(),
         choices: g.choices
           .filter(function(c){ return (c.name||'').trim(); })
-          .map(function(c){ return { name: c.name.trim(), price_delta: parseFloat(c.price_delta)||0 }; })
+          .map(function(c){ return { name: c.name.trim(), price_delta: parseFloat(c.price_delta)||0, cost_delta: parseFloat(c.cost_delta)||0 }; })
       };
     });
 }
