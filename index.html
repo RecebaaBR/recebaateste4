@@ -3738,6 +3738,51 @@ function closePromoPopup(){
 
 // Soma as quantidades vendidas de itens em promoção nesse pedido e atualiza o
 // contador no banco — desativa a promoção automaticamente ao bater o limite.
+// Quando um pedido é cancelado (pelo cliente ou pelo quiosque), devolve ao
+// limite as unidades que tinham sido "consumidas" em promoção por ele.
+// Devolve `qty` unidades ao limite de promoção de um único produto (reaproveitado
+// tanto pelo cancelamento de pedido inteiro quanto pela remoção de um item avulso)
+async function decrementPromoSoldForProduct(productId, qty){
+  if(!isConfigured || !currentKiosk || currentKiosk.id==='demo' || !qty) return;
+  try{
+    var prodResp = await sb.from('products').select('promo_sold,promo_limit,promo_price').eq('id', productId).single();
+    if(prodResp.error || !prodResp.data) return;
+    var current = prodResp.data;
+    var newSold = Math.max(0, Number(current.promo_sold||0) - qty);
+    var updates = { promo_sold: newSold };
+    // Reativa a promoção automaticamente se ela tinha sido desligada por atingir o limite
+    if(current.promo_price!=null && current.promo_limit!=null && newSold < Number(current.promo_limit)){
+      updates.promo_active = true;
+    }
+    await sb.from('products').update(updates).eq('id', productId);
+
+    var prodLocal = catalog.find(function(p){ return p.id===productId; });
+    if(prodLocal){
+      prodLocal.promo_sold = newSold;
+      if(updates.promo_active) prodLocal.promo_active = true;
+    }
+  }catch(e){}
+}
+
+async function decrementPromoSold(orderId){
+  if(!isConfigured || !currentKiosk || currentKiosk.id==='demo') return;
+  try{
+    var resp = await sb.from('order_items').select('product_id,quantity').eq('order_id', orderId).eq('is_promo', true);
+    if(resp.error || !resp.data || !resp.data.length) return;
+
+    var qtyByProduct = {};
+    resp.data.forEach(function(i){
+      if(!i.product_id) return;
+      qtyByProduct[i.product_id] = (qtyByProduct[i.product_id]||0) + Number(i.quantity||0);
+    });
+
+    var ids = Object.keys(qtyByProduct);
+    for(var k=0; k<ids.length; k++){
+      await decrementPromoSoldForProduct(ids[k], qtyByProduct[ids[k]]);
+    }
+  }catch(e){}
+}
+
 async function incrementPromoSold(items){
   if(!isConfigured || !currentKiosk || currentKiosk.id==='demo') return;
   var promoQtyByProduct = {};
@@ -4302,8 +4347,8 @@ async function submitWaiterOrder(){
         var baseCost = prod && prod.cost_price ? Number(prod.cost_price) : 0;
         var costAtTime = (baseCost || i.optionsCostDelta) ? (baseCost + Number(i.optionsCostDelta||0)) : null;
         return {
-          order_id: ord.id, product_name: i.name, quantity: i.qty, unit_price: i.price,
-          cost_price: costAtTime, notes: i.optionsLabel || null, emoji: i.emoji || null
+          order_id: ord.id, product_id: i.id || null, product_name: i.name, quantity: i.qty, unit_price: i.price,
+          cost_price: costAtTime, notes: i.optionsLabel || null, emoji: i.emoji || null, is_promo: !!i.onPromo
         };
       }));
       createdNumbers.push(ord.order_number);
@@ -4457,12 +4502,14 @@ async function placeOrder(){
         var costAtTime = (baseCost || i.optionsCostDelta) ? (baseCost + Number(i.optionsCostDelta||0)) : null;
         return {
           order_id: ord.id,
+          product_id: i.id || null,
           product_name: i.name,
           quantity: i.qty,
           unit_price: i.price,
           cost_price: costAtTime,
           notes: i.notes || null,
-          emoji: i.emoji || null
+          emoji: i.emoji || null,
+          is_promo: !!i.onPromo
         };
       }));
       lastOrderId = ord.id; lastOrderNum = ord.order_number;
@@ -5083,6 +5130,7 @@ async function clientCancelOrder(orderId){
       toast('⚠️ Pedido já foi aceito pelo quiosque. Não é mais possível cancelar.');
       return;
     }
+    await decrementPromoSold(orderId);
   }
 
   // Atualizar em memória
@@ -6427,10 +6475,14 @@ async function removeOrderItem(orderId, itemId){
   if(!item) return;
 
   if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
+    var itemInfoResp = await sb.from('order_items').select('product_id,is_promo,quantity').eq('id', itemId).single();
     var delResp = await sb.from('order_items').delete().eq('id', itemId);
     if(delResp.error){
       toast('❌ Erro ao remover item: ' + delResp.error.message);
       return;
+    }
+    if(itemInfoResp.data && itemInfoResp.data.is_promo && itemInfoResp.data.product_id){
+      await decrementPromoSoldForProduct(itemInfoResp.data.product_id, Number(itemInfoResp.data.quantity||0));
     }
   }
 
@@ -6512,6 +6564,7 @@ async function advOrder(id,st){
   }
   o.status=st;
   o.last_updated_by=who;
+  if(st==='cancelled') await decrementPromoSold(id);
   renderLiveOrders();
   renderHist();
   updateDashMetrics();
@@ -6735,7 +6788,7 @@ function renderHistTable(list, skipFilterSetup){
       var notesClean = notesRaw.replace(/\s*\[(BEBIDAS|COMIDA|OUTROS)\]\s*/g, '').trim();
       var isChecked = window._histSelected && window._histSelected[o.id];
       return '<tr>'
-        +'<td>'+(isSpecial?'':'<input type="checkbox" class="hist-row-check" data-oid="'+o.id+'" '+(isChecked?'checked':'')+' onchange="toggleHistSelection(\''+o.id+'\',this.checked)"/>')+'</td>'
+        +'<td>'+(!isSpecial && o.status==='pending'?'<input type="checkbox" class="hist-row-check" data-oid="'+o.id+'" '+(isChecked?'checked':'')+' onchange="toggleHistSelection(\''+o.id+'\',this.checked)"/>':'')+'</td>'
         +'<td><b>#'+(o.order_number||'—')+'</b>'+groupChip+'</td>'
         +'<td>☂️ '+esc(o.umb||o.umbrella_num||'?')+'</td>'
         +'<td>'+esc(o.customer_name||'?')+'</td>'
@@ -6850,6 +6903,10 @@ async function applyBulkHistStatus(){
     if(o){ o.status = newStatus; o.last_updated_by = who; }
   });
 
+  if(newStatus==='cancelled'){
+    for(var k=0; k<ids.length; k++){ await decrementPromoSold(ids[k]); }
+  }
+
   window._histSelected = {};
   toast('✅ Status atualizado para '+ids.length+' pedido(s)');
   renderHist();
@@ -6912,6 +6969,7 @@ async function changeHistStatus(id,st){
   if(isConfigured && !String(id).startsWith('local')) await sb.from('orders').update({status:st, last_updated_by: who}).eq('id',id);
   o.status=st;
   o.last_updated_by=who;
+  if(st==='cancelled') await decrementPromoSold(id);
   renderHist();
   renderLiveOrders();
   updateDashMetrics();
