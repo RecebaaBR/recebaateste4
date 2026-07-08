@@ -7745,14 +7745,24 @@ function applyContasFilters(){
       var sessionOrders = o._sessionOrders || [];
       var conferenciaHtml;
       if(sessionOrders.length){
-        conferenciaHtml = sessionOrders.map(function(so){
-          var itensTxt = (so.order_items||[]).map(function(i){
+        // Agrupar por nome do cliente — a mesma pessoa pode ter feito vários pedidos
+        var groupsC = {};
+        var groupOrderC = [];
+        sessionOrders.forEach(function(so){
+          var key = (so.customer_name||'Cliente').trim();
+          if(!groupsC[key]){ groupsC[key] = { total: 0, items: [] }; groupOrderC.push(key); }
+          groupsC[key].total += Number(so.total)||0;
+          (so.order_items||[]).forEach(function(i){ groupsC[key].items.push(i); });
+        });
+        conferenciaHtml = groupOrderC.map(function(name){
+          var g = groupsC[name];
+          var itensTxt = g.items.map(function(i){
             return '<div style="font-size:12px;color:#5b21b6;padding:1px 0">• '+i.quantity+'× '+esc(i.product_name)+'</div>';
           }).join('');
           return '<div style="padding:8px 0;border-bottom:1px dashed #ddd6fe">'
             +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'
-            +'<div style="font-size:12.5px;font-weight:700;color:#6d28d9">👤 '+esc(so.customer_name||'Cliente')+'</div>'
-            +'<div style="font-size:12px;font-weight:600;color:#6d28d9">'+fmt(so.total)+'</div>'
+            +'<div style="font-size:12.5px;font-weight:700;color:#6d28d9">👤 '+esc(name)+'</div>'
+            +'<div style="font-size:12px;font-weight:600;color:#6d28d9">'+fmt(g.total)+'</div>'
             +'</div>'
             +itensTxt
             +'</div>';
@@ -7897,14 +7907,26 @@ async function openUmbrellaConsumptionModal(umbNum){
   }
 
   var totalGeral = pedidos.reduce(function(s,o){ return s + (Number(o.total)||0); }, 0);
-  var itemsHtml = pedidos.map(function(o){
-    var itensTxt = (o.order_items||[]).map(function(i){
+
+  // Agrupar por nome do cliente — a mesma pessoa pode ter feito vários pedidos
+  var groups = {};
+  var groupOrder = [];
+  pedidos.forEach(function(o){
+    var key = (o.customer_name||'Cliente').trim();
+    if(!groups[key]){ groups[key] = { total: 0, items: [] }; groupOrder.push(key); }
+    groups[key].total += Number(o.total)||0;
+    (o.order_items||[]).forEach(function(i){ groups[key].items.push(i); });
+  });
+
+  var itemsHtml = groupOrder.map(function(name){
+    var g = groups[name];
+    var itensTxt = g.items.map(function(i){
       return '<div style="font-size:12px;color:#5b21b6;padding:1px 0">• '+i.quantity+'× '+esc(i.product_name)+'</div>';
     }).join('');
     return '<div style="padding:8px 0;border-bottom:1px dashed #ddd6fe">'
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'
-      +'<div style="font-size:12.5px;font-weight:700;color:#6d28d9">👤 '+esc(o.customer_name||'Cliente')+'</div>'
-      +'<div style="font-size:12px;font-weight:600;color:#6d28d9">'+fmt(o.total)+'</div>'
+      +'<div style="font-size:12.5px;font-weight:700;color:#6d28d9">👤 '+esc(name)+'</div>'
+      +'<div style="font-size:12px;font-weight:600;color:#6d28d9">'+fmt(g.total)+'</div>'
       +'</div>'
       +itensTxt
       +'</div>';
