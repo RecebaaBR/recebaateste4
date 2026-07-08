@@ -8497,9 +8497,9 @@ async function loadReports(){
   var marginEl = $('r-margin');
   if(marginEl) marginEl.textContent = 'margem '+margin+'%';
 
-  // Top produtos
+  // Top produtos (exclui pedidos cancelados — item cancelado não é "mais vendido")
   var counts = {};
-  realOrdersReport.forEach(function(o){
+  realOrdersReport.filter(function(o){ return o.status !== 'cancelled'; }).forEach(function(o){
     (o.items||[]).forEach(function(i){
       counts[i.name] = (counts[i.name]||0) + i.qty;
     });
