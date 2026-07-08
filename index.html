@@ -8467,13 +8467,18 @@ function renderMarginTable(){
   if(!el) return;
 
   if(!marginTableData.length){
-    el.innerHTML = '<div style="color:var(--sl-400);font-size:13px;padding:16px">Nenhum produto com custo cadastrado no período.</div>';
+    el.innerHTML = '<div style="color:var(--sl-400);font-size:13px;padding:16px">Nenhuma venda no período.</div>';
     return;
   }
 
-  // Ordenar
+  // Ordenar (produtos sem custo ficam por último quando ordenado por margem)
   var sorted = marginTableData.slice().sort(function(a,b){
-    if(marginSortBy==='margin') return b.marginPct - a.marginPct;
+    if(marginSortBy==='margin'){
+      if(a.hasCost && !b.hasCost) return -1;
+      if(!a.hasCost && b.hasCost) return 1;
+      if(!a.hasCost && !b.hasCost) return 0;
+      return b.marginPct - a.marginPct;
+    }
     if(marginSortBy==='revenue') return b.revenue - a.revenue;
     if(marginSortBy==='qty') return b.qty - a.qty;
     return 0;
@@ -8490,6 +8495,17 @@ function renderMarginTable(){
     +'<th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Visualização</th>'
     +'</tr></thead><tbody>'
     + sorted.map(function(p, i){
+      if(!p.hasCost){
+        return '<tr style="border-bottom:1px solid var(--sand-50);opacity:.7">'
+          +'<td style="padding:10px 12px;font-size:13px;font-weight:500">'+esc(p.name)+'</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:13px">'+p.qty+'</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:13px">'+fmt(p.revenue)+'</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:12px;color:var(--sl-400)">—</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:12px;color:var(--sl-400)">—</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:12px;color:var(--sl-400)">—</td>'
+          +'<td style="padding:10px 12px;min-width:120px;font-size:11px;color:var(--sl-400)">⚠️ Sem custo cadastrado</td>'
+          +'</tr>';
+      }
       var marginColor = p.marginPct >= 50 ? 'var(--green)' : p.marginPct >= 25 ? '#f59e0b' : 'var(--red)';
       var barWidth = Math.max(0, Math.min(100, p.marginPct));
       return '<tr style="border-bottom:1px solid var(--sand-50)">'
@@ -8507,18 +8523,21 @@ function renderMarginTable(){
     }).join('')
     +'</tbody></table></div>';
 
-  // Resumo no rodapé
-  var totalRev = sorted.reduce(function(s,p){ return s+p.revenue; }, 0);
-  var totalCost = sorted.reduce(function(s,p){ return s+p.cost; }, 0);
+  // Resumo no rodapé (só considera produtos com custo cadastrado, pra não inflar o lucro)
+  var withCost = sorted.filter(function(p){ return p.hasCost; });
+  var totalRev = withCost.reduce(function(s,p){ return s+p.revenue; }, 0);
+  var totalCost = withCost.reduce(function(s,p){ return s+p.cost; }, 0);
   var totalProfit = totalRev - totalCost;
   var avgMargin = totalRev > 0 ? (totalProfit/totalRev*100) : 0;
+  var semCustoCount = sorted.length - withCost.length;
 
   html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px;padding-top:14px;border-top:2px solid var(--sand-100)">'
     +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Receita total</div><div style="font-size:16px;font-weight:700">'+fmt(totalRev)+'</div></div>'
     +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Custo total</div><div style="font-size:16px;font-weight:700;color:var(--red)">'+fmt(totalCost)+'</div></div>'
     +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Lucro total</div><div style="font-size:16px;font-weight:700;color:var(--green)">'+fmt(totalProfit)+'</div></div>'
     +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Margem média</div><div style="font-size:16px;font-weight:700;color:'+(avgMargin>=30?'var(--green)':avgMargin>=15?'#f59e0b':'var(--red)')+'">'+avgMargin.toFixed(1)+'%</div></div>'
-    +'</div>';
+    +'</div>'
+    +(semCustoCount>0 ? '<div style="font-size:11px;color:var(--sl-400);text-align:center;margin-top:8px">⚠️ '+semCustoCount+' produto(s) sem custo cadastrado não entram nesse cálculo de lucro/margem (mas aparecem na tabela acima com a receita).</div>' : '');
 
   el.innerHTML = html;
 }
@@ -8687,15 +8706,15 @@ async function loadReports(){
     });
   });
 
-  // Montar tabela de margem (só produtos com custo cadastrado)
+  // Montar tabela de margem (inclui produtos sem custo cadastrado, marcados à parte)
   marginTableData = Object.keys(revenueByProd)
-    .filter(function(n){ return costByProd[n] > 0; })
     .map(function(n){
       var rev = revenueByProd[n]||0;
+      var hasCost = costByProd[n] > 0;
       var cost = costByProd[n]||0;
-      var profit = rev - cost;
-      var marginPct = rev > 0 ? (profit/rev*100) : 0;
-      return {name:n, qty:qtyByProd[n]||0, revenue:rev, cost:cost, profit:profit, marginPct:marginPct};
+      var profit = hasCost ? (rev - cost) : null;
+      var marginPct = hasCost && rev > 0 ? (profit/rev*100) : null;
+      return {name:n, qty:qtyByProd[n]||0, revenue:rev, cost:cost, profit:profit, marginPct:marginPct, hasCost:hasCost};
     });
   renderMarginTable();
 
