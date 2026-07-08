@@ -901,8 +901,8 @@ tr:hover td{background:var(--sand-50)}
         <button class="s-item" onclick="kPage('menu',this)"><span class="s-icon">🍔</span>Cardápio</button>
         <button class="s-item" onclick="kPage('umbrellas',this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
         <button class="s-item" onclick="kPage('contas',this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
-        <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
         <button class="s-item" id="waiters-nav-btn" onclick="kPage('waiters',this)"><span class="s-icon">🧑‍🍳</span>Garçons</button>
+        <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
       </nav>
       <div class="sidebar-foot">
         <button class="s-item" id="mute-btn" onclick="toggleMute()" style="margin-bottom:4px">
@@ -5189,13 +5189,22 @@ async function renderWaiters(){
       +'<div>'
       +'<div style="font-size:14px;font-weight:600">'+esc(w.name)+' '+(w.is_active?'<span class="pill pill-delivered" style="font-size:10px;margin-left:6px">Ativo</span>':'<span class="pill pill-cancelled" style="font-size:10px;margin-left:6px">Inativo</span>')+'</div>'
       +'<div style="font-size:12px;color:var(--sl-400);margin-top:2px">'+esc(w.email)+'</div>'
+      +'<div style="font-size:11px;margin-top:4px">'+(w.can_edit_menu?'<span style="color:#059669">✅ Pode editar o Cardápio</span>':'<span style="color:#94a3b8">🔒 Sem acesso ao Cardápio</span>')+'</div>'
       +'</div>'
-      +'<div style="display:flex;gap:6px">'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +'<button class="btn btn-ghost btn-sm" onclick="toggleWaiterMenuPermission(\''+w.id+'\','+(!w.can_edit_menu)+')">'+(w.can_edit_menu?'🔒 Bloquear Cardápio':'✅ Liberar Cardápio')+'</button>'
       +'<button class="btn btn-ghost btn-sm" onclick="toggleWaiterActive(\''+w.id+'\','+(!w.is_active)+')">'+(w.is_active?'⏸️ Desativar':'▶️ Reativar')+'</button>'
       +'<button class="btn btn-ghost btn-sm" style="color:#ef4444" onclick="confirmDeleteWaiter(\''+w.id+'\',\''+esc(w.name).replace(/'/g,"\\'")+'\')">🗑️ Excluir</button>'
       +'</div>'
       +'</div>';
   }).join('');
+}
+
+async function toggleWaiterMenuPermission(waiterId, newState){
+  var resp = await sb.rpc('set_waiter_menu_permission', { p_waiter_id: waiterId, p_can_edit_menu: newState });
+  if(resp.error){ toast('❌ Erro: '+resp.error.message); return; }
+  toast(newState ? '✅ Garçom agora pode editar o Cardápio' : '🔒 Acesso ao Cardápio bloqueado pra esse garçom');
+  renderWaiters();
 }
 
 async function toggleWaiterActive(waiterId, newState){
@@ -5237,6 +5246,10 @@ function openAddWaiterModal(){
     +'<input id="new-waiter-email" type="email" class="input" style="width:100%" placeholder="joao@email.com"/></div>'
     +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">Senha (mín. 6 caracteres) *</label>'
     +'<input id="new-waiter-password" type="password" class="input" style="width:100%" placeholder="••••••••"/></div>'
+    +'<label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;background:#f8fafc;padding:10px;border-radius:8px">'
+    +'<input type="checkbox" id="new-waiter-can-edit-menu" style="accent-color:var(--ocean-500);margin-top:2px"/>'
+    +'<span style="font-size:12.5px;color:#475569"><b>Permitir editar o Cardápio</b><br><span style="font-size:11px;color:#94a3b8">Só marque se confiar nesse garçom para adicionar, editar ou remover produtos. Por padrão, fica bloqueado.</span></span>'
+    +'</label>'
     +'<div style="display:flex;gap:8px;margin-top:6px">'
     +'<button class="btn btn-ghost" style="flex:1" onclick="closeAddWaiterModal()">Cancelar</button>'
     +'<button class="btn btn-ocean" id="add-waiter-save-btn" style="flex:1" onclick="saveNewWaiter()">Cadastrar</button>'
@@ -5254,6 +5267,7 @@ async function saveNewWaiter(){
   var name = (($('new-waiter-name')||{}).value || '').trim();
   var email = (($('new-waiter-email')||{}).value || '').trim();
   var pass = (($('new-waiter-password')||{}).value || '').trim();
+  var canEditMenu = !!($('new-waiter-can-edit-menu') && $('new-waiter-can-edit-menu').checked);
 
   if(!name){ toast('⚠️ Informe o nome do garçom'); return; }
   if(!email){ toast('⚠️ Informe o e-mail'); return; }
@@ -5269,7 +5283,7 @@ async function saveNewWaiter(){
   }
 
   var resp = await sb.rpc('register_waiter', {
-    p_kiosk_id: currentKiosk.id, p_name: name, p_email: email, p_password: pass
+    p_kiosk_id: currentKiosk.id, p_name: name, p_email: email, p_password: pass, p_can_edit_menu: canEditMenu
   });
   setLoading('add-waiter-save-btn', false, 'Cadastrar');
   if(resp.error){
@@ -5342,7 +5356,7 @@ async function doLogin(){
       if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
       currentKiosk = k;
-      window._currentWaiter = { id: w.id, name: w.name };
+      window._currentWaiter = { id: w.id, name: w.name, canEditMenu: !!w.can_edit_menu };
     } else {
       currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_name:'Demo'};
       window._currentWaiter = { id:'demo-waiter', name:'Garçom Demo' };
@@ -5558,7 +5572,10 @@ async function enterDash(){
   document.querySelectorAll('.kpage').forEach(p=>p.classList.remove('active'));
 
   // Modo garçom: esconder Dashboard, Histórico, Relatórios e Garçons, e abrir direto em "Ao vivo"
+  // Cardápio só fica visível se esse garçom específico tiver a permissão liberada
   var waiterHideNames = ['overview','history','reports','waiters'];
+  var waiterCanEditMenu = !!(window._currentWaiter && window._currentWaiter.canEditMenu);
+  if(window._isWaiterMode && !waiterCanEditMenu) waiterHideNames.push('menu');
   $('kiosk-dash').querySelectorAll('.s-item[onclick]').forEach(function(b){
     var m = b.getAttribute('onclick').match(/kPage\('([a-z]+)'/);
     var pageName = m ? m[1] : null;
@@ -6236,6 +6253,11 @@ function playAlert(){
 // ══════════════════════════════════════════════════════
 function kPage(name,btn){
   var waiterBlocked = ['overview','history','reports','waiters'];
+  var waiterCanEditMenu = !!(window._currentWaiter && window._currentWaiter.canEditMenu);
+  if(window._isWaiterMode && name === 'menu' && !waiterCanEditMenu){
+    toast('⛔ Você não tem permissão para acessar o Cardápio. Fale com o responsável pelo quiosque.');
+    return;
+  }
   if(window._isWaiterMode && waiterBlocked.indexOf(name) !== -1){
     toast('⛔ Acesso restrito no modo garçom.');
     return;
@@ -7814,6 +7836,96 @@ function setUmbStatusFilter(val){
   renderUmbrellas();
 }
 
+// ══════════════════════════════════════════════════════
+// GUARDA-SÓIS — VER CONSUMO (abrir a "conta" manualmente pelo quiosque,
+// útil quando o cliente não consegue pedir a conta pelo celular)
+// ══════════════════════════════════════════════════════
+async function openUmbrellaConsumptionModal(umbNum){
+  var old = document.getElementById('umb-consumption-modal');
+  if(old) old.remove();
+
+  var div = document.createElement('div');
+  div.id = 'umb-consumption-modal';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+  div.onclick = function(e){ if(e.target===div) closeUmbrellaConsumptionModal(); };
+  div.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:440px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9">'
+    +'<div style="font-size:15px;font-weight:600">👁️ Consumo · ☂️ Guarda-sol '+esc(umbNum)+'</div>'
+    +'<button onclick="closeUmbrellaConsumptionModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
+    +'</div>'
+    +'<div id="umb-consumption-body" style="padding:20px"><div class="page-loading" style="padding:20px"></div></div>'
+    +'</div>';
+  document.body.appendChild(div);
+
+  if(!isConfigured || !currentKiosk || currentKiosk.id === 'demo'){
+    var bodyDemo = document.getElementById('umb-consumption-body');
+    if(bodyDemo) bodyDemo.innerHTML = '<div style="color:var(--sl-400);font-size:13px;text-align:center">Não disponível no modo demo.</div>';
+    return;
+  }
+
+  var kid = currentKiosk.id;
+  var umbStr = String(umbNum);
+
+  // Mesma lógica usada em Contas: pega os pedidos desde o último encerramento
+  var {data: lastEnc} = await sb.from('orders')
+    .select('created_at')
+    .eq('kiosk_id', kid)
+    .eq('umbrella_num', umbStr)
+    .eq('customer_name', 'ENCERRAMENTO')
+    .order('created_at', {ascending:false})
+    .limit(1);
+  var sessionStart = (lastEnc && lastEnc[0]) ? lastEnc[0].created_at : null;
+
+  var q = sb.from('orders')
+    .select('*, order_items(*)')
+    .eq('kiosk_id', kid)
+    .eq('umbrella_num', umbStr)
+    .not('customer_name','eq','ENCERRAMENTO')
+    .not('customer_name','eq','CHAMADA DE ATENDENTE')
+    .not('customer_name','eq','PEDIDO DE CONTA')
+    .not('status','eq','cancelled');
+  if(sessionStart) q = q.gt('created_at', sessionStart);
+  var {data: pedidos} = await q;
+  pedidos = (pedidos||[]).sort(function(a,b){ return new Date(a.created_at) - new Date(b.created_at); });
+
+  var body = document.getElementById('umb-consumption-body');
+  if(!body) return;
+
+  if(!pedidos.length){
+    body.innerHTML = '<div style="color:var(--sl-400);font-size:13px;text-align:center">Nenhum pedido ativo nesse guarda-sol.</div>';
+    return;
+  }
+
+  var totalGeral = pedidos.reduce(function(s,o){ return s + (Number(o.total)||0); }, 0);
+  var itemsHtml = pedidos.map(function(o){
+    var itensTxt = (o.order_items||[]).map(function(i){
+      return '<div style="font-size:12px;color:#5b21b6;padding:1px 0">• '+i.quantity+'× '+esc(i.product_name)+'</div>';
+    }).join('');
+    return '<div style="padding:8px 0;border-bottom:1px dashed #ddd6fe">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'
+      +'<div style="font-size:12.5px;font-weight:700;color:#6d28d9">👤 '+esc(o.customer_name||'Cliente')+'</div>'
+      +'<div style="font-size:12px;font-weight:600;color:#6d28d9">'+fmt(o.total)+'</div>'
+      +'</div>'
+      +itensTxt
+      +'</div>';
+  }).join('');
+
+  body.innerHTML = '<div style="font-size:12.5px;color:#64748b;margin-bottom:12px">Detalhamento de tudo que foi pedido nesse guarda-sol desde a última abertura — útil se o cliente não conseguir pedir a conta pelo celular.</div>'
+    +'<div style="background:#f5f3ff;border-radius:8px;padding:10px 12px;margin-bottom:14px;max-height:300px;overflow-y:auto">'
+    +itemsHtml
+    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
+    +'<span style="font-size:14px;color:var(--sl-500)">Total</span>'
+    +'<span style="font-size:22px;font-weight:700;color:#6d28d9">💰 '+fmt(totalGeral)+'</span>'
+    +'</div>'
+    +'<button class="btn btn-sm" style="width:100%;background:#10b981;color:#fff;font-weight:600;padding:10px" onclick="closeUmbrellaConsumptionModal();closeUmbrellaSession(\''+umbStr+'\')">✅ Faturar e encerrar mesa</button>';
+}
+
+function closeUmbrellaConsumptionModal(){
+  var d = document.getElementById('umb-consumption-modal');
+  if(d) d.remove();
+}
+
 async function renderUmbrellas(){
   var grid=$('umb-grid'); if(!grid) return;
   var umbs=[];
@@ -7931,7 +8043,10 @@ async function renderUmbrellas(){
       +'<button class="btn btn-danger btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" onclick="delUmbFromBtn(this)">🗑️</button>'
       +'</div>'
       +(isOpen
-        ? '<button class="btn btn-sm" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;font-size:11px" data-num="'+u.number+'" onclick="closeUmbrellaSession(this.dataset.num)">💰 Encerrar conta</button>'
+        ? '<button class="btn btn-sm" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-size:11px" data-num="'+u.number+'" onclick="openUmbrellaConsumptionModal(this.dataset.num)">👁️ Ver consumo</button>'
+        : '')
+      +(isOpen
+        ? '<button class="btn btn-sm" style="width:100%;margin-top:6px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;font-size:11px" data-num="'+u.number+'" onclick="closeUmbrellaSession(this.dataset.num)">💰 Encerrar conta</button>'
         : '')
       +'</div>';
   }).join('');
