@@ -5449,20 +5449,24 @@ function sendAprovacaoEmail(params){
 }
 
 async function doRegister(){
+  // Proteção contra execução duplicada (duplo-clique, ou elementos duplicados na página)
+  if(window._registeringInProgress) return;
+  window._registeringInProgress = true;
+
   const owner=$('reg-owner').value.trim(), email=$('reg-email').value.trim(),
     pass=$('reg-pass').value.trim(), phone=$('reg-phone').value.trim(),
     kname=$('reg-kname').value.trim(), doc=($('reg-doc')&&$('reg-doc').value.trim())||'';
-  if(!owner||!email||!pass||!phone||!kname){ toast('Preencha todos os campos obrigatórios *'); return; }
-  if(!doc){ toast('Informe o CPF ou CNPJ *'); return; }
-  if(pass.length<6){ toast('Senha deve ter mínimo 6 caracteres'); return; }
-  if(!/[A-Z]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 letra MAIÚSCULA'); return; }
-  if(!/[0-9]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 número'); return; }
-  if(!/[^A-Za-z0-9]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 símbolo (ex: !@#$%&*?)'); return; }
+  if(!owner||!email||!pass||!phone||!kname){ toast('Preencha todos os campos obrigatórios *'); window._registeringInProgress=false; return; }
+  if(!doc){ toast('Informe o CPF ou CNPJ *'); window._registeringInProgress=false; return; }
+  if(pass.length<6){ toast('Senha deve ter mínimo 6 caracteres'); window._registeringInProgress=false; return; }
+  if(!/[A-Z]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 letra MAIÚSCULA'); window._registeringInProgress=false; return; }
+  if(!/[0-9]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 número'); window._registeringInProgress=false; return; }
+  if(!/[^A-Za-z0-9]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 símbolo (ex: !@#$%&*?)'); window._registeringInProgress=false; return; }
   // Validar aceite dos Termos e Política
   var termsBoxes = document.querySelectorAll('[id="reg-terms"]');
   var accepted = false;
   termsBoxes.forEach(function(cb){ if(cb.checked) accepted = true; });
-  if(!accepted){ toast('⚠️ Você precisa aceitar os Termos de Uso e a Política de Privacidade'); return; }
+  if(!accepted){ toast('⚠️ Você precisa aceitar os Termos de Uso e a Política de Privacidade'); window._registeringInProgress=false; return; }
   setLoading('register-btn',true,'Criando conta...');
 
   if(isConfigured){
@@ -5485,12 +5489,14 @@ async function doRegister(){
         toast('Erro ao criar conta: ' + msg);
       }
       setLoading('register-btn',false,'Criar conta 🚀');
+      window._registeringInProgress = false;
       return;
     }
     var rows = resp.data || [];
     if(!rows.length){
       toast('Erro ao criar conta: resposta vazia do servidor');
       setLoading('register-btn',false,'Criar conta 🚀');
+      window._registeringInProgress = false;
       return;
     }
     var data = rows[0];
@@ -5511,6 +5517,7 @@ async function doRegister(){
     ['reg-owner','reg-email','reg-pass','reg-phone','reg-kname','reg-doc','reg-city','reg-beach'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
     showCard('login');
     toast('✅ Cadastro enviado! Seu quiosque está aguardando aprovação do administrador. Você receberá um aviso quando for liberado.');
+    window._registeringInProgress = false;
     return;
   } else {
     // Modo demo (sem Supabase): entra direto, sem precisar de aprovação
@@ -5518,6 +5525,7 @@ async function doRegister(){
   }
   setLoading('register-btn',false,'Criar conta 🚀');
   toast('✅ Bem-vindo(a), '+owner.split(' ')[0]+'!');
+  window._registeringInProgress = false;
   enterDash();
 }
 
@@ -6999,10 +7007,50 @@ function renderMgmt(){
       +'<div class="mgmt-price">'+fmt(p.price)+'</div>'
       +'<div class="mgmt-foot">'
       +'<button class="btn btn-ghost btn-sm" data-pid="'+p.id+'" onclick="editProdFromBtn(this)">✏️</button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="duplicateProduct(\''+p.id+'\')" title="Duplicar produto">📋</button>'
       +'<button class="btn btn-ghost btn-sm" onclick="toggleBlock(\''+p.id+'\')">'+(blocked?'&#x1F513; Ativar':'&#x1F512; Bloquear')+'</button>'
       +'<button class="btn btn-danger btn-sm" onclick="removeProd(\''+p.id+'\')">&#x1F5D1;&#xFE0F;</button>'
       +'</div></div></div>';
   }).join('');
+}
+
+async function duplicateProduct(id){
+  var p = catalog.find(function(x){ return x.id===id; });
+  if(!p){ toast('Produto não encontrado'); return; }
+
+  var newName = p.name + ' (cópia)';
+  var payload = {
+    kiosk_id: currentKiosk.id,
+    category_id: p.category_id || p.cat,
+    name: newName,
+    description: p.description || p.desc || null,
+    price: p.price,
+    cost_price: p.cost_price || null,
+    emoji: p.emoji || '🍴',
+    image_url: p.image_url || null,
+    is_available: p.is_available !== false,
+    sort_order: catalog.length,
+    options: p.options || [],
+    // Promoção NÃO é copiada — cada produto deve ter sua própria promoção configurada à parte
+    promo_active: false,
+    promo_price: null,
+    promo_limit: null,
+    promo_sold: 0
+  };
+
+  if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
+    var resp = await sb.from('products').insert(payload).select().single();
+    if(resp.error){
+      toast('❌ Erro ao duplicar: ' + resp.error.message);
+      return;
+    }
+    catalog.unshift(Object.assign({}, resp.data, { cat: resp.data.category_id }));
+  } else {
+    catalog.unshift(Object.assign({ id: 'local-'+Date.now() }, payload, { cat: payload.category_id }));
+  }
+
+  renderMgmt();
+  toast('✅ "'+newName+'" criado a partir de "'+p.name+'"');
 }
 
 function editProdFromBtn(btn){
