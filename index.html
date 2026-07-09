@@ -4458,7 +4458,7 @@ async function placeOrder(){
   if(!alreadyAcceptedTerms){
     var termsCheck = $('terms-accept-check');
     if(!termsCheck || !termsCheck.checked){
-      toast('⚠️ Você precisa aceitar os Termos de Uso pra continuar');
+      toast('⚠️ Marque a caixinha de aceite dos Termos de Uso para enviar o pedido');
       return;
     }
     try{ localStorage.setItem('recebaa-terms-accepted', '1'); }catch(e){}
