@@ -779,6 +779,7 @@ tr:hover td{background:var(--sand-50)}
     </div>
     <div id="view-menu">
       <div class="cat-tabs" id="cat-tabs"></div>
+      <div style="padding:8px 16px 0;text-align:center;font-size:11px;color:var(--sl-400)">📷 As imagens são meramente ilustrativas.</div>
       <div id="menu-content" style="padding-bottom:90px"></div>
     </div>
     <div id="view-orders" class="hidden">
@@ -805,6 +806,12 @@ tr:hover td{background:var(--sand-50)}
       <div class="field">
         <label class="label">Observações</label>
         <textarea class="textarea" id="order-notes" placeholder="Ex: sem cebola, bem gelado..."></textarea>
+      </div>
+      <div id="terms-accept-box" class="hidden" style="background:#f8fafc;border-radius:10px;padding:12px;margin-top:4px">
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer">
+          <input type="checkbox" id="terms-accept-check" style="accent-color:var(--ocean-500);margin-top:3px"/>
+          <span style="font-size:12.5px;color:#475569">Li e aceito os <a href="#" onclick="openTermsModal();return false" style="color:var(--ocean-600);text-decoration:underline">Termos de Uso e a Política de Privacidade</a> do Recebaa.</span>
+        </label>
       </div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button class="btn btn-ghost" style="flex:1" onclick="clearCart()">🗑️ Limpar</button>
@@ -4039,6 +4046,42 @@ function refreshCart(){
 // ══════════════════════════════════════════════════════
 // CLIENTE — CARRINHO
 // ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// CLIENTE — TERMOS DE USO E POLÍTICA DE PRIVACIDADE
+// ══════════════════════════════════════════════════════
+function openTermsModal(){
+  var old = document.getElementById('terms-modal');
+  if(old) old.remove();
+
+  var div = document.createElement('div');
+  div.id = 'terms-modal';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+  div.onclick = function(e){ if(e.target===div) closeTermsModal(); };
+  div.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9;position:sticky;top:0;background:#fff">'
+    +'<div style="font-size:15px;font-weight:600">📋 Termos de Uso e Privacidade</div>'
+    +'<button onclick="closeTermsModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
+    +'</div>'
+    +'<div style="padding:20px;font-size:13px;line-height:1.6;color:#334155">'
+    +'<p style="margin-bottom:12px"><b>1. Sobre o Recebaa</b><br>O Recebaa é uma plataforma que conecta clientes a quiosques de praia, permitindo fazer pedidos pelo celular via QR Code. Não somos os vendedores dos produtos — cada quiosque é responsável pelo preparo, qualidade e entrega dos itens pedidos.</p>'
+    +'<p style="margin-bottom:12px"><b>2. Pedidos e pagamento</b><br>O pedido feito pelo app é enviado diretamente ao quiosque. O pagamento é combinado e realizado diretamente com o quiosque (o app não processa pagamentos). Preços e disponibilidade dos produtos são definidos e atualizados pelo próprio quiosque.</p>'
+    +'<p style="margin-bottom:12px"><b>3. Dados que coletamos</b><br>Para processar seu pedido, coletamos o nome informado, o número do guarda-sol/mesa e os itens pedidos. Não pedimos dados de pagamento, CPF ou endereço pelo app.</p>'
+    +'<p style="margin-bottom:12px"><b>4. Uso dos dados</b><br>Usamos essas informações apenas para viabilizar seu pedido junto ao quiosque (nome para identificação, itens para preparo). Não vendemos nem compartilhamos seus dados com terceiros para fins de marketing.</p>'
+    +'<p style="margin-bottom:12px"><b>5. Responsabilidade</b><br>O Recebaa atua como intermediário tecnológico. Questões sobre qualidade dos produtos, tempo de preparo ou atendimento devem ser resolvidas diretamente com o quiosque responsável.</p>'
+    +'<p style="margin-bottom:12px"><b>6. Seus direitos (LGPD)</b><br>Você pode solicitar a qualquer momento informações sobre os dados armazenados ou pedir a exclusão deles, entrando em contato pelo e-mail <a href="mailto:pediu.recebaa@gmail.com" style="color:var(--ocean-600)">pediu.recebaa@gmail.com</a>.</p>'
+    +'<p style="margin-bottom:0;color:#94a3b8;font-size:11.5px">Ao aceitar, você confirma que leu e concorda com estes termos. Última atualização: '+new Date().toLocaleDateString('pt-BR')+'.</p>'
+    +'</div>'
+    +'<div style="padding:0 20px 20px">'
+    +'<button onclick="closeTermsModal()" style="width:100%;padding:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Entendi</button>'
+    +'</div></div>';
+  document.body.appendChild(div);
+}
+
+function closeTermsModal(){
+  var d = document.getElementById('terms-modal');
+  if(d) d.remove();
+}
+
 function openCart(){
   const entries=Object.entries(cart);
   const total=entries.reduce((s,[k,i])=>s+i.price*i.qty,0);
@@ -4049,6 +4092,13 @@ function openCart(){
     +'</div>'
     +'<div class="cart-item-price">'+fmt(i.price*i.qty)+'</div></div>').join('');
   $('cart-total').textContent=fmt(total);
+  var termsBox = $('terms-accept-box');
+  if(termsBox){
+    var accepted = false;
+    try{ accepted = localStorage.getItem('recebaa-terms-accepted') === '1'; }catch(e){}
+    if(accepted) termsBox.classList.add('hidden');
+    else termsBox.classList.remove('hidden');
+  }
   $('cart-overlay').classList.add('open');
   $('cart-drawer').classList.add('open');
 }
@@ -4401,6 +4451,19 @@ async function placeOrder(){
     return;
   }
   try{ sessionStorage.setItem('recebaa-client-name', name); }catch(e){}
+
+  // Termos de uso: exigir aceite só na primeira vez (fica salvo depois)
+  var alreadyAcceptedTerms = false;
+  try{ alreadyAcceptedTerms = localStorage.getItem('recebaa-terms-accepted') === '1'; }catch(e){}
+  if(!alreadyAcceptedTerms){
+    var termsCheck = $('terms-accept-check');
+    if(!termsCheck || !termsCheck.checked){
+      toast('⚠️ Você precisa aceitar os Termos de Uso pra continuar');
+      return;
+    }
+    try{ localStorage.setItem('recebaa-terms-accepted', '1'); }catch(e){}
+  }
+
   const items=Object.values(cart);
   if(!items.length){ toast('Adicione itens ao carrinho'); return; }
   // Validar que todos os itens do carrinho ainda estão disponíveis
