@@ -8689,8 +8689,9 @@ function renderMarginTable(){
     }).join('')
     +'</tbody></table></div>';
 
-  // Resumo no rodapé (só considera produtos com custo cadastrado, pra não inflar o lucro)
+  // Receita total considera TODOS os produtos vendidos; Custo/Lucro/Margem só os com custo cadastrado
   var withCost = sorted.filter(function(p){ return p.hasCost; });
+  var totalRevAll = sorted.reduce(function(s,p){ return s+p.revenue; }, 0);
   var totalRev = withCost.reduce(function(s,p){ return s+p.revenue; }, 0);
   var totalCost = withCost.reduce(function(s,p){ return s+p.cost; }, 0);
   var totalProfit = totalRev - totalCost;
@@ -8698,12 +8699,12 @@ function renderMarginTable(){
   var semCustoCount = sorted.length - withCost.length;
 
   html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px;padding-top:14px;border-top:2px solid var(--sand-100)">'
-    +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Receita total</div><div style="font-size:16px;font-weight:700">'+fmt(totalRev)+'</div></div>'
+    +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Receita total</div><div style="font-size:16px;font-weight:700">'+fmt(totalRevAll)+'</div></div>'
     +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Custo total</div><div style="font-size:16px;font-weight:700;color:var(--red)">'+fmt(totalCost)+'</div></div>'
     +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Lucro total</div><div style="font-size:16px;font-weight:700;color:var(--green)">'+fmt(totalProfit)+'</div></div>'
     +'<div style="text-align:center"><div style="font-size:11px;color:var(--sl-400);margin-bottom:2px">Margem média</div><div style="font-size:16px;font-weight:700;color:'+(avgMargin>=30?'var(--green)':avgMargin>=15?'#f59e0b':'var(--red)')+'">'+avgMargin.toFixed(1)+'%</div></div>'
     +'</div>'
-    +(semCustoCount>0 ? '<div style="font-size:11px;color:var(--sl-400);text-align:center;margin-top:8px">⚠️ '+semCustoCount+' produto(s) sem custo cadastrado não entram nesse cálculo de lucro/margem (mas aparecem na tabela acima com a receita).</div>' : '');
+    +(semCustoCount>0 ? '<div style="font-size:11px;color:var(--sl-400);text-align:center;margin-top:8px">⚠️ '+semCustoCount+' produto(s) sem custo cadastrado: a receita deles já está somada acima, mas não entram no cálculo de custo/lucro/margem.</div>' : '');
 
   el.innerHTML = html;
 }
