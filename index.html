@@ -3910,14 +3910,18 @@ function openProductOptionsModal(pid){
   div.onclick = function(e){ if(e.target===div) closeProductOptionsModal(); };
 
   var groupsHtml = p.options.map(function(g, gi){
+    var isMulti = !!g.multi;
     var choicesHtml = g.choices.map(function(c, ci){
       var priceTxt = c.price_delta ? ' (+'+fmt(c.price_delta)+')' : '';
+      var inputType = isMulti ? 'checkbox' : 'radio';
+      var inputName = isMulti ? 'popt-'+pid+'-g'+gi+'-c'+ci : 'popt-'+pid+'-g'+gi;
+      var checkedAttr = (!isMulti && ci===0) ? ' checked' : '';
       return '<label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;margin-top:6px;cursor:pointer">'
-        +'<input type="radio" name="popt-'+pid+'-g'+gi+'" value="'+ci+'" onchange="updatePoptTotal(\''+pid+'\')"'+(ci===0?' checked':'')+' style="accent-color:#0ea5e9"/>'
+        +'<input type="'+inputType+'" name="'+inputName+'" data-group="'+gi+'" value="'+ci+'" onchange="updatePoptTotal(\''+pid+'\')"'+checkedAttr+' style="accent-color:#0ea5e9"/>'
         +'<span style="font-size:13.5px">'+esc(c.name)+priceTxt+'</span>'
         +'</label>';
     }).join('');
-    return '<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:2px">'+esc(g.name)+'</div>'+choicesHtml+'</div>';
+    return '<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:2px">'+esc(g.name)+(isMulti?' <span style="font-weight:400;color:#94a3b8;font-size:11px">(pode marcar vários)</span>':'')+'</div>'+choicesHtml+'</div>';
   }).join('');
 
   div.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(0,0,0,.2)">'
@@ -3942,6 +3946,17 @@ function closeProductOptionsModal(){
   if(d) d.remove();
 }
 
+// Retorna as opções marcadas (uma ou várias) de um grupo específico dentro de um container
+function getSelectedChoicesForGroup(container, g, gi){
+  if(g.multi){
+    var checks = container.querySelectorAll('input[data-group="'+gi+'"]:checked');
+    return Array.prototype.map.call(checks, function(el){ return g.choices[parseInt(el.value,10)]; }).filter(Boolean);
+  }
+  var checked = container.querySelector('input[data-group="'+gi+'"]:checked');
+  var ci = checked ? parseInt(checked.value, 10) : 0;
+  return g.choices[ci] ? [g.choices[ci]] : [];
+}
+
 // Recalcula e mostra o total (preço base + acréscimos das opções marcadas) em tempo real
 function updatePoptTotal(pid){
   var p = catalog.find(function(x){ return x.id===pid; });
@@ -3949,10 +3964,8 @@ function updatePoptTotal(pid){
   var totalEl = document.getElementById('popt-total');
   if(!p || !container || !totalEl) return;
   var deltaSum = p.options.reduce(function(sum, g, gi){
-    var checked = container.querySelector('input[name="popt-'+pid+'-g'+gi+'"]:checked');
-    var ci = checked ? parseInt(checked.value, 10) : 0;
-    var choice = g.choices[ci];
-    return sum + (Number(choice.price_delta)||0);
+    var selected = getSelectedChoicesForGroup(container, g, gi);
+    return sum + selected.reduce(function(s,c){ return s + (Number(c.price_delta)||0); }, 0);
   }, 0);
   totalEl.textContent = fmt(effectivePrice(p) + deltaSum);
 }
@@ -3963,17 +3976,26 @@ function confirmProductOptions(pid){
   var container = document.getElementById('popt-groups');
   if(!container) return;
 
-  var selections = p.options.map(function(g, gi){
-    var checked = container.querySelector('input[name="popt-'+pid+'-g'+gi+'"]:checked');
-    var ci = checked ? parseInt(checked.value, 10) : 0;
-    var choice = g.choices[ci];
-    return { group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0, costDelta: Number(choice.cost_delta)||0 };
+  // Cada grupo pode contribuir com uma ou várias escolhas (se for múltipla escolha)
+  var selections = [];
+  p.options.forEach(function(g, gi){
+    var chosen = getSelectedChoicesForGroup(container, g, gi);
+    chosen.forEach(function(choice){
+      selections.push({ group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0, costDelta: Number(choice.cost_delta)||0 });
+    });
   });
 
   var deltaSum = selections.reduce(function(s, sel){ return s + sel.delta; }, 0);
   var costDeltaSum = selections.reduce(function(s, sel){ return s + sel.costDelta; }, 0);
   var unitPrice = effectivePrice(p) + deltaSum;
-  var label = selections.map(function(s){ return s.group+': '+s.choice; }).join(', ');
+  // Agrupa por nome do grupo pra exibir "Adicionais: Leite condensado, Granola" em vez de repetir o grupo
+  var labelByGroup = {};
+  var labelGroupOrder = [];
+  selections.forEach(function(s){
+    if(!labelByGroup[s.group]){ labelByGroup[s.group] = []; labelGroupOrder.push(s.group); }
+    labelByGroup[s.group].push(s.choice);
+  });
+  var label = labelGroupOrder.map(function(gname){ return gname+': '+labelByGroup[gname].join(', '); }).join(' · ');
   var key = pid + '::' + selections.map(function(s){ return s.choice; }).join('|');
 
   if(cart[key]){
@@ -3981,7 +4003,7 @@ function confirmProductOptions(pid){
   } else {
     cart[key] = {
       id: pid,
-      name: p.name + ' — ' + label,
+      name: p.name + (label ? ' — ' + label : ''),
       price: unitPrice,
       qty: 1,
       emoji: p.emoji,
@@ -4285,13 +4307,17 @@ function openWoProductOptionsModal(pid){
   if(old) old.remove();
 
   var groupsHtml = p.options.map(function(g, gi){
+    var isMulti = !!g.multi;
     var choicesHtml = g.choices.map(function(c, ci){
       var priceTxt = c.price_delta ? ' (+'+fmt(c.price_delta)+')' : '';
+      var inputType = isMulti ? 'checkbox' : 'radio';
+      var inputName = isMulti ? 'wopt-'+pid+'-g'+gi+'-c'+ci : 'wopt-'+pid+'-g'+gi;
+      var checkedAttr = (!isMulti && ci===0) ? ' checked' : '';
       return '<label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e2e8f0;border-radius:10px;margin-top:6px;cursor:pointer">'
-        +'<input type="radio" name="wopt-'+pid+'-g'+gi+'" value="'+ci+'"'+(ci===0?' checked':'')+' style="accent-color:var(--ocean-500)"/>'
+        +'<input type="'+inputType+'" name="'+inputName+'" data-group="'+gi+'" value="'+ci+'"'+checkedAttr+' style="accent-color:var(--ocean-500)"/>'
         +'<span style="font-size:13.5px">'+esc(c.name)+priceTxt+'</span></label>';
     }).join('');
-    return '<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:2px">'+esc(g.name)+'</div>'+choicesHtml+'</div>';
+    return '<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:600;color:#334155;margin-bottom:2px">'+esc(g.name)+(isMulti?' <span style="font-weight:400;color:#94a3b8;font-size:11px">(pode marcar vários)</span>':'')+'</div>'+choicesHtml+'</div>';
   }).join('');
 
   var div = document.createElement('div');
@@ -4321,23 +4347,30 @@ function confirmWoProductOptions(pid){
   var container = document.getElementById('wopt-groups');
   if(!container) return;
 
-  var selections = p.options.map(function(g, gi){
-    var checked = container.querySelector('input[name="wopt-'+pid+'-g'+gi+'"]:checked');
-    var ci = checked ? parseInt(checked.value, 10) : 0;
-    var choice = g.choices[ci];
-    return { group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0, costDelta: Number(choice.cost_delta)||0 };
+  var selections = [];
+  p.options.forEach(function(g, gi){
+    var chosen = getSelectedChoicesForGroup(container, g, gi);
+    chosen.forEach(function(choice){
+      selections.push({ group: g.name, choice: choice.name, delta: Number(choice.price_delta)||0, costDelta: Number(choice.cost_delta)||0 });
+    });
   });
 
   var deltaSum = selections.reduce(function(s, sel){ return s + sel.delta; }, 0);
   var costDeltaSum = selections.reduce(function(s, sel){ return s + sel.costDelta; }, 0);
   var unitPrice = Number(p.price) + deltaSum;
-  var label = selections.map(function(s){ return s.group+': '+s.choice; }).join(', ');
+  var labelByGroup = {};
+  var labelGroupOrder = [];
+  selections.forEach(function(s){
+    if(!labelByGroup[s.group]){ labelByGroup[s.group] = []; labelGroupOrder.push(s.group); }
+    labelByGroup[s.group].push(s.choice);
+  });
+  var label = labelGroupOrder.map(function(gname){ return gname+': '+labelByGroup[gname].join(', '); }).join(' · ');
   var key = pid + '::' + selections.map(function(s){ return s.choice; }).join('|');
 
   if(waiterCart[key]){
     waiterCart[key].qty += 1;
   } else {
-    waiterCart[key] = { id: pid, name: p.name+' — '+label, price: unitPrice, qty: 1, emoji: p.emoji, optionsLabel: label, optionsCostDelta: costDeltaSum };
+    waiterCart[key] = { id: pid, name: p.name+(label?' — '+label:''), price: unitPrice, qty: 1, emoji: p.emoji, optionsLabel: label, optionsCostDelta: costDeltaSum };
   }
   updateWoCartBar();
   woRefreshCard(pid);
@@ -7461,6 +7494,10 @@ function updateOptGroupName(ns, gi, val){
   window['_optGroups_'+ns][gi].name = val;
 }
 
+function updateOptGroupMulti(ns, gi, checked){
+  window['_optGroups_'+ns][gi].multi = !!checked;
+}
+
 function updateOptChoiceName(ns, gi, ci, val){
   window['_optGroups_'+ns][gi].choices[ci].name = val;
 }
@@ -7497,6 +7534,10 @@ function renderOptGroups(ns){
       +'<input placeholder="Nome do grupo (ex: Fruta, Drink, Tamanho)" value="'+esc(g.name)+'" oninput="updateOptGroupName(\''+ns+'\','+gi+',this.value)" style="flex:1;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;font-weight:500"/>'
       +'<button type="button" onclick="removeOptGroup(\''+ns+'\','+gi+')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:16px;padding:2px 4px" title="Remover grupo">🗑️</button>'
       +'</div>'
+      +'<label style="display:flex;align-items:center;gap:6px;margin-top:8px;cursor:pointer">'
+      +'<input type="checkbox" '+(g.multi?'checked':'')+' onchange="updateOptGroupMulti(\''+ns+'\','+gi+',this.checked)" style="accent-color:var(--ocean-500)"/>'
+      +'<span style="font-size:11.5px;color:#64748b">Permitir escolher <b>mais de um item</b> nesse grupo (ex: adicionais do açaí)</span>'
+      +'</label>'
       +choicesHtml
       +'<button type="button" onclick="addOptChoice(\''+ns+'\','+gi+')" style="margin-top:8px;background:none;border:none;color:#0ea5e9;font-size:12px;font-weight:500;cursor:pointer;padding:2px 0">+ Adicionar opção</button>'
       +'</div>';
@@ -7511,6 +7552,7 @@ function buildOptGroupsPayload(ns){
     .map(function(g){
       return {
         name: g.name.trim(),
+        multi: !!g.multi,
         choices: g.choices
           .filter(function(c){ return (c.name||'').trim(); })
           .map(function(c){ return { name: c.name.trim(), price_delta: parseFloat(c.price_delta)||0, cost_delta: parseFloat(c.cost_delta)||0 }; })
