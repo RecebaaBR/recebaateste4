@@ -955,6 +955,10 @@ tr:hover td{background:var(--sand-50)}
             <button class="hf-btn lt-btn" onclick="liveTypeFilter('others',this)" style="flex:1;min-width:80px;border-left:3px solid #10b981">📦 Outros</button>
           </div>
         </div>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por guarda-sol</div>
+          <input class="input" id="live-umb-filter" type="number" min="1" placeholder="Ex: 7 (deixe vazio para ver todos)" oninput="renderLiveOrders()" style="width:100%"/>
+        </div>
         <div class="orders-grid" id="live-orders-grid"></div>
       </div>
 
@@ -1021,6 +1025,10 @@ tr:hover td{background:var(--sand-50)}
             <button class="hf-btn" onclick="histFilter('waiter',this)">🙋 Garçom</button>
             <button class="hf-btn" onclick="histFilter('cancelled',this)">❌ Cancelado</button>
           </div>
+        </div>
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:12px 14px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por guarda-sol</div>
+          <input class="input" id="hist-umb-filter" type="number" min="1" placeholder="Ex: 7 (deixe vazio para ver todos)" oninput="renderHist()" style="width:100%;max-width:300px"/>
         </div>
         <div id="hist-bulk-bar" class="hidden" style="background:#0f172a;color:#fff;border-radius:var(--r);padding:10px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <span id="hist-bulk-count" style="font-size:13px;font-weight:600">0 selecionados</span>
@@ -6491,6 +6499,10 @@ function renderLiveOrders(){
       if(liveTypeFilterVal === 'foods'  && t !== 'foods') return false;
       if(liveTypeFilterVal === 'others' && t !== 'others') return false;
     }
+    // Aplicar filtro por guarda-sol
+    var umbFilterEl = $('live-umb-filter');
+    var umbFilterVal = umbFilterEl ? String(umbFilterEl.value||'').trim() : '';
+    if(umbFilterVal && String(o.umbrella_num||o.umb||'') !== umbFilterVal) return false;
     return true;
   });
 
@@ -6769,6 +6781,13 @@ async function renderHist(){
       query = query.gte('created_at', dates.from).lte('created_at', dates.to);
     }
 
+    // Filtro por guarda-sol
+    var histUmbEl = $('hist-umb-filter');
+    var histUmbVal = histUmbEl ? String(histUmbEl.value||'').trim() : '';
+    if(histUmbVal){
+      query = query.eq('umbrella_num', histUmbVal);
+    }
+
     var {data, error} = await query;
     if(data){
       // Atualizar orders em memória também
@@ -6799,6 +6818,9 @@ async function renderHist(){
     list2 = orders.filter(function(o){ return o.customer_name==='CHAMADA DE ATENDENTE'; });
   } else {
     list2 = orders.filter(function(o){ return o.status===histFilterVal && o.customer_name!=='ENCERRAMENTO'; });
+  }
+  if(histUmbVal){
+    list2 = list2.filter(function(o){ return String(o.umbrella_num||o.umb||'') === histUmbVal; });
   }
   window._histRawList = list2;
   renderHistTable(list2);
