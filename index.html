@@ -7913,6 +7913,42 @@ function setUmbStatusFilter(val){
 // GUARDA-SÓIS — VER CONSUMO (abrir a "conta" manualmente pelo quiosque,
 // útil quando o cliente não consegue pedir a conta pelo celular)
 // ══════════════════════════════════════════════════════
+// Remove um item direto do modal "Ver consumo" (item errado ou não servido).
+// Recalcula o total do pedido correspondente e recarrega o modal na hora.
+async function removeUmbrellaConsumptionItem(itemId, orderId, umbNum){
+  if(!confirm('Remover este item da conta? Essa ação não pode ser desfeita.')) return;
+
+  var delResp = await sb.from('order_items').delete().eq('id', itemId);
+  if(delResp.error){
+    toast('❌ Erro ao remover item: ' + delResp.error.message);
+    return;
+  }
+
+  // Recalcular o total do pedido a partir dos itens restantes
+  var {data: remainingItems} = await sb.from('order_items').select('quantity,unit_price').eq('order_id', orderId);
+  var newTotal = (remainingItems||[]).reduce(function(s,i){ return s + Number(i.quantity)*Number(i.unit_price); }, 0);
+
+  var updates = { total: newTotal, last_updated_by: getCurrentActorName() };
+  if(!remainingItems || !remainingItems.length){
+    updates.status = 'cancelled'; // pedido sem itens não faz mais sentido
+  }
+  await sb.from('orders').update(updates).eq('id', orderId);
+
+  // Atualizar também o array em memória, se esse pedido estiver carregado
+  var o = orders.find(function(x){ return x.id === orderId; });
+  if(o){
+    o.items = (o.items||[]).filter(function(i){ return String(i.id) !== String(itemId); });
+    o.total = newTotal;
+    if(updates.status) o.status = updates.status;
+  }
+
+  toast('🗑️ Item removido. Total atualizado.');
+  renderLiveOrders();
+  renderHist();
+  updateDashMetrics();
+  openUmbrellaConsumptionModal(umbNum); // recarrega o modal com os dados atualizados
+}
+
 async function openUmbrellaConsumptionModal(umbNum){
   var old = document.getElementById('umb-consumption-modal');
   if(old) old.remove();
@@ -7984,7 +8020,10 @@ async function openUmbrellaConsumptionModal(umbNum){
   var itemsHtml = groupOrder.map(function(name){
     var g = groups[name];
     var itensTxt = g.items.map(function(i){
-      return '<div style="font-size:12px;color:#5b21b6;padding:1px 0">• '+i.quantity+'× '+esc(i.product_name)+'</div>';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 0">'
+        +'<span style="font-size:12px;color:#5b21b6">• '+i.quantity+'× '+esc(i.product_name)+'</span>'
+        +'<button onclick="removeUmbrellaConsumptionItem(\''+i.id+'\',\''+i.order_id+'\',\''+umbStr+'\')" title="Remover item (não servido / errado)" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;padding:2px 6px;flex-shrink:0">🗑️</button>'
+        +'</div>';
     }).join('');
     return '<div style="padding:8px 0;border-bottom:1px dashed #ddd6fe">'
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">'
