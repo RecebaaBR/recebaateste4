@@ -6329,7 +6329,7 @@ function playAlert(){
         osc.connect(g); g.connect(ctx.destination);
         osc.frequency.value = 880; osc.type = 'sine';
         g.gain.setValueAtTime(0, ctx.currentTime + delay/1000);
-        g.gain.linearRampToValueAtTime(.4, ctx.currentTime + delay/1000 + .05);
+        g.gain.linearRampToValueAtTime(.9, ctx.currentTime + delay/1000 + .05);
         g.gain.linearRampToValueAtTime(0, ctx.currentTime + delay/1000 + .25);
         osc.start(ctx.currentTime + delay/1000);
         osc.stop(ctx.currentTime + delay/1000 + .3);
