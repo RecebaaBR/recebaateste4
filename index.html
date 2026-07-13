@@ -928,6 +928,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="metric-card"><div class="metric-label">Pedidos ativos</div><div class="metric-val" id="metric-active">0</div><div class="metric-sub">em andamento</div></div>
           <div class="metric-card"><div class="metric-label">Produtos</div><div class="metric-val" id="m-products">0</div><div class="metric-sub">no cardápio</div></div>
           <div class="metric-card"><div class="metric-label">Cancelamentos</div><div class="metric-val" id="m-cancelled">0</div><div class="metric-sub">hoje</div></div>
+          <div class="metric-card"><div class="metric-label">Serviço (10%)</div><div class="metric-val" id="m-service">R$ 0,00</div><div class="metric-sub">hoje</div></div>
         </div>
         <div class="reports-row">
           <div class="report-card" style="grid-column:1/-1"><div class="report-title">Itens mais pedidos</div><div id="top-products-chart"><div class="page-loading" style="padding:20px"></div></div></div>
@@ -1142,6 +1143,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="metric-card"><div class="metric-label">Total pedidos</div><div class="metric-val" id="r-orders">0</div></div>
           <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-val" id="r-ticket">R$ 0</div></div>
           <div class="metric-card"><div class="metric-label">Cancelamentos</div><div class="metric-val" id="r-cancel">0</div></div>
+          <div class="metric-card"><div class="metric-label">Serviço (10%)</div><div class="metric-val" id="r-service" style="color:#6366f1">R$ 0</div><div class="metric-sub">taxa de serviço no período</div></div>
         </div>
 
         <div class="reports-row">
@@ -5739,8 +5741,11 @@ async function atenderChamada(orderId){
   toast('✅ Chamada atendida!');
 }
 
-async function closeUmbrellaSession(umbNum){
-  if(!confirm('Faturar e encerrar guarda-sol '+umbNum+'?\nIsso vai marcar todos os pedidos como faturados e limpar a sessão do cliente.')) return;
+async function closeUmbrellaSession(umbNum, applyService){
+  applyService = !!applyService;
+  var confirmMsg = 'Faturar e encerrar guarda-sol '+umbNum+'?\nIsso vai marcar todos os pedidos como faturados e limpar a sessão do cliente.';
+  if(applyService) confirmMsg += '\n\nSerá adicionada uma taxa de serviço de 10% sobre o total.';
+  if(!confirm(confirmMsg)) return;
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     var kid = currentKiosk.id;
@@ -5778,8 +5783,10 @@ async function closeUmbrellaSession(umbNum){
     }
     pedidos = pedidos || [];
 
-    // 2) Calcular total somado (pedidos não cancelados)
+    // 2) Calcular total somado (pedidos não cancelados) + taxa de serviço opcional
     var totalConta = pedidos.reduce(function(s,o){ return s + (Number(o.total)||0); }, 0);
+    var serviceAmt = applyService ? Math.round(totalConta * 0.10 * 100) / 100 : 0;
+    var totalComServico = totalConta + serviceAmt;
 
     // 3) Marcar todos os pedidos ativos como delivered
     if(pedidos.length){
@@ -5797,6 +5804,7 @@ async function closeUmbrellaSession(umbNum){
           return '#'+(o.order_number||'?')+' ('+qtdItens+' itens) '+fmt(Number(o.total)||0);
         }).join(' · ')
       : 'Encerramento sem pedidos';
+    if(applyService) resumo += ' · Serviço 10%: ' + fmt(serviceAmt);
 
     // 5) Tratar PEDIDO DE CONTA — sempre recalcular total com a soma dos pedidos
     var contasQuery = sb.from('orders')
@@ -5815,7 +5823,7 @@ async function closeUmbrellaSession(umbNum){
       var newNotes = (contasExist[0].notes ? contasExist[0].notes + ' · ' : '')
         + 'FATURADO pelo quiosque · ' + resumo;
       await sb.from('orders')
-        .update({status:'delivered', total: totalConta, notes: newNotes, last_updated_by: getCurrentActorName()})
+        .update({status:'delivered', total: totalComServico, service_amount: serviceAmt, notes: newNotes, last_updated_by: getCurrentActorName()})
         .eq('id', contasExist[0].id);
     } else {
       // Não existia: criar pedido de conta retroativo
@@ -5836,7 +5844,8 @@ async function closeUmbrellaSession(umbNum){
         customer_name: 'PEDIDO DE CONTA',
         notes: notes,
         status: 'delivered',
-        total: totalConta
+        total: totalComServico,
+        service_amount: serviceAmt
       });
     }
 
@@ -6420,6 +6429,12 @@ function updateDashMetrics(){
   const ticket=delivered.length?rev/delivered.length:0;
   const cancelled=realToday.filter(o=>o.status==='cancelled');
   const m=x=>$(x);
+  // Total de taxa de serviço (10%) cobrada hoje, ao fechar contas
+  var serviceToday = orders.filter(function(o){
+    return o.customer_name==='PEDIDO DE CONTA' && isToday(o) && Number(o.service_amount||0) > 0;
+  });
+  var serviceTotal = serviceToday.reduce(function(s,o){ return s+Number(o.service_amount||0); }, 0);
+  if(m('m-service')) m('m-service').textContent = fmt(serviceTotal);
   if(m('m-revenue')) m('m-revenue').textContent=fmt(rev);
   if(m('m-total')) m('m-total').textContent=realToday.length;
   if(m('m-ticket')) m('m-ticket').textContent=fmt(ticket);
@@ -7928,9 +7943,14 @@ function applyContasFilters(){
         +'</div>'
         +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
         +'<div style="font-size:22px;font-weight:700;color:#6d28d9">💰 '+fmt(o.total)+'</div>'
-        +'<button class="btn btn-sm" style="background:#10b981;color:#fff;font-weight:600;font-size:13px;padding:10px 20px" '
+        +'<div style="display:flex;gap:8px">'
+        +'<button class="btn btn-sm" style="background:#10b981;color:#fff;font-weight:600;font-size:12.5px;padding:10px 16px" '
         +'data-umb="'+(o.umbrella_num||o.umb||'')+'" onclick="closeUmbrellaSession(this.dataset.umb)">'
-        +'✅ Faturar e encerrar mesa</button>'
+        +'✅ Faturar</button>'
+        +'<button class="btn btn-sm" style="background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-weight:600;font-size:12.5px;padding:10px 16px" '
+        +'data-umb="'+(o.umbrella_num||o.umb||'')+'" onclick="closeUmbrellaSession(this.dataset.umb,true)">'
+        +'➕10% e Faturar</button>'
+        +'</div>'
         +'</div>'
         +'</div>';
     }).join('');
@@ -8117,7 +8137,10 @@ async function openUmbrellaConsumptionModal(umbNum){
     +'<span style="font-size:14px;color:var(--sl-500)">Total</span>'
     +'<span style="font-size:22px;font-weight:700;color:#6d28d9">💰 '+fmt(totalGeral)+'</span>'
     +'</div>'
-    +'<button class="btn btn-sm" style="width:100%;background:#10b981;color:#fff;font-weight:600;padding:10px" onclick="closeUmbrellaConsumptionModal();closeUmbrellaSession(\''+umbStr+'\')">✅ Faturar e encerrar mesa</button>';
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn btn-sm" style="flex:1;background:#10b981;color:#fff;font-weight:600;padding:10px;font-size:12.5px" onclick="closeUmbrellaConsumptionModal();closeUmbrellaSession(\''+umbStr+'\')">✅ Faturar</button>'
+    +'<button class="btn btn-sm" style="flex:1;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-weight:600;padding:10px;font-size:12.5px" onclick="closeUmbrellaConsumptionModal();closeUmbrellaSession(\''+umbStr+'\',true)">➕10% e Faturar</button>'
+    +'</div>';
 }
 
 function closeUmbrellaConsumptionModal(){
@@ -8819,6 +8842,14 @@ async function loadReports(){
       || o.customer_name==='CHAMADA DE ATENDENTE';
   };
   var realOrdersReport = filteredOrders.filter(function(o){ return !isSpecialReport(o); });
+
+  // Total de taxa de serviço (10%) cobrada no período
+  var serviceReport = filteredOrders.filter(function(o){
+    return o.customer_name==='PEDIDO DE CONTA' && Number(o.service_amount||0) > 0;
+  });
+  var serviceTotalReport = serviceReport.reduce(function(s,o){ return s+Number(o.service_amount||0); }, 0);
+  var serviceEl = $('r-service');
+  if(serviceEl) serviceEl.textContent = fmt(serviceTotalReport);
 
   // ── Ranking de garçons por valor vendido (pedidos lançados via "Novo Pedido") ──
   var waiterSalesReport = realOrdersReport.filter(function(o){ return o.status!=='cancelled' && o.created_by; });
