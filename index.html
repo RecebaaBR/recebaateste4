@@ -928,7 +928,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="metric-card"><div class="metric-label">Pedidos ativos</div><div class="metric-val" id="metric-active">0</div><div class="metric-sub">em andamento</div></div>
           <div class="metric-card"><div class="metric-label">Produtos</div><div class="metric-val" id="m-products">0</div><div class="metric-sub">no cardápio</div></div>
           <div class="metric-card"><div class="metric-label">Cancelamentos</div><div class="metric-val" id="m-cancelled">0</div><div class="metric-sub">hoje</div></div>
-          <div class="metric-card"><div class="metric-label">Serviço (10%)</div><div class="metric-val" id="m-service">R$ 0,00</div><div class="metric-sub">hoje</div></div>
+          <div class="metric-card"><div class="metric-label">Serviço (10%)</div><div class="metric-val" id="m-service" style="color:#0ea5e9">R$ 0,00</div><div class="metric-sub">hoje</div></div>
         </div>
         <div class="reports-row">
           <div class="report-card" style="grid-column:1/-1"><div class="report-title">Itens mais pedidos</div><div id="top-products-chart"><div class="page-loading" style="padding:20px"></div></div></div>
@@ -1143,7 +1143,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="metric-card"><div class="metric-label">Total pedidos</div><div class="metric-val" id="r-orders">0</div></div>
           <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-val" id="r-ticket">R$ 0</div></div>
           <div class="metric-card"><div class="metric-label">Cancelamentos</div><div class="metric-val" id="r-cancel">0</div></div>
-          <div class="metric-card"><div class="metric-label">Serviço (10%)</div><div class="metric-val" id="r-service" style="color:#6366f1">R$ 0</div><div class="metric-sub">taxa de serviço no período</div></div>
+          <div class="metric-card"><div class="metric-label">Serviço (10%)</div><div class="metric-val" id="r-service" style="color:#0ea5e9">R$ 0</div><div class="metric-sub">valor apartado dos produtos</div></div>
         </div>
 
         <div class="reports-row">
@@ -5744,7 +5744,7 @@ async function atenderChamada(orderId){
 async function closeUmbrellaSession(umbNum, applyService){
   applyService = !!applyService;
   var confirmMsg = 'Faturar e encerrar guarda-sol '+umbNum+'?\nIsso vai marcar todos os pedidos como faturados e limpar a sessão do cliente.';
-  if(applyService) confirmMsg += '\n\nSerá adicionada uma taxa de serviço de 10% sobre o total.';
+  if(applyService) confirmMsg += '\n\nSerá adicionada a taxa de serviço de 10% sobre o total.';
   if(!confirm(confirmMsg)) return;
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
@@ -7929,6 +7929,7 @@ function applyContasFilters(){
       var billTypeTag = esc((o.notes||'').split(' · ')[0] || '');
       var perPersonMatch = (o.notes||'').match(/\d+\s*pessoas?\s*×\s*R\$\s*[\d.,]+\s*cada/i);
       var perPersonTxt = perPersonMatch ? esc(perPersonMatch[0]) : '';
+      var umbId = esc(o.umbrella_num||o.umb||'');
       return '<div style="background:#fff;border-radius:var(--r);border:2px solid #8b5cf6;padding:16px;position:relative;margin-bottom:10px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px">'
         +'<div style="font-size:14px;font-weight:700;color:#6d28d9">🧾 ☂️ Guarda-sol '+esc(o.umbrella_num||o.umb||'?')+'</div>'
@@ -7941,16 +7942,19 @@ function applyContasFilters(){
         +'<div style="background:#f5f3ff;border-radius:8px;padding:10px 12px;margin-bottom:12px;max-height:260px;overflow-y:auto">'
         +conferenciaHtml
         +'</div>'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
-        +'<div style="font-size:22px;font-weight:700;color:#6d28d9">💰 '+fmt(o.total)+'</div>'
-        +'<div style="display:flex;gap:8px">'
-        +'<button class="btn btn-sm" style="background:#10b981;color:#fff;font-weight:600;font-size:12.5px;padding:10px 16px" '
-        +'data-umb="'+(o.umbrella_num||o.umb||'')+'" onclick="closeUmbrellaSession(this.dataset.umb)">'
-        +'✅ Faturar</button>'
-        +'<button class="btn btn-sm" style="background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-weight:600;font-size:12.5px;padding:10px 16px" '
-        +'data-umb="'+(o.umbrella_num||o.umb||'')+'" onclick="closeUmbrellaSession(this.dataset.umb,true)">'
-        +'➕10% e Faturar</button>'
+        +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#f8fafc;padding:8px 10px;border-radius:8px;margin-bottom:10px">'
+        +'<input type="checkbox" id="conta-service-check-'+umbId+'" data-base="'+o.total+'" onchange="updateContaServicePreview(\''+umbId+'\')" style="accent-color:#0ea5e9"/>'
+        +'<span style="font-size:12px;color:#475569">➕ Adicionar <b>10% de serviço</b> sobre o total</span>'
+        +'</label>'
+        +'<div id="conta-service-row-'+umbId+'" class="hidden" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+        +'<span style="font-size:12.5px;color:#0ea5e9">Serviço (10%)</span>'
+        +'<span style="font-size:12.5px;color:#0ea5e9" id="conta-service-val-'+umbId+'">R$ 0,00</span>'
         +'</div>'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+        +'<div style="font-size:22px;font-weight:700;color:#6d28d9" id="conta-total-val-'+umbId+'">💰 '+fmt(o.total)+'</div>'
+        +'<button class="btn btn-sm" style="background:#10b981;color:#fff;font-weight:600;font-size:13px;padding:10px 20px" '
+        +'data-umb="'+(o.umbrella_num||o.umb||'')+'" onclick="closeUmbrellaSession(this.dataset.umb, document.getElementById(\'conta-service-check-'+umbId+'\')&&document.getElementById(\'conta-service-check-'+umbId+'\').checked)">'
+        +'✅ Faturar e encerrar mesa</button>'
         +'</div>'
         +'</div>';
     }).join('');
@@ -8133,14 +8137,61 @@ async function openUmbrellaConsumptionModal(umbNum){
     +'<div style="background:#f5f3ff;border-radius:8px;padding:10px 12px;margin-bottom:14px;max-height:300px;overflow-y:auto">'
     +itemsHtml
     +'</div>'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
-    +'<span style="font-size:14px;color:var(--sl-500)">Total</span>'
-    +'<span style="font-size:22px;font-weight:700;color:#6d28d9">💰 '+fmt(totalGeral)+'</span>'
+    +'<label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#f8fafc;padding:10px 12px;border-radius:8px;margin-bottom:14px">'
+    +'<input type="checkbox" id="umb-service-check" data-base="'+totalGeral+'" onchange="updateUmbServicePreview()" style="accent-color:#0ea5e9"/>'
+    +'<span style="font-size:12.5px;color:#475569">➕ Adicionar <b>10% de serviço</b> sobre o total</span>'
+    +'</label>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+    +'<span style="font-size:14px;color:var(--sl-500)">Subtotal</span>'
+    +'<span style="font-size:14px;color:var(--sl-500)" id="umb-subtotal-val">'+fmt(totalGeral)+'</span>'
     +'</div>'
-    +'<div style="display:flex;gap:8px">'
-    +'<button class="btn btn-sm" style="flex:1;background:#10b981;color:#fff;font-weight:600;padding:10px;font-size:12.5px" onclick="closeUmbrellaConsumptionModal();closeUmbrellaSession(\''+umbStr+'\')">✅ Faturar</button>'
-    +'<button class="btn btn-sm" style="flex:1;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-weight:600;padding:10px;font-size:12.5px" onclick="closeUmbrellaConsumptionModal();closeUmbrellaSession(\''+umbStr+'\',true)">➕10% e Faturar</button>'
-    +'</div>';
+    +'<div id="umb-service-row" class="hidden" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+    +'<span style="font-size:14px;color:#0ea5e9">Serviço (10%)</span>'
+    +'<span style="font-size:14px;color:#0ea5e9" id="umb-service-val">R$ 0,00</span>'
+    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-top:6px;border-top:1px solid #e2e8f0">'
+    +'<span style="font-size:14px;font-weight:600;color:var(--sl-500)">Total a cobrar</span>'
+    +'<span style="font-size:22px;font-weight:700;color:#6d28d9" id="umb-total-val">💰 '+fmt(totalGeral)+'</span>'
+    +'</div>'
+    +'<button class="btn btn-sm" style="width:100%;background:#10b981;color:#fff;font-weight:600;padding:10px" onclick="closeUmbrellaConsumptionModal();closeUmbrellaSession(\''+umbStr+'\', document.getElementById(\'umb-service-check\')&&document.getElementById(\'umb-service-check\').checked)">✅ Faturar e encerrar mesa</button>';
+}
+
+// Recalcula a prévia do total com/sem o acréscimo de 10% de serviço
+function updateUmbServicePreview(){
+  var check = document.getElementById('umb-service-check');
+  if(!check) return;
+  var base = Number(check.dataset.base)||0;
+  var serviceRow = document.getElementById('umb-service-row');
+  var serviceVal = document.getElementById('umb-service-val');
+  var totalVal = document.getElementById('umb-total-val');
+  if(check.checked){
+    var service = Math.round(base*0.10*100)/100;
+    if(serviceRow) serviceRow.classList.remove('hidden');
+    if(serviceVal) serviceVal.textContent = fmt(service);
+    if(totalVal) totalVal.textContent = '💰 ' + fmt(base+service);
+  } else {
+    if(serviceRow) serviceRow.classList.add('hidden');
+    if(totalVal) totalVal.textContent = '💰 ' + fmt(base);
+  }
+}
+
+// Mesma prévia, para os cards de conta pendente na aba Contas (um por guarda-sol)
+function updateContaServicePreview(umbId){
+  var check = document.getElementById('conta-service-check-'+umbId);
+  if(!check) return;
+  var base = Number(check.dataset.base)||0;
+  var serviceRow = document.getElementById('conta-service-row-'+umbId);
+  var serviceVal = document.getElementById('conta-service-val-'+umbId);
+  var totalVal = document.getElementById('conta-total-val-'+umbId);
+  if(check.checked){
+    var service = Math.round(base*0.10*100)/100;
+    if(serviceRow) serviceRow.classList.remove('hidden');
+    if(serviceVal) serviceVal.textContent = fmt(service);
+    if(totalVal) totalVal.textContent = '💰 ' + fmt(base+service);
+  } else {
+    if(serviceRow) serviceRow.classList.add('hidden');
+    if(totalVal) totalVal.textContent = '💰 ' + fmt(base);
+  }
 }
 
 function closeUmbrellaConsumptionModal(){
@@ -8843,7 +8894,7 @@ async function loadReports(){
   };
   var realOrdersReport = filteredOrders.filter(function(o){ return !isSpecialReport(o); });
 
-  // Total de taxa de serviço (10%) cobrada no período
+  // Total de taxa de serviço (10%) cobrada no período — linha separada dos produtos
   var serviceReport = filteredOrders.filter(function(o){
     return o.customer_name==='PEDIDO DE CONTA' && Number(o.service_amount||0) > 0;
   });
