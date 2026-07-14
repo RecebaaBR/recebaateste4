@@ -8721,6 +8721,7 @@ function renderPieChart(data){
 }
 var marginSortBy = 'margin';
 var marginTableData = [];
+var reportServiceTotal = 0;
 
 function sortMarginTable(by, btn){
   marginSortBy = by;
@@ -8739,7 +8740,7 @@ function renderMarginTable(){
   var el = $('r-margin-table');
   if(!el) return;
 
-  if(!marginTableData.length){
+  if(!marginTableData.length && reportServiceTotal <= 0){
     el.innerHTML = '<div style="color:var(--sl-400);font-size:13px;padding:16px">Nenhuma venda no período.</div>';
     return;
   }
@@ -8767,6 +8768,17 @@ function renderMarginTable(){
     +'<th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Margem</th>'
     +'<th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Visualização</th>'
     +'</tr></thead><tbody>'
+    + (reportServiceTotal > 0
+        ? '<tr style="background:#eff6ff;border-bottom:2px solid #bfdbfe">'
+          +'<td style="padding:10px 12px;font-size:13px;font-weight:700;color:#0369a1">💼 Serviço (10%) <span style="font-weight:400;color:#64748b;font-size:11px">— não é produto</span></td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:13px;color:#94a3b8">—</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:13px;font-weight:700;color:#0369a1">'+fmt(reportServiceTotal)+'</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:12px;color:#94a3b8">—</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:12px;color:#94a3b8">—</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:12px;color:#94a3b8">—</td>'
+          +'<td style="padding:10px 12px;font-size:11px;color:#94a3b8">Cobrado ao faturar contas</td>'
+          +'</tr>'
+        : '')
     + sorted.map(function(p, i){
       if(!p.hasCost){
         return '<tr style="border-bottom:1px solid var(--sand-50);opacity:.7">'
@@ -8899,6 +8911,7 @@ async function loadReports(){
     return o.customer_name==='PEDIDO DE CONTA' && Number(o.service_amount||0) > 0;
   });
   var serviceTotalReport = serviceReport.reduce(function(s,o){ return s+Number(o.service_amount||0); }, 0);
+  reportServiceTotal = serviceTotalReport;
   var serviceEl = $('r-service');
   if(serviceEl) serviceEl.textContent = fmt(serviceTotalReport);
 
