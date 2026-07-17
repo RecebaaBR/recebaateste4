@@ -131,6 +131,13 @@ body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webk
 .cart-fab{position:fixed;bottom:20px;left:16px;right:16px;z-index:100;background:var(--sl-800);color:#fff;border:none;border-radius:14px;padding:15px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 8px 28px rgba(15,23,42,.3);transition:all .2s;font-family:var(--font)}
 .cart-fab-count{background:var(--ocean-500);color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 body[data-bill-blocked="1"] .cart-fab{display:none !important}
+/* Pedido direto desativado pelo negócio: esconde os controles de adicionar item,
+   deixando o cliente só ver o cardápio (peça ao garçom aparece no lugar). */
+body[data-direct-orders-off="1"] .cart-fab{display:none !important}
+body[data-direct-orders-off="1"] .add-btn,
+body[data-direct-orders-off="1"] .qty-ctrl{display:none !important}
+body[data-direct-orders-off="1"] .direct-orders-off-badge{display:inline-block !important}
+.direct-orders-off-badge{display:none;font-size:11px;color:var(--sl-500);background:var(--sand-100);padding:4px 9px;border-radius:99px;white-space:nowrap}
 body[data-bill-blocked="1"] .menu-cat-tabs{opacity:.4;pointer-events:none}
 body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
 
@@ -464,7 +471,7 @@ tr:hover td{background:var(--sand-50)}
   </div>
   <div class="lp-nav-btns">
     <button class="lp-btn-outline" onclick="goToClient()">📱 Sou cliente</button>
-    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Meu negócio</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu negócio</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
@@ -476,7 +483,7 @@ tr:hover td{background:var(--sand-50)}
   </button>
   <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:32px;width:auto"/></div>
   <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
-  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this);setRegBusinessType('quiosque')">🏪 Negócio</button>
+  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Negócio</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -511,7 +518,7 @@ tr:hover td{background:var(--sand-50)}
       <p>O Recebaa conecta clientes aos negócios via QR Code.<br/>Sem filas, sem espera.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToClient()">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Quero meu negócio</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu negócio</button>
       </div>
 
     </div>
@@ -664,7 +671,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="lp-access-desc">Escaneie o QR Code da sua mesa e faça seu pedido agora mesmo.</div>
           <button class="lp-access-btn blue">Fazer pedido →</button>
         </div>
-        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">
+        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk')">
           <div class="lp-access-icon">🏪</div>
           <div class="lp-access-title">Negócio</div>
           <div class="lp-access-desc">Acesse o painel do seu negócio, gerencie pedidos e cardápio.</div>
@@ -860,19 +867,39 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:80%;max-height:80%;object-fit:contain"/></div>
       <div class="auth-title">Criar conta</div>
       <div class="auth-sub" id="reg-auth-sub">Preencha os dados do seu quiosque</div>
-      <div class="biz-type-toggle" style="display:flex;gap:8px;margin-bottom:14px">
-        <button type="button" class="hf-btn active" id="regtype-kiosk" onclick="setRegBusinessType('quiosque')">🏪 Quiosque</button>
-        <button type="button" class="hf-btn" id="regtype-bar" onclick="setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Tipo de negócio *</label>
+        <select class="input" id="reg-biztype" onchange="setRegBusinessType(this.value)">
+          <option value="" disabled selected>Selecione o tipo de negócio</option>
+          <option value="quiosque" id="regtype-kiosk">🏪 Quiosque</option>
+          <option value="bar_restaurante" id="regtype-bar">🍽️ Bar/Restaurante</option>
+        </select>
       </div>
       <div class="grid-2">
         <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo"/><div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div></div>
-        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
+        <div class="field" style="margin-bottom:0">
+          <label class="label">Senha *</label>
+          <div style="position:relative">
+            <input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo" style="padding-right:38px"/>
+            <button type="button" onclick="togglePasswordVisibility('reg-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+          </div>
+          <div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="label">Confirmar senha *</label>
+          <div style="position:relative">
+            <input class="input" id="reg-pass-confirm" type="password" placeholder="Repita a senha" style="padding-right:38px"/>
+            <button type="button" onclick="togglePasswordVisibility('reg-pass-confirm',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+          </div>
+        </div>
       </div>
-      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label" id="reg-kname-label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      <div class="grid-2" style="margin-top:12px">
+        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label" id="reg-kname-label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      </div>
       <div class="field" style="margin-top:12px;margin-bottom:0">
         <label class="label">CPF ou CNPJ *</label>
         <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)"/>
@@ -1056,6 +1083,15 @@ tr:hover td{background:var(--sand-50)}
         <div class="page-header">
           <div class="page-title">Guarda-sóis</div>
           <button class="btn btn-ocean btn-sm" onclick="toggleUmbForm()">+ Guarda-sol</button>
+        </div>
+
+        <!-- Controle: cliente pode pedir direto pelo celular, ou só pelo garçom? -->
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:13.5px;font-weight:600;color:var(--sl-800)">Pedido direto pelo cliente</div>
+            <div style="font-size:12px;color:var(--sl-500);margin-top:2px">Quando desativado, o cliente só vê o cardápio, chama o garçom, acompanha os pedidos e pede a conta — sem poder pedir sozinho pelo celular.</div>
+          </div>
+          <button class="btn btn-sm" id="direct-orders-toggle" onclick="toggleDirectOrders()" style="white-space:nowrap">Carregando...</button>
         </div>
 
         <!-- Formulário inline (aparece/some) -->
@@ -1434,6 +1470,13 @@ body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webk
 .cart-fab{position:fixed;bottom:20px;left:16px;right:16px;z-index:100;background:var(--sl-800);color:#fff;border:none;border-radius:14px;padding:15px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 8px 28px rgba(15,23,42,.3);transition:all .2s;font-family:var(--font)}
 .cart-fab-count{background:var(--ocean-500);color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 body[data-bill-blocked="1"] .cart-fab{display:none !important}
+/* Pedido direto desativado pelo negócio: esconde os controles de adicionar item,
+   deixando o cliente só ver o cardápio (peça ao garçom aparece no lugar). */
+body[data-direct-orders-off="1"] .cart-fab{display:none !important}
+body[data-direct-orders-off="1"] .add-btn,
+body[data-direct-orders-off="1"] .qty-ctrl{display:none !important}
+body[data-direct-orders-off="1"] .direct-orders-off-badge{display:inline-block !important}
+.direct-orders-off-badge{display:none;font-size:11px;color:var(--sl-500);background:var(--sand-100);padding:4px 9px;border-radius:99px;white-space:nowrap}
 body[data-bill-blocked="1"] .menu-cat-tabs{opacity:.4;pointer-events:none}
 body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
 
@@ -1749,7 +1792,7 @@ tr:hover td{background:var(--sand-50)}
   </div>
   <div class="lp-nav-btns">
     <button class="lp-btn-outline" onclick="goToClient()">📱 Sou cliente</button>
-    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Meu negócio</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu negócio</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
@@ -1761,7 +1804,7 @@ tr:hover td{background:var(--sand-50)}
   </button>
   <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:32px;width:auto"/></div>
   <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
-  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this);setRegBusinessType('quiosque')">🏪 Negócio</button>
+  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Negócio</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -1840,7 +1883,7 @@ tr:hover td{background:var(--sand-50)}
       <p>O Recebaa conecta clientes aos negócios via QR Code.<br/>Sem filas, sem espera.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToClient()">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Quero meu negócio</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu negócio</button>
       </div>
 
     </div>
@@ -1993,7 +2036,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="lp-access-desc">Escaneie o QR Code da sua mesa e faça seu pedido agora mesmo.</div>
           <button class="lp-access-btn blue">Fazer pedido →</button>
         </div>
-        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">
+        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk')">
           <div class="lp-access-icon">🏪</div>
           <div class="lp-access-title">Negócio</div>
           <div class="lp-access-desc">Acesse o painel do seu negócio, gerencie pedidos e cardápio.</div>
@@ -2122,19 +2165,39 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:80%;max-height:80%;object-fit:contain"/></div>
       <div class="auth-title">Criar conta</div>
       <div class="auth-sub" id="reg-auth-sub">Preencha os dados do seu quiosque</div>
-      <div class="biz-type-toggle" style="display:flex;gap:8px;margin-bottom:14px">
-        <button type="button" class="hf-btn active" id="regtype-kiosk" onclick="setRegBusinessType('quiosque')">🏪 Quiosque</button>
-        <button type="button" class="hf-btn" id="regtype-bar" onclick="setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Tipo de negócio *</label>
+        <select class="input" id="reg-biztype" onchange="setRegBusinessType(this.value)">
+          <option value="" disabled selected>Selecione o tipo de negócio</option>
+          <option value="quiosque" id="regtype-kiosk">🏪 Quiosque</option>
+          <option value="bar_restaurante" id="regtype-bar">🍽️ Bar/Restaurante</option>
+        </select>
       </div>
       <div class="grid-2">
         <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo"/><div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div></div>
-        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
+        <div class="field" style="margin-bottom:0">
+          <label class="label">Senha *</label>
+          <div style="position:relative">
+            <input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo" style="padding-right:38px"/>
+            <button type="button" onclick="togglePasswordVisibility('reg-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+          </div>
+          <div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="label">Confirmar senha *</label>
+          <div style="position:relative">
+            <input class="input" id="reg-pass-confirm" type="password" placeholder="Repita a senha" style="padding-right:38px"/>
+            <button type="button" onclick="togglePasswordVisibility('reg-pass-confirm',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+          </div>
+        </div>
       </div>
-      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label" id="reg-kname-label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      <div class="grid-2" style="margin-top:12px">
+        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label" id="reg-kname-label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      </div>
       <div class="field" style="margin-top:12px;margin-bottom:0">
         <label class="label">CPF ou CNPJ *</label>
         <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)"/>
@@ -2700,7 +2763,7 @@ if(!isConfigured){
 // ESTADO GLOBAL
 // ══════════════════════════════════════════════════════
 var currentKiosk = null;   // objeto kiosk do quiosque logado
-var _regBusinessType = 'quiosque';  // tipo de negócio selecionado no cadastro/entrada: 'quiosque' | 'bar_restaurante'
+var _regBusinessType = '';  // tipo de negócio selecionado no cadastro: '' (nenhum ainda) | 'quiosque' | 'bar_restaurante'
 var BIZ_LABELS = {
   quiosque:       { icon:'🏪', name:'Quiosque',        nameLabel:'Nome do quiosque *',        placeholder:'Ex: Quiosque Pôr do Sol', sub:'Preencha os dados do seu quiosque' },
   bar_restaurante:{ icon:'🍽️', name:'Bar/Restaurante', nameLabel:'Nome do bar/restaurante *', placeholder:'Ex: Bar do Zé',           sub:'Preencha os dados do seu bar ou restaurante' }
@@ -3569,6 +3632,9 @@ async function goToMenu(){
   // Garante que "guarda-sol" vire "mesa" em todo o cardápio/pedidos deste cliente,
   // caso o tipo de negócio só tenha sido confirmado agora (ex: sessão restaurada).
   startClientBizTerminologyWatcher();
+  // Reflete se o negócio permite pedido direto pelo cliente (senão, o
+  // cardápio fica só pra visualização e os botões de adicionar somem).
+  document.body.dataset.directOrdersOff = (currentKiosk && currentKiosk.allow_direct_orders === false) ? '1' : '0';
   buildCatTabs();
   buildMenu();
   maybeShowPromoPopup();
@@ -3587,6 +3653,10 @@ async function goToMenu(){
     if(window._clientProductsChannel){
       try{ sb.removeChannel(window._clientProductsChannel); }catch(e){}
       window._clientProductsChannel = null;
+    }
+    if(window._clientKioskChannel){
+      try{ sb.removeChannel(window._clientKioskChannel); }catch(e){}
+      window._clientKioskChannel = null;
     }
 
     window._clientRealtimeChannel = sb.channel(chName)
@@ -3747,6 +3817,25 @@ async function goToMenu(){
           catalog = catalog.filter(function(p){ return p.id !== payload.old.id; });
           var vm = $('view-menu');
           if(vm && !vm.classList.contains('hidden')) buildMenu();
+        })
+      .subscribe();
+
+    // Escutar em tempo real se o negócio liga/desliga o pedido direto do cliente
+    window._clientKioskChannel = sb.channel('client-kiosk-'+currentKiosk.id)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'kiosks',
+        filter:'id=eq.'+currentKiosk.id},
+        function(payload){
+          var updated = payload.new;
+          if(!currentKiosk) return;
+          var wasOff = currentKiosk.allow_direct_orders === false;
+          currentKiosk.allow_direct_orders = updated.allow_direct_orders;
+          var isOff = currentKiosk.allow_direct_orders === false;
+          document.body.dataset.directOrdersOff = isOff ? '1' : '0';
+          if(isOff && !wasOff){
+            toast('🙋 Este negócio agora atende só pelo garçom. Chame quando quiser pedir!');
+          } else if(!isOff && wasOff){
+            toast('✅ Pedido direto pelo celular liberado novamente!');
+          }
         })
       .subscribe();
   }
@@ -3973,7 +4062,7 @@ function productCard(p){
   return '<div class="product-card" id="pc-'+p.id+'">'+img
     +'<div class="product-body"><div class="product-name">'+esc(p.name)+'</div>'
     +'<div class="product-desc">'+esc(p.description||p.desc||'')+'</div>'
-    +'<div class="product-footer">'+priceHtml+ctrl+'</div>'
+    +'<div class="product-footer">'+priceHtml+ctrl+'<span class="direct-orders-off-badge">🙋 Peça ao garçom</span></div>'
     +'</div></div>';
 }
 
@@ -5353,14 +5442,27 @@ function showCard(name){
 // Define o tipo de negócio (quiosque ou bar/restaurante) usado no cadastro,
 // e atualiza os textos/labels do formulário e o toggle visual.
 function setRegBusinessType(type){
-  if(!BIZ_LABELS[type]) type = 'quiosque';
+  if(!BIZ_LABELS[type]) return; // sem seleção ainda — mantém os campos no estado neutro
   _regBusinessType = type;
   var lbl = BIZ_LABELS[type];
-  document.querySelectorAll('#regtype-kiosk').forEach(function(b){ b.classList.toggle('active', type==='quiosque'); });
-  document.querySelectorAll('#regtype-bar').forEach(function(b){ b.classList.toggle('active', type==='bar_restaurante'); });
+  document.querySelectorAll('#reg-biztype').forEach(function(sel){ sel.value = type; });
   document.querySelectorAll('#reg-auth-sub').forEach(function(el){ el.textContent = lbl.sub; });
   document.querySelectorAll('#reg-kname-label').forEach(function(el){ el.textContent = lbl.nameLabel; });
   document.querySelectorAll('#reg-kname').forEach(function(el){ el.placeholder = lbl.placeholder; });
+}
+
+// Alterna a visibilidade de um campo de senha (mostra/esconde o texto digitado)
+// e troca o ícone do olho de acordo com o estado atual.
+function togglePasswordVisibility(inputId, btn){
+  document.querySelectorAll('#'+inputId).forEach(function(input){
+    var showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+  });
+  if(btn){
+    var nowShowing = btn.parentElement.querySelector('#'+inputId) ? btn.parentElement.querySelector('#'+inputId).type === 'text' : false;
+    btn.textContent = nowShowing ? '🙈' : '👁️';
+    btn.setAttribute('aria-label', nowShowing ? 'Esconder senha' : 'Mostrar senha');
+  }
 }
 
 // Retorna quem está executando a ação agora: nome do garçom logado, ou o
@@ -5685,14 +5787,17 @@ async function doRegister(){
   window._registeringInProgress = true;
 
   const owner=$('reg-owner').value.trim(), email=$('reg-email').value.trim(),
-    pass=$('reg-pass').value.trim(), phone=$('reg-phone').value.trim(),
+    pass=$('reg-pass').value.trim(), passConfirm=($('reg-pass-confirm')&&$('reg-pass-confirm').value.trim())||'',
+    phone=$('reg-phone').value.trim(),
     kname=$('reg-kname').value.trim(), doc=($('reg-doc')&&$('reg-doc').value.trim())||'';
   if(!owner||!email||!pass||!phone||!kname){ toast('Preencha todos os campos obrigatórios *'); window._registeringInProgress=false; return; }
+  if(!_regBusinessType){ toast('⚠️ Selecione o tipo de negócio (Quiosque ou Bar/Restaurante)'); window._registeringInProgress=false; return; }
   if(!doc){ toast('Informe o CPF ou CNPJ *'); window._registeringInProgress=false; return; }
   if(pass.length<6){ toast('Senha deve ter mínimo 6 caracteres'); window._registeringInProgress=false; return; }
   if(!/[A-Z]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 letra MAIÚSCULA'); window._registeringInProgress=false; return; }
   if(!/[0-9]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 número'); window._registeringInProgress=false; return; }
   if(!/[^A-Za-z0-9]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 símbolo (ex: !@#$%&*?)'); window._registeringInProgress=false; return; }
+  if(pass!==passConfirm){ toast('⚠️ As senhas digitadas não coincidem'); window._registeringInProgress=false; return; }
   // Validar aceite dos Termos e Política
   var termsBoxes = document.querySelectorAll('[id="reg-terms"]');
   var accepted = false;
@@ -5749,7 +5854,8 @@ async function doRegister(){
       kiosk_doc: doc
     });
     // Limpar formulário e voltar pra tela de login com aviso
-    ['reg-owner','reg-email','reg-pass','reg-phone','reg-kname','reg-doc','reg-city','reg-beach'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
+    ['reg-owner','reg-email','reg-pass','reg-pass-confirm','reg-phone','reg-kname','reg-doc','reg-city','reg-beach','reg-biztype'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
+    _regBusinessType = '';
     showCard('login');
     toast('✅ Cadastro enviado! Seu negócio está aguardando aprovação do administrador. Você receberá um aviso quando for liberado.');
     window._registeringInProgress = false;
@@ -8322,7 +8428,31 @@ function closeUmbrellaConsumptionModal(){
   if(d) d.remove();
 }
 
+// ── Pedido direto pelo cliente (liga/desliga globalmente pro negócio) ──
+function renderDirectOrdersToggle(){
+  var on = !currentKiosk || currentKiosk.allow_direct_orders !== false;
+  document.querySelectorAll('#direct-orders-toggle').forEach(function(b){
+    b.textContent = on ? '✅ Ativado' : '⏸️ Desativado';
+    b.style.background = on ? 'rgba(16,185,129,.12)' : 'rgba(239,68,68,.1)';
+    b.style.color = on ? '#047857' : 'var(--red)';
+    b.style.fontWeight = '600';
+  });
+}
+async function toggleDirectOrders(){
+  if(!currentKiosk) return;
+  var current = currentKiosk.allow_direct_orders !== false;
+  var next = !current;
+  if(isConfigured && currentKiosk.id !== 'demo'){
+    var {error} = await sb.from('kiosks').update({allow_direct_orders: next}).eq('id', currentKiosk.id);
+    if(error){ toast('Erro ao atualizar: ' + error.message); return; }
+  }
+  currentKiosk.allow_direct_orders = next;
+  renderDirectOrdersToggle();
+  toast(next ? '✅ Pedido direto pelo cliente ativado' : '⏸️ Pedido direto desativado — cliente só vê cardápio, chama garçom, acompanha pedidos e pede a conta');
+}
+
 async function renderUmbrellas(){
+  renderDirectOrdersToggle();
   var grid=$('umb-grid'); if(!grid) return;
   var umbs=[];
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
