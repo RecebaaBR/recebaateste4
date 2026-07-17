@@ -2843,20 +2843,30 @@ function applyBizTerminology(root){
   });
 }
 var _bizTermObserver = null;
-// Observa o painel do dono e reaplica a troca de terminologia sempre que o
-// conteúdo é re-renderizado (pedidos, mesas, histórico, contas, etc.).
+// Observa TUDO que fica direto dentro do <body> (painel do dono, tela do
+// cliente e também os modais avulsos como "Pedir a conta" e "Consumo", que
+// são criados fora dessas telas) e reaplica a troca "guarda-sol" → "mesa"
+// sempre que algo é re-renderizado. Não mexe na landing page (texto de
+// marketing fixo, que já tem uma seção própria para cada tipo de negócio).
 function startBizTerminologyWatcher(){
-  var target = $('kiosk-dash');
-  if(!target) return;
-  applyBizTerminology(target);
+  function sweepAll(){
+    Array.prototype.forEach.call(document.body.children, function(n){
+      if(n.id === 'screen-landing') return;
+      applyBizTerminology(n);
+    });
+  }
+  sweepAll();
   if(_bizTermObserver) _bizTermObserver.disconnect();
   if(!isBarBiz()) return;
   _bizTermObserver = new MutationObserver(function(){
+    if(!isBarBiz()) return;
     clearTimeout(window._bizTermTimer);
-    window._bizTermTimer = setTimeout(function(){ applyBizTerminology(target); }, 30);
+    window._bizTermTimer = setTimeout(sweepAll, 30);
   });
-  _bizTermObserver.observe(target, {childList:true, subtree:true, characterData:true});
+  _bizTermObserver.observe(document.body, {childList:true, subtree:true, characterData:true});
 }
+// Mantido por compatibilidade — aponta pro mesmo watcher único acima.
+function startClientBizTerminologyWatcher(){ startBizTerminologyWatcher(); }
 var catalog = [];          // produtos do kiosk atual
 var dbCategories = [];     // categorias do kiosk atual
 var orders = [];           // pedidos em memória (sincronizados com DB)
@@ -3363,11 +3373,17 @@ window.addEventListener('load', async function(){
   var urlParams = new URLSearchParams(window.location.search);
   var kioskId = urlParams.get('kiosk');
   var umbNum = urlParams.get('umbrella');
-  if(kioskId && umbNum && isConfigured){
-    $('umbrella-input').value = umbNum;
-    // Buscar nome do kiosk para mostrar na splash
-    var {data} = await sb.from('kiosks').select('name').eq('id',kioskId).single();
-    if(data) $('splash-kname').textContent = data.name;
+  if(umbNum) $('umbrella-input').value = umbNum;
+  if(kioskId && isConfigured){
+    // Buscar nome e tipo de negócio do kiosk para mostrar na splash já com o
+    // termo certo ("guarda-sol" ou "mesa") antes mesmo do cliente digitar o número
+    // (mesmo quando o QR Code só tem o kiosk, sem o número já preenchido).
+    var {data} = await sb.from('kiosks').select('name,business_type').eq('id',kioskId).single();
+    if(data){
+      $('splash-kname').textContent = data.name;
+      currentKiosk = {id:kioskId, name:data.name, business_type:data.business_type};
+      startClientBizTerminologyWatcher();
+    }
   }
 
   // ─── Restaurar sessão do cliente após refresh (pull-to-refresh, F5, etc.) ───
@@ -3647,11 +3663,14 @@ async function goToMenu(){
     currentKiosk={id:'demo',name:'Quiosque Pôr do Sol'};
   }
   setLoading('splash-btn',false,'Ver Cardápio →');
-  $('umbrella-label').textContent='☂️ Guarda-sol '+window._umb;
+  $('umbrella-label').textContent=swapUmbrellaWords('☂️ Guarda-sol '+window._umb);
   $('menu-kname').textContent=currentKiosk?currentKiosk.name:'Quiosque';
   $('splash-kname').textContent=currentKiosk?currentKiosk.name:'Recebaa';
   $('client-splash').classList.add('hidden');
   $('client-menu').classList.remove('hidden');
+  // Garante que "guarda-sol" vire "mesa" em todo o cardápio/pedidos deste cliente,
+  // caso o tipo de negócio só tenha sido confirmado agora (ex: sessão restaurada).
+  startClientBizTerminologyWatcher();
   buildCatTabs();
   buildMenu();
   maybeShowPromoPopup();
