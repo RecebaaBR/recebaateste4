@@ -1258,7 +1258,7 @@ tr:hover td{background:var(--sand-50)}
 <!-- Análise de margem por produto -->
         <div class="report-card" style="margin-top:16px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-            <div class="report-title" style="margin-bottom:0">📈 Relatórios</div>
+            <div class="report-title" style="margin-bottom:0">📈 Análise de Margem por Produto</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button class="hf-btn active" id="margin-sort-margin" onclick="sortMarginTable('margin',this)">Maior margem</button>
               <button class="hf-btn" id="margin-sort-revenue" onclick="sortMarginTable('revenue',this)">Maior receita</button>
@@ -6788,6 +6788,18 @@ function decodeKioskAlertBuffer(){
 // GainNode com ganho acima de 1 (amplificação real) e depois por um
 // DynamicsCompressor, que evita estouro/distorção mesmo amplificado.
 // Se o Web Audio não estiver disponível/pronto, cai no <audio> como reserva.
+// Curva de "soft clip" (saturação suave via tanh) usada no WaveShaperNode
+// abaixo. Isso deixa a gente empurrar o ganho MUITO mais alto sem gerar
+// aquele estouro digital feio — os picos são arredondados em vez de cortados
+// abruptamente, o que soa bem mais alto na prática sem distorcer tanto.
+function makeSoftClipCurve(amount){
+  var n = 44100, curve = new Float32Array(n);
+  for(var i=0;i<n;i++){
+    var x = (i * 2) / n - 1;
+    curve[i] = Math.tanh(x * amount) / Math.tanh(amount);
+  }
+  return curve;
+}
 function playAlertViaBuffer(){
   var ctx = getSharedAlertCtx();
   if(!ctx || !_kioskAlertBuffer) return false;
@@ -6797,17 +6809,22 @@ function playAlertViaBuffer(){
     source.buffer = _kioskAlertBuffer;
 
     var gain = ctx.createGain();
-    gain.gain.value = 6; // amplificação bem acima do volume "normal" de 100%
+    gain.gain.value = 14; // amplificação bem acima do volume "normal" de 100%
+
+    var shaper = ctx.createWaveShaper();
+    shaper.curve = makeSoftClipCurve(2.2);
+    shaper.oversample = '4x';
 
     var comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -28;
-    comp.knee.value = 4;
+    comp.threshold.value = -32;
+    comp.knee.value = 2;
     comp.ratio.value = 20;
-    comp.attack.value = 0.0005;
-    comp.release.value = 0.12;
+    comp.attack.value = 0.0003;
+    comp.release.value = 0.1;
 
     source.connect(gain);
-    gain.connect(comp);
+    gain.connect(shaper);
+    shaper.connect(comp);
     comp.connect(ctx.destination);
     source.start(0);
     return true;
@@ -9284,10 +9301,7 @@ function renderMarginTable(){
     if(marginSortBy==='margin'){
       if(a.hasCost && !b.hasCost) return -1;
       if(!a.hasCost && b.hasCost) return 1;
-      // Nenhum dos dois tem custo cadastrado — não dá pra comparar margem,
-      // então usa a maior receita como critério (em vez de deixar em ordem
-      // arbitrária, que parecia "bagunçado" pro usuário).
-      if(!a.hasCost && !b.hasCost) return b.revenue - a.revenue;
+      if(!a.hasCost && !b.hasCost) return 0;
       return b.marginPct - a.marginPct;
     }
     if(marginSortBy==='revenue') return b.revenue - a.revenue;
