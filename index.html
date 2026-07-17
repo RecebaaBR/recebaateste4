@@ -1258,7 +1258,7 @@ tr:hover td{background:var(--sand-50)}
 <!-- Análise de margem por produto -->
         <div class="report-card" style="margin-top:16px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-            <div class="report-title" style="margin-bottom:0">📈 Relatórios</div>
+            <div class="report-title" style="margin-bottom:0">📈 Análise de Margem por Produto</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <button class="hf-btn active" id="margin-sort-margin" onclick="sortMarginTable('margin',this)">Maior margem</button>
               <button class="hf-btn" id="margin-sort-revenue" onclick="sortMarginTable('revenue',this)">Maior receita</button>
@@ -9284,10 +9284,7 @@ function renderMarginTable(){
     if(marginSortBy==='margin'){
       if(a.hasCost && !b.hasCost) return -1;
       if(!a.hasCost && b.hasCost) return 1;
-      // Nenhum dos dois tem custo cadastrado — não dá pra comparar margem,
-      // então usa a maior receita como critério (em vez de deixar em ordem
-      // arbitrária, que parecia "bagunçado" pro usuário).
-      if(!a.hasCost && !b.hasCost) return b.revenue - a.revenue;
+      if(!a.hasCost && !b.hasCost) return 0;
       return b.marginPct - a.marginPct;
     }
     if(marginSortBy==='revenue') return b.revenue - a.revenue;
