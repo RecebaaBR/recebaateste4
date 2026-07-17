@@ -882,7 +882,12 @@ tr:hover td{background:var(--sand-50)}
       </label>
       <div class="field"><label class="label" id="login-email-label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
       <div id="login-pass-wrap">
-        <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
+        <div class="field"><label class="label">Senha</label>
+          <div style="position:relative">
+            <input class="input" id="login-pass" type="password" placeholder="••••••••" style="padding-right:38px"/>
+            <button type="button" onclick="togglePasswordVisibility('login-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+          </div>
+        </div>
         <div style="text-align:right;margin:-8px 0 14px" id="login-forgot-wrap"><a class="auth-link" href="#" style="font-size:12.5px" onclick="openForgotPasswordModal();return false">Esqueci minha senha</a></div>
       </div>
       <button class="btn btn-dark" id="login-btn" style="width:100%" onclick="doLogin()">Entrar</button>
@@ -1085,8 +1090,11 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </div>
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:12px 14px;margin-bottom:12px">
-          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por guarda-sol/mesa (digite o número e aperte Enter para adicionar)</div>
-          <input class="input" id="hist-umb-filter" type="number" min="1" placeholder="Ex: 7 (deixe vazio para ver todos)" style="width:100%;max-width:300px" onkeydown="if(event.key==='Enter'){event.preventDefault();addHistUmbFilter();}"/>
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por guarda-sol/mesa (digite o número e toque em Adicionar)</div>
+          <div style="display:flex;gap:8px">
+            <input class="input" id="hist-umb-filter" type="number" min="1" inputmode="numeric" placeholder="Ex: 7 (deixe vazio para ver todos)" style="flex:1;max-width:300px" onkeydown="if(event.key==='Enter'){event.preventDefault();addHistUmbFilter();}"/>
+            <button type="button" class="btn btn-ocean btn-sm" style="white-space:nowrap" onclick="addHistUmbFilter()">+ Adicionar</button>
+          </div>
           <div id="hist-umb-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
         </div>
         <div id="hist-bulk-bar" class="hidden" style="background:#0f172a;color:#fff;border-radius:var(--r);padding:10px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -1286,7 +1294,10 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="field">
         <label class="label">Senha</label>
-        <input class="input" id="admin-pass" type="password" placeholder="••••••••"/>
+        <div style="position:relative">
+          <input class="input" id="admin-pass" type="password" placeholder="••••••••" style="padding-right:38px"/>
+          <button type="button" onclick="togglePasswordVisibility('admin-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+        </div>
       </div>
       <button class="btn btn-dark" style="width:100%" onclick="doAdminLogin()">Entrar</button>
     </div>
@@ -2210,7 +2221,12 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-title">Painel Recebaa</div>
       <div class="auth-sub">Entre com suas credenciais</div>
       <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
-      <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
+      <div class="field"><label class="label">Senha</label>
+        <div style="position:relative">
+          <input class="input" id="login-pass" type="password" placeholder="••••••••" style="padding-right:38px"/>
+          <button type="button" onclick="togglePasswordVisibility('login-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+        </div>
+      </div>
       <button class="btn btn-dark" id="login-btn" style="width:100%" onclick="doLogin()">Entrar</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:16px">
         Não tem conta? <a class="auth-link" href="#" onclick="showCard('register');return false">Criar conta grátis</a>
@@ -2465,7 +2481,10 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="field">
         <label class="label">Senha</label>
-        <input class="input" id="admin-pass" type="password" placeholder="••••••••"/>
+        <div style="position:relative">
+          <input class="input" id="admin-pass" type="password" placeholder="••••••••" style="padding-right:38px"/>
+          <button type="button" onclick="togglePasswordVisibility('admin-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+        </div>
       </div>
       <button class="btn btn-dark" style="width:100%" onclick="doAdminLogin()">Entrar</button>
     </div>
