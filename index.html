@@ -6645,39 +6645,30 @@ function getSharedAlertCtx(){
   }
   return _sharedAlertCtx;
 }
+// playAlert agora usa o mesmo mecanismo de <audio> com o MP3 embutido que já
+// era usado em playAlertClient — os bipes gerados via Web Audio API/oscilador
+// eram silenciados em vários celulares (o AudioContext ficava suspenso e o
+// resume() fora de um toque real não é aceito pelo navegador). Elemento
+// <audio> tocando um arquivo é bem mais confiável em mobile.
 function playAlert(){
   if(isMuted) return;
   try{
-    var ctx = getSharedAlertCtx();
-    if(!ctx) return;
-    var startBeeps = function(){
-      // Compressor no final da cadeia: maximiza o volume percebido (mais "denso")
-      // sem deixar o som estourar/distorcer feio
-      var comp = ctx.createDynamicsCompressor();
-      comp.threshold.value = -24;
-      comp.knee.value = 10;
-      comp.ratio.value = 12;
-      comp.attack.value = 0.002;
-      comp.release.value = 0.15;
-      comp.connect(ctx.destination);
-
-      // 3 bipes, onda quadrada (mais estridente, corta melhor no barulho de bar/quiosque)
-      [0, 260, 520].forEach(function(delay){
-        var osc = ctx.createOscillator(), g = ctx.createGain();
-        osc.connect(g); g.connect(comp);
-        osc.frequency.value = 1046; osc.type = 'square';
-        g.gain.setValueAtTime(0, ctx.currentTime + delay/1000);
-        g.gain.linearRampToValueAtTime(1, ctx.currentTime + delay/1000 + .03);
-        g.gain.linearRampToValueAtTime(0, ctx.currentTime + delay/1000 + .22);
-        osc.start(ctx.currentTime + delay/1000);
-        osc.stop(ctx.currentTime + delay/1000 + .25);
+    var audio = new Audio(ALERT_SOUND_DATA);
+    audio.preload = 'auto';
+    audio.volume = 1.0;
+    var p = audio.play();
+    if(p && p.catch){
+      p.catch(function(){
+        // Fallback: tentar pelo objeto _alertAudio pré-carregado/destravado no primeiro toque
+        if(_alertAudio){
+          try{
+            _alertAudio.muted = false;
+            _alertAudio.volume = 1.0;
+            _alertAudio.currentTime = 0;
+            _alertAudio.play().catch(function(){});
+          }catch(e){}
+        }
       });
-    };
-    // Se o contexto ficou suspenso (política de autoplay do navegador), retoma antes de tocar
-    if(ctx.state === 'suspended'){
-      ctx.resume().then(startBeeps).catch(function(){});
-    } else {
-      startBeeps();
     }
   }catch(e){}
 }
