@@ -322,6 +322,29 @@ tr:hover td{background:var(--sand-50)}
   .orders-grid{grid-template-columns:1fr}
   .grid-2{grid-template-columns:1fr}
   .metrics-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Alvos de toque maiores no menu lateral e nos botões pequenos */
+  .s-item{padding:13px 12px;font-size:13.5px;min-height:46px}
+  .s-icon{font-size:16px}
+  .btn-sm{padding:9px 15px;font-size:13px}
+  .hf-btn{padding:9px 15px;font-size:13px}
+  .page-title{font-size:17px}
+  .page-header{flex-wrap:wrap;gap:10px}
+
+  /* Cards de pedido (Ao vivo): texto maior e mais legível, menos espaço vazio */
+  .oc-head{padding:11px 14px 7px}
+  .oc-num{font-size:16px}
+  .oc-customer{font-size:14px}
+  .oc-item-row{font-size:13.5px;padding:2px 0}
+  .oc-note{font-size:13px}
+  .oc-total{font-size:15px}
+  .oc-actions{padding:10px 14px 14px}
+  .oc-actions .btn{flex:1;min-width:100px;padding:10px 12px}
+
+  /* Tabelas: fonte maior e rolagem horizontal mais suave no celular */
+  table{font-size:13px}
+  th{font-size:10.5px}
+  .table-wrap{-webkit-overflow-scrolling:touch}
 }
 @media(max-width:480px){
   .nav-btn{padding:4px 9px;font-size:11px}
@@ -1661,6 +1684,29 @@ tr:hover td{background:var(--sand-50)}
   .orders-grid{grid-template-columns:1fr}
   .grid-2{grid-template-columns:1fr}
   .metrics-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Alvos de toque maiores no menu lateral e nos botões pequenos */
+  .s-item{padding:13px 12px;font-size:13.5px;min-height:46px}
+  .s-icon{font-size:16px}
+  .btn-sm{padding:9px 15px;font-size:13px}
+  .hf-btn{padding:9px 15px;font-size:13px}
+  .page-title{font-size:17px}
+  .page-header{flex-wrap:wrap;gap:10px}
+
+  /* Cards de pedido (Ao vivo): texto maior e mais legível, menos espaço vazio */
+  .oc-head{padding:11px 14px 7px}
+  .oc-num{font-size:16px}
+  .oc-customer{font-size:14px}
+  .oc-item-row{font-size:13.5px;padding:2px 0}
+  .oc-note{font-size:13px}
+  .oc-total{font-size:15px}
+  .oc-actions{padding:10px 14px 14px}
+  .oc-actions .btn{flex:1;min-width:100px;padding:10px 12px}
+
+  /* Tabelas: fonte maior e rolagem horizontal mais suave no celular */
+  table{font-size:13px}
+  th{font-size:10.5px}
+  .table-wrap{-webkit-overflow-scrolling:touch}
 }
 @media(max-width:480px){
   .nav-btn{padding:4px 9px;font-size:11px}
@@ -2780,8 +2826,8 @@ function swapUmbrellaWords(str){
     .replace(/GUARDA-SOL/g,'MESA')
     .replace(/Guarda-sol/g,'Mesa')
     .replace(/guarda-sol/g,'mesa')
-    .replace(/☂️/g,'🪑')
-    .replace(/☂/g,'🪑');
+    .replace(/☂️/g,'🍽️')
+    .replace(/☂/g,'🍽️');
 }
 // Percorre um elemento e troca o texto (e placeholders/títulos) de "guarda-sol"
 // para "mesa" quando o painel logado é de bar/restaurante. Assim cobrimos telas
