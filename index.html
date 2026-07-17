@@ -6590,6 +6590,15 @@ function unlockAudio(){
         source.start(0);
       }catch(e){}
     }
+    // Também criar e destravar o AudioContext compartilhado usado pelos bipes
+    // de alerta (playAlert) já nesse gesto real do usuário. Se ele só for
+    // criado depois, na hora de um pedido chegar via notificação em tempo
+    // real (sem gesto do usuário), o iOS/celular recusa destravar o áudio
+    // e os avisos sonoros ficam mudos.
+    try{
+      var sharedCtx = getSharedAlertCtx();
+      if(sharedCtx && sharedCtx.state === 'suspended'){ sharedCtx.resume(); }
+    }catch(e){}
     _audioUnlocked = true;
   }catch(e){
     _audioUnlocked = true;
@@ -6679,6 +6688,15 @@ function playAlert(){
     var ctx = _sharedAlertCtx;
     if(ctx && ctx.state === 'suspended'){ ctx.resume().catch(function(){}); }
   }, { passive: true });
+});
+// Celulares costumam suspender o AudioContext quando a tela é bloqueada ou o
+// app vai para segundo plano. Retomar sempre que a aba volta a ficar visível
+// evita que os avisos sonoros fiquem mudos depois disso.
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible'){
+    var ctx = _sharedAlertCtx;
+    if(ctx && ctx.state === 'suspended'){ ctx.resume().catch(function(){}); }
+  }
 });
 
 // ══════════════════════════════════════════════════════
