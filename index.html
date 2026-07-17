@@ -3380,13 +3380,19 @@ function showScreen(name, btn){
 }
 
 function toggleSidebar(){
-  var sidebar = document.querySelector('.sidebar.active-screen, .dash-layout .sidebar, .admin-layout .admin-sidebar');
+  // Primeiro: identificar qual tela está realmente ativa/visível (kiosk ou admin)
+  // e pegar a sidebar correspondente. Isso evita pegar por engano a sidebar
+  // de uma tela escondida quando há blocos duplicados no HTML.
+  var sidebar = null;
+  var admin = $('screen-admin');
+  var kiosk = $('kiosk-dash');
+  if(admin && admin.classList.contains('active')){
+    sidebar = admin.querySelector('.admin-sidebar');
+  } else if(kiosk && !kiosk.classList.contains('hidden')){
+    sidebar = kiosk.querySelector('.sidebar');
+  }
   if(!sidebar){
-    // Tentar pegar qualquer sidebar visível
-    var kiosk = $('kiosk-dash');
-    var admin = $('screen-admin');
-    if(kiosk && !kiosk.classList.contains('hidden')) sidebar = kiosk.querySelector('.sidebar');
-    else if(admin && admin.classList.contains('active')) sidebar = admin.querySelector('.admin-sidebar');
+    sidebar = document.querySelector('.sidebar.active-screen, .dash-layout .sidebar, .admin-layout .admin-sidebar');
   }
   if(sidebar){
     sidebar.classList.toggle('open');
@@ -5534,7 +5540,7 @@ function togglePasswordVisibility(inputId, btn){
   });
   if(btn){
     var nowShowing = btn.parentElement.querySelector('#'+inputId) ? btn.parentElement.querySelector('#'+inputId).type === 'text' : false;
-    btn.textContent = nowShowing ? '🙈' : '👁️';
+    btn.textContent = '👁️';
     btn.setAttribute('aria-label', nowShowing ? 'Esconder senha' : 'Mostrar senha');
   }
 }
