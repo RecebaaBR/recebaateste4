@@ -464,8 +464,7 @@ tr:hover td{background:var(--sand-50)}
   </div>
   <div class="lp-nav-btns">
     <button class="lp-btn-outline" onclick="goToClient()">📱 Sou cliente</button>
-    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Meu quiosque</button>
-    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Meu negócio</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
@@ -477,8 +476,7 @@ tr:hover td{background:var(--sand-50)}
   </button>
   <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:32px;width:auto"/></div>
   <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
-  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this);setRegBusinessType('quiosque')">🏪 Quiosque</button>
-  <button class="nav-btn" id="nav-bar" onclick="showScreen('kiosk',this);setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
+  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this);setRegBusinessType('quiosque')">🏪 Negócio</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -509,13 +507,11 @@ tr:hover td{background:var(--sand-50)}
       </div>
     </div>
     <div class="lp-hero" style="position:relative;z-index:10;background:rgba(3,60,100,.55);backdrop-filter:blur(2px);margin:0;padding-top:100px;padding-bottom:60px">
-      <div class="lp-badge" id="lp-badge">🌊 Tecnologia para a beira-mar</div>
-      <h1><span id="lp-h1-main">Peça na praia,</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
-      <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
+      <h1><span id="lp-h1-main">Peça</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
+      <p>O Recebaa conecta clientes aos negócios via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToClient()">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Quero meu quiosque</button>
-        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">🍽️ Quero meu bar/restaurante</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Quero meu negócio</button>
       </div>
 
     </div>
@@ -526,11 +522,11 @@ tr:hover td{background:var(--sand-50)}
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.7);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Como funciona</div>
       <div class="lp-section-title" id="lp-how-title">Simples como deve ser</div>
-      <div class="lp-section-sub" id="lp-how-sub" style="margin:0 auto">Três passos e o pedido está a caminho do seu guarda-sol.</div>
+      <div class="lp-section-sub" id="lp-how-sub" style="margin:0 auto">Três passos e o pedido está a caminho da sua mesa.</div>
       <div class="lp-steps">
         <div class="lp-step">
           <div class="lp-step-num">1</div>
-          <h3 id="lp-step1-t">Escaneie o QR Code</h3><p id="lp-step1-p">Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.</p>
+          <h3 id="lp-step1-t">Escaneie o QR Code</h3><p id="lp-step1-p">Cada mesa tem um QR Code. Aponte a câmera, selecione sua mesa e pronto.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">2</div>
@@ -538,7 +534,7 @@ tr:hover td{background:var(--sand-50)}
         </div>
         <div class="lp-step">
           <div class="lp-step-num">3</div>
-          <h3 id="lp-step3-t">Receba no lugar</h3><p id="lp-step3-p">O quiosque recebe o pedido e entrega direto no seu guarda-sol.</p>
+          <h3 id="lp-step3-t">Receba no lugar</h3><p id="lp-step3-p">O negócio recebe o pedido e entrega direto na sua mesa.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">4</div>
@@ -553,7 +549,7 @@ tr:hover td{background:var(--sand-50)}
     <div class="lp-section" style="position:relative;z-index:10">
       <div class="lp-section-tag">Para o cliente</div>
       <div class="lp-section-title">Mais tempo curtindo,<br/>menos tempo esperando</div>
-      <div class="lp-section-sub">Chega de levantar do guarda-sol para pedir ou pagar. Tudo pelo celular.</div>
+      <div class="lp-section-sub">Chega de levantar da mesa para pedir ou pagar. Tudo pelo celular.</div>
       <div class="lp-cards">
         <div class="lp-card">
           <div class="lp-card-icon blue">📱</div>
@@ -590,9 +586,9 @@ tr:hover td{background:var(--sand-50)}
 
     <div class="lp-divider"></div>
 
-    <!-- PARA O QUIOSQUE -->
+    <!-- PARA O NEGÓCIO -->
     <div class="lp-section" style="position:relative;z-index:10">
-      <div class="lp-section-tag">Para o quiosque</div>
+      <div class="lp-section-tag">Para o negócio</div>
       <div class="lp-section-title">Venda mais com<br/>menos esforço</div>
       <div class="lp-section-sub">Painel completo para gerenciar pedidos, cardápio e relatórios em tempo real.</div>
       <div class="lp-cards">
@@ -613,49 +609,8 @@ tr:hover td{background:var(--sand-50)}
         </div>
         <div class="lp-card">
           <div class="lp-card-icon amber">☂️</div>
-          <h3>Gestão de guarda-sóis</h3>
-          <p>Controle cada guarda-sol, gere QR Codes e encerre sessões quando a conta for paga.</p>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon blue">📱</div>
-          <h3>Funciona no celular</h3>
-          <p>Painel responsivo. Gerencie pelo celular, tablet ou computador com a mesma facilidade.</p>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon purple">🚀</div>
-          <h3>Setup em minutos</h3>
-          <p>Cadastre seu quiosque, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="lp-divider"></div>
-
-    <!-- PARA O BAR/RESTAURANTE -->
-    <div class="lp-section" style="position:relative;z-index:10">
-      <div class="lp-section-tag">Para o bar/restaurante</div>
-      <div class="lp-section-title">Comandas digitais<br/>sem complicação</div>
-      <div class="lp-section-sub">Painel completo para gerenciar pedidos por mesa, cardápio e relatórios em tempo real.</div>
-      <div class="lp-cards">
-        <div class="lp-card">
-          <div class="lp-card-icon blue">📋</div>
-          <h3>Pedidos ao vivo</h3>
-          <p>Receba e gerencie pedidos em tempo real. Alertas sonoros para nenhum pedido passar.</p>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon purple">🍔</div>
-          <h3>Cardápio digital</h3>
-          <p>Atualize preços, fotos e disponibilidade na hora. Sem precisar reimprimir nada.</p>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon green">📈</div>
-          <h3>Relatórios detalhados</h3>
-          <p>Faturamento por dia, semana e mês. Veja quais produtos vendem mais.</p>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon amber">🪑</div>
           <h3>Gestão de mesas</h3>
-          <p>Controle cada mesa, gere QR Codes e feche a comanda quando a conta for paga.</p>
+          <p>Controle cada mesa, gere QR Codes e encerre sessões quando a conta for paga.</p>
         </div>
         <div class="lp-card">
           <div class="lp-card-icon blue">📱</div>
@@ -665,7 +620,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-card">
           <div class="lp-card-icon purple">🚀</div>
           <h3>Setup em minutos</h3>
-          <p>Cadastre seu bar ou restaurante, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
+          <p>Cadastre seu negócio, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
         </div>
       </div>
     </div>
@@ -675,8 +630,8 @@ tr:hover td{background:var(--sand-50)}
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.75);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Nossa missão</div>
-      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
-      <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
+      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>no Brasil</div>
+      <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de negócio que trabalha duro todo dia.</div>
       <div class="lp-cards">
         <div class="lp-card">
           <div class="lp-card-icon blue">💙</div>
@@ -686,7 +641,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-card">
           <div class="lp-card-icon green">🤝</div>
           <h3>Parceria</h3>
-          <p>Crescemos junto com os quiosques. Seu sucesso é o nosso sucesso.</p>
+          <p>Crescemos junto com os negócios. Seu sucesso é o nosso sucesso.</p>
         </div>
         <div class="lp-card">
           <div class="lp-card-icon amber">⚡</div>
@@ -706,19 +661,13 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-access-card client" onclick="goToClient()">
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
-          <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
+          <div class="lp-access-desc">Escaneie o QR Code da sua mesa e faça seu pedido agora mesmo.</div>
           <button class="lp-access-btn blue">Fazer pedido →</button>
         </div>
         <div class="lp-access-card kiosk" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">
           <div class="lp-access-icon">🏪</div>
-          <div class="lp-access-title">Quiosque</div>
-          <div class="lp-access-desc">Acesse o painel do seu quiosque, gerencie pedidos e cardápio.</div>
-          <button class="lp-access-btn indigo">Entrar no painel →</button>
-        </div>
-        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">
-          <div class="lp-access-icon">🍽️</div>
-          <div class="lp-access-title">Bar/Restaurante</div>
-          <div class="lp-access-desc">Acesse o painel do seu bar ou restaurante, gerencie pedidos e cardápio.</div>
+          <div class="lp-access-title">Negócio</div>
+          <div class="lp-access-desc">Acesse o painel do seu negócio, gerencie pedidos e cardápio.</div>
           <button class="lp-access-btn indigo">Entrar no painel →</button>
         </div>
         <div class="lp-access-card admin" onclick="goToScreen('admin')">
@@ -733,7 +682,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- FOOTER -->
     <div class="lp-footer" style="padding:20px 24px">
       <div style="margin-bottom:4px;opacity:.6"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:24px;width:auto;filter:brightness(2)"/></div>
-      <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
+      <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para negócios · Feito com ❤️ no Brasil</div>
       <div style="margin-top:10px;font-size:12px;opacity:.6">
         <a href="/privacy.html" style="color:inherit;text-decoration:underline;margin:0 8px">Política de Privacidade</a>
         ·
@@ -815,7 +764,7 @@ tr:hover td{background:var(--sand-50)}
     <div class="menu-header">
       <div class="menu-kiosk-logo" id="menu-logo" style="background:#fff;padding:4px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
       <div>
-        <div class="menu-kiosk-name" id="menu-kname">Quiosque</div>
+        <div class="menu-kiosk-name" id="menu-kname">Negócio</div>
         <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
       </div>
       <div class="menu-tab-row">
@@ -952,7 +901,7 @@ tr:hover td{background:var(--sand-50)}
     <aside class="sidebar">
       <div class="sidebar-top">
         <div id="dash-logo" style="background:#fff;padding:8px 10px;border-radius:10px;width:100%;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="width:100%;max-width:160px;height:auto;display:block"/></div>
-        <div class="sidebar-kname" id="dash-kname" style="text-align:center;font-size:13px;margin-top:2px">Quiosque</div>
+        <div class="sidebar-kname" id="dash-kname" style="text-align:center;font-size:13px;margin-top:2px">Negócio</div>
       </div>
       <nav class="sidebar-nav">
         <button class="s-item active" onclick="kPage('overview',this)"><span class="s-icon">📊</span>Dashboard</button>
@@ -1287,7 +1236,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="sidebar-kname" style="text-align:center;margin-top:4px">Admin SaaS</div>
       </div>
       <nav class="sidebar-nav">
-        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Quiosques</button>
+        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Negócios</button>
         <button class="s-item" onclick="aPage('subs',this)"><span class="s-icon">💳</span>Assinaturas</button>
         <button class="s-item" onclick="aPage('metrics',this)"><span class="s-icon">📊</span>Métricas</button>
       </nav>
@@ -1344,7 +1293,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="metric-card"><div class="metric-label">GMV total</div><div class="metric-val" id="am-gmv">—</div><div class="metric-sub">faturamento global</div></div>
           <div class="metric-card"><div class="metric-label">Total pedidos</div><div class="metric-val" id="am-orders">—</div></div>
           <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-val" id="am-ticket">—</div></div>
-          <div class="metric-card"><div class="metric-label">Quiosques ativos</div><div class="metric-val" id="am-active-kiosks">—</div></div>
+          <div class="metric-card"><div class="metric-label">Negócios ativos</div><div class="metric-val" id="am-active-kiosks">—</div></div>
           <div class="metric-card"><div class="metric-label">Pedidos entregues</div><div class="metric-val" id="am-delivered">—</div></div>
           <div class="metric-card"><div class="metric-label">Cancelamentos</div><div class="metric-val" id="am-cancelled">—</div></div>
         </div>
@@ -1352,14 +1301,14 @@ tr:hover td{background:var(--sand-50)}
         <!-- Ranking de quiosques -->
         <div class="reports-row">
           <div class="report-card" style="grid-column:1/-1">
-            <div class="report-title">🏆 Ranking de quiosques por faturamento</div>
+            <div class="report-title">🏆 Ranking de negócios por faturamento</div>
             <div id="am-kiosk-ranking" style="margin-top:8px"><div style="color:var(--sl-400);font-size:13px">Carregando...</div></div>
           </div>
         </div>
 
         <!-- Tabela detalhada -->
         <div class="report-card" style="margin-top:16px">
-          <div class="report-title">Detalhamento por quiosque</div>
+          <div class="report-title">Detalhamento por negócio</div>
           <div id="am-kiosk-table" style="overflow:auto;margin-top:12px"><div style="color:var(--sl-400);font-size:13px;padding:16px">Carregando...</div></div>
         </div>
       </div>
@@ -1800,8 +1749,7 @@ tr:hover td{background:var(--sand-50)}
   </div>
   <div class="lp-nav-btns">
     <button class="lp-btn-outline" onclick="goToClient()">📱 Sou cliente</button>
-    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Meu quiosque</button>
-    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Meu negócio</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
@@ -1813,8 +1761,7 @@ tr:hover td{background:var(--sand-50)}
   </button>
   <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:32px;width:auto"/></div>
   <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
-  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this);setRegBusinessType('quiosque')">🏪 Quiosque</button>
-  <button class="nav-btn" id="nav-bar" onclick="showScreen('kiosk',this);setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
+  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this);setRegBusinessType('quiosque')">🏪 Negócio</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -1847,7 +1794,7 @@ tr:hover td{background:var(--sand-50)}
       </svg>
     </div>
 
-    <!-- Guarda-sóis decorativos -->
+    <!-- Mesas decorativas -->
     <div class="lp-umbrella-deco" style="left:8%;animation-delay:0s">
       <svg width="60" height="80" viewBox="0 0 60 80">
         <ellipse cx="30" cy="22" rx="28" ry="18" fill="#ef4444" opacity=".9"/>
@@ -1889,13 +1836,11 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- HERO -->
     <div class="lp-hero">
-      <div class="lp-badge" id="lp-badge">🌊 Tecnologia para a beira-mar</div>
-      <h1><span id="lp-h1-main">Peça na praia,</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
-      <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
+      <h1><span id="lp-h1-main">Peça</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
+      <p>O Recebaa conecta clientes aos negócios via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToClient()">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Quero meu quiosque</button>
-        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">🍽️ Quero meu bar/restaurante</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Quero meu negócio</button>
       </div>
 
     </div>
@@ -1906,11 +1851,11 @@ tr:hover td{background:var(--sand-50)}
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.7);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Como funciona</div>
       <div class="lp-section-title" id="lp-how-title">Simples como deve ser</div>
-      <div class="lp-section-sub" id="lp-how-sub" style="margin:0 auto">Três passos e o pedido está a caminho do seu guarda-sol.</div>
+      <div class="lp-section-sub" id="lp-how-sub" style="margin:0 auto">Três passos e o pedido está a caminho da sua mesa.</div>
       <div class="lp-steps">
         <div class="lp-step">
           <div class="lp-step-num">1</div>
-          <h3 id="lp-step1-t">Escaneie o QR Code</h3><p id="lp-step1-p">Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.</p>
+          <h3 id="lp-step1-t">Escaneie o QR Code</h3><p id="lp-step1-p">Cada mesa tem um QR Code. Aponte a câmera, selecione sua mesa e pronto.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">2</div>
@@ -1918,7 +1863,7 @@ tr:hover td{background:var(--sand-50)}
         </div>
         <div class="lp-step">
           <div class="lp-step-num">3</div>
-          <h3 id="lp-step3-t">Receba no lugar</h3><p id="lp-step3-p">O quiosque recebe o pedido e entrega direto no seu guarda-sol.</p>
+          <h3 id="lp-step3-t">Receba no lugar</h3><p id="lp-step3-p">O negócio recebe o pedido e entrega direto na sua mesa.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">4</div>
@@ -1933,7 +1878,7 @@ tr:hover td{background:var(--sand-50)}
     <div class="lp-section" style="position:relative;z-index:10">
       <div class="lp-section-tag">Para o cliente</div>
       <div class="lp-section-title">Mais tempo curtindo,<br/>menos tempo esperando</div>
-      <div class="lp-section-sub">Chega de levantar do guarda-sol para pedir ou pagar. Tudo pelo celular.</div>
+      <div class="lp-section-sub">Chega de levantar da mesa para pedir ou pagar. Tudo pelo celular.</div>
       <div class="lp-cards">
         <div class="lp-card">
           <div class="lp-card-icon blue">📱</div>
@@ -1970,9 +1915,9 @@ tr:hover td{background:var(--sand-50)}
 
     <div class="lp-divider"></div>
 
-    <!-- PARA O QUIOSQUE -->
+    <!-- PARA O NEGÓCIO -->
     <div class="lp-section" style="position:relative;z-index:10">
-      <div class="lp-section-tag">Para o quiosque</div>
+      <div class="lp-section-tag">Para o negócio</div>
       <div class="lp-section-title">Venda mais com<br/>menos esforço</div>
       <div class="lp-section-sub">Painel completo para gerenciar pedidos, cardápio e relatórios em tempo real.</div>
       <div class="lp-cards">
@@ -1993,49 +1938,8 @@ tr:hover td{background:var(--sand-50)}
         </div>
         <div class="lp-card">
           <div class="lp-card-icon amber">☂️</div>
-          <h3>Gestão de guarda-sóis</h3>
-          <p>Controle cada guarda-sol, gere QR Codes e encerre sessões quando a conta for paga.</p>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon blue">📱</div>
-          <h3>Funciona no celular</h3>
-          <p>Painel responsivo. Gerencie pelo celular, tablet ou computador com a mesma facilidade.</p>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon purple">🚀</div>
-          <h3>Setup em minutos</h3>
-          <p>Cadastre seu quiosque, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="lp-divider"></div>
-
-    <!-- PARA O BAR/RESTAURANTE -->
-    <div class="lp-section" style="position:relative;z-index:10">
-      <div class="lp-section-tag">Para o bar/restaurante</div>
-      <div class="lp-section-title">Comandas digitais<br/>sem complicação</div>
-      <div class="lp-section-sub">Painel completo para gerenciar pedidos por mesa, cardápio e relatórios em tempo real.</div>
-      <div class="lp-cards">
-        <div class="lp-card">
-          <div class="lp-card-icon blue">📋</div>
-          <h3>Pedidos ao vivo</h3>
-          <p>Receba e gerencie pedidos em tempo real. Alertas sonoros para nenhum pedido passar.</p>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon purple">🍔</div>
-          <h3>Cardápio digital</h3>
-          <p>Atualize preços, fotos e disponibilidade na hora. Sem precisar reimprimir nada.</p>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon green">📈</div>
-          <h3>Relatórios detalhados</h3>
-          <p>Faturamento por dia, semana e mês. Veja quais produtos vendem mais.</p>
-        </div>
-        <div class="lp-card">
-          <div class="lp-card-icon amber">🪑</div>
           <h3>Gestão de mesas</h3>
-          <p>Controle cada mesa, gere QR Codes e feche a comanda quando a conta for paga.</p>
+          <p>Controle cada mesa, gere QR Codes e encerre sessões quando a conta for paga.</p>
         </div>
         <div class="lp-card">
           <div class="lp-card-icon blue">📱</div>
@@ -2045,7 +1949,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-card">
           <div class="lp-card-icon purple">🚀</div>
           <h3>Setup em minutos</h3>
-          <p>Cadastre seu bar ou restaurante, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
+          <p>Cadastre seu negócio, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
         </div>
       </div>
     </div>
@@ -2055,8 +1959,8 @@ tr:hover td{background:var(--sand-50)}
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.75);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Nossa missão</div>
-      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
-      <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
+      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>no Brasil</div>
+      <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de negócio que trabalha duro todo dia.</div>
       <div class="lp-cards">
         <div class="lp-card">
           <div class="lp-card-icon blue">💙</div>
@@ -2066,7 +1970,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-card">
           <div class="lp-card-icon green">🤝</div>
           <h3>Parceria</h3>
-          <p>Crescemos junto com os quiosques. Seu sucesso é o nosso sucesso.</p>
+          <p>Crescemos junto com os negócios. Seu sucesso é o nosso sucesso.</p>
         </div>
         <div class="lp-card">
           <div class="lp-card-icon amber">⚡</div>
@@ -2086,19 +1990,13 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-access-card client" onclick="goToClient()">
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
-          <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
+          <div class="lp-access-desc">Escaneie o QR Code da sua mesa e faça seu pedido agora mesmo.</div>
           <button class="lp-access-btn blue">Fazer pedido →</button>
         </div>
         <div class="lp-access-card kiosk" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">
           <div class="lp-access-icon">🏪</div>
-          <div class="lp-access-title">Quiosque</div>
-          <div class="lp-access-desc">Acesse o painel do seu quiosque, gerencie pedidos e cardápio.</div>
-          <button class="lp-access-btn indigo">Entrar no painel →</button>
-        </div>
-        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">
-          <div class="lp-access-icon">🍽️</div>
-          <div class="lp-access-title">Bar/Restaurante</div>
-          <div class="lp-access-desc">Acesse o painel do seu bar ou restaurante, gerencie pedidos e cardápio.</div>
+          <div class="lp-access-title">Negócio</div>
+          <div class="lp-access-desc">Acesse o painel do seu negócio, gerencie pedidos e cardápio.</div>
           <button class="lp-access-btn indigo">Entrar no painel →</button>
         </div>
         <div class="lp-access-card admin" onclick="goToScreen('admin')">
@@ -2113,7 +2011,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- FOOTER -->
     <div class="lp-footer" style="padding:20px 24px">
       <div style="margin-bottom:4px;opacity:.6"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:24px;width:auto;filter:brightness(2)"/></div>
-      <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
+      <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para negócios · Feito com ❤️ no Brasil</div>
       <div style="margin-top:10px;font-size:12px;opacity:.6">
         <a href="/privacy.html" style="color:inherit;text-decoration:underline;margin:0 8px">Política de Privacidade</a>
         ·
@@ -2143,7 +2041,7 @@ tr:hover td{background:var(--sand-50)}
     <div class="menu-header">
       <div class="menu-kiosk-logo" id="menu-logo" style="background:#fff;padding:4px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
       <div>
-        <div class="menu-kiosk-name" id="menu-kname">Quiosque</div>
+        <div class="menu-kiosk-name" id="menu-kname">Negócio</div>
         <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
       </div>
       <div class="menu-tab-row">
@@ -2265,7 +2163,7 @@ tr:hover td{background:var(--sand-50)}
     <aside class="sidebar">
       <div class="sidebar-top">
         <div id="dash-logo" style="background:#fff;padding:8px 10px;border-radius:10px;width:100%;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="width:100%;max-width:160px;height:auto;display:block"/></div>
-        <div class="sidebar-kname" id="dash-kname" style="text-align:center;font-size:13px;margin-top:2px">Quiosque</div>
+        <div class="sidebar-kname" id="dash-kname" style="text-align:center;font-size:13px;margin-top:2px">Negócio</div>
       </div>
       <nav class="sidebar-nav">
         <button class="s-item active" onclick="kPage('overview',this)"><span class="s-icon">📊</span>Dashboard</button>
@@ -2463,7 +2361,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="sidebar-kname" style="text-align:center;margin-top:4px">Admin SaaS</div>
       </div>
       <nav class="sidebar-nav">
-        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Quiosques</button>
+        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Negócios</button>
         <button class="s-item" onclick="aPage('subs',this)"><span class="s-icon">💳</span>Assinaturas</button>
         <button class="s-item" onclick="aPage('metrics',this)"><span class="s-icon">📊</span>Métricas</button>
       </nav>
@@ -2600,25 +2498,25 @@ var LANG_CURRENT = 'pt';
 var I18N = {
   pt: {
     // Nav landing
-    lp_client: '📱 Sou cliente', lp_kiosk: '🏪 Meu quiosque', lp_admin: '⚙️ Admin',
+    lp_client: '📱 Sou cliente', lp_kiosk: '🏪 Meu negócio', lp_admin: '⚙️ Admin',
     // Hero
     lp_badge: '🌊 Tecnologia para a beira-mar',
-    lp_h1: 'Peça na praia,', lp_h1s: 'sem sair do lugar',
-    lp_p: 'O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.',
-    lp_cta1: '☂️ Fazer um pedido', lp_cta2: '🏪 Quero meu quiosque',
+    lp_h1: 'Peça', lp_h1s: 'sem sair do lugar',
+    lp_p: 'O Recebaa conecta clientes aos negócios via QR Code. Sem filas, sem espera. Só aproveitar o sol.',
+    lp_cta1: '☂️ Fazer um pedido', lp_cta2: '🏪 Quero meu negócio',
     // Seções
     lp_how: 'Como funciona', lp_how_title: 'Simples como deve ser',
-    lp_how_sub: 'Três passos e o pedido está a caminho do seu guarda-sol.',
-    lp_step1_t: 'Escaneie o QR Code', lp_step1_p: 'Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.',
+    lp_how_sub: 'Três passos e o pedido está a caminho da sua mesa.',
+    lp_step1_t: 'Escaneie o QR Code', lp_step1_p: 'Cada mesa tem um QR Code. Aponte a câmera, selecione sua mesa e pronto.',
     lp_step2_t: 'Escolha no cardápio', lp_step2_p: 'Veja fotos, preços e descrições. Monte seu pedido com calma.',
-    lp_step3_t: 'Receba no lugar', lp_step3_p: 'O quiosque recebe o pedido e entrega direto no seu guarda-sol.',
+    lp_step3_t: 'Receba no lugar', lp_step3_p: 'O negócio recebe o pedido e entrega direto na sua mesa.',
     lp_step4_t: 'Peça a conta', lp_step4_p: 'Quando quiser, solicite a conta pelo celular. Sem precisar chamar ninguém.',
     lp_client_tag: 'Para o cliente', lp_client_title: 'Mais tempo curtindo,\nmenos tempo esperando',
-    lp_kiosk_tag: 'Para o quiosque', lp_kiosk_title: 'Venda mais com\nmenos esforço',
-    lp_mission_tag: 'Nossa missão', lp_mission_title: 'Transformar a experiência\nde praia no Brasil',
+    lp_kiosk_tag: 'Para o negócio', lp_kiosk_title: 'Venda mais com\nmenos esforço',
+    lp_mission_tag: 'Nossa missão', lp_mission_title: 'Transformar a experiência\nno Brasil',
     lp_mission_sub: 'Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil.',
     lp_access_tag: 'Acesse agora', lp_access_title: 'Por onde você quer entrar?',
-    lp_footer: '© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil',
+    lp_footer: '© 2025 Recebaa · Tecnologia para negócios · Feito com ❤️ no Brasil',
     // Cliente splash
     splash_title: 'Bem-vindo!', splash_sub: 'Digite o número do seu guarda-sol para ver o cardápio',
     splash_ph: 'Número do guarda-sol', splash_btn: 'Ver Cardápio →',
@@ -2629,7 +2527,7 @@ var I18N = {
     order_btn: 'Enviar Pedido 🚀',
     // Status
     s_pending: 'Pedido recebido', s_pending_sub: 'Aguardando confirmação',
-    s_accepted: 'Confirmado', s_accepted_sub: 'O quiosque aceitou!',
+    s_accepted: 'Confirmado', s_accepted_sub: 'O negócio aceitou!',
     s_preparing: 'Em preparo', s_preparing_sub: 'Preparando com carinho',
     s_delivering: 'A caminho', s_delivering_sub: 'Indo ao seu guarda-sol',
     s_delivered: 'Entregue!', s_delivered_sub: 'Bom apetite! 🌊',
@@ -3217,7 +3115,7 @@ function handleQrDecoded(decodedText){
   }
 
   if(!kioskId){
-    showQrError('⚠️ QR Code não reconhecido. Use um QR Code de quiosque Recebaa.');
+    showQrError('⚠️ QR Code não reconhecido. Use um QR Code de negócio Recebaa.');
     return;
   }
 
@@ -3619,7 +3517,7 @@ async function goToMenu(){
     // Validar que o quiosque existe e está ativo
     if(!currentKiosk){
       setLoading('splash-btn',false,'Ver Cardápio →');
-      toast('❌ Quiosque não encontrado ou inativo. Verifique o QR Code.');
+      toast('❌ Negócio não encontrado ou inativo. Verifique o QR Code.');
       return;
     }
 
@@ -3660,11 +3558,11 @@ async function goToMenu(){
   } else {
     catalog=MOCK_PRODUCTS;
     dbCategories=MOCK_CATS;
-    currentKiosk={id:'demo',name:'Quiosque Pôr do Sol'};
+    currentKiosk={id:'demo',name:'Negócio Pôr do Sol'};
   }
   setLoading('splash-btn',false,'Ver Cardápio →');
   $('umbrella-label').textContent=swapUmbrellaWords('☂️ Guarda-sol '+window._umb);
-  $('menu-kname').textContent=currentKiosk?currentKiosk.name:'Quiosque';
+  $('menu-kname').textContent=currentKiosk?currentKiosk.name:'Negócio';
   $('splash-kname').textContent=currentKiosk?currentKiosk.name:'Recebaa';
   $('client-splash').classList.add('hidden');
   $('client-menu').classList.remove('hidden');
@@ -4288,11 +4186,11 @@ function openTermsModal(){
     +'<button onclick="closeTermsModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
     +'</div>'
     +'<div style="padding:20px;font-size:13px;line-height:1.6;color:#334155">'
-    +'<p style="margin-bottom:12px"><b>1. Sobre o Recebaa</b><br>O Recebaa é uma plataforma que conecta clientes a quiosques de praia, permitindo fazer pedidos pelo celular via QR Code. Não somos os vendedores dos produtos — cada quiosque é responsável pelo preparo, qualidade e entrega dos itens pedidos.</p>'
-    +'<p style="margin-bottom:12px"><b>2. Pedidos e pagamento</b><br>O pedido feito pelo app é enviado diretamente ao quiosque. O pagamento é combinado e realizado diretamente com o quiosque (o app não processa pagamentos). Preços e disponibilidade dos produtos são definidos e atualizados pelo próprio quiosque.</p>'
+    +'<p style="margin-bottom:12px"><b>1. Sobre o Recebaa</b><br>O Recebaa é uma plataforma que conecta clientes a negócios de praia, permitindo fazer pedidos pelo celular via QR Code. Não somos os vendedores dos produtos — cada negócio é responsável pelo preparo, qualidade e entrega dos itens pedidos.</p>'
+    +'<p style="margin-bottom:12px"><b>2. Pedidos e pagamento</b><br>O pedido feito pelo app é enviado diretamente ao negócio. O pagamento é combinado e realizado diretamente com o negócio (o app não processa pagamentos). Preços e disponibilidade dos produtos são definidos e atualizados pelo próprio negócio.</p>'
     +'<p style="margin-bottom:12px"><b>3. Dados que coletamos</b><br>Para processar seu pedido, coletamos o nome informado, o número do guarda-sol/mesa e os itens pedidos. Não pedimos dados de pagamento, CPF ou endereço pelo app.</p>'
-    +'<p style="margin-bottom:12px"><b>4. Uso dos dados</b><br>Usamos essas informações apenas para viabilizar seu pedido junto ao quiosque (nome para identificação, itens para preparo). Não vendemos nem compartilhamos seus dados com terceiros para fins de marketing.</p>'
-    +'<p style="margin-bottom:12px"><b>5. Responsabilidade</b><br>O Recebaa atua como intermediário tecnológico. Questões sobre qualidade dos produtos, tempo de preparo ou atendimento devem ser resolvidas diretamente com o quiosque responsável.</p>'
+    +'<p style="margin-bottom:12px"><b>4. Uso dos dados</b><br>Usamos essas informações apenas para viabilizar seu pedido junto ao negócio (nome para identificação, itens para preparo). Não vendemos nem compartilhamos seus dados com terceiros para fins de marketing.</p>'
+    +'<p style="margin-bottom:12px"><b>5. Responsabilidade</b><br>O Recebaa atua como intermediário tecnológico. Questões sobre qualidade dos produtos, tempo de preparo ou atendimento devem ser resolvidas diretamente com o negócio responsável.</p>'
     +'<p style="margin-bottom:12px"><b>6. Seus direitos (LGPD)</b><br>Você pode solicitar a qualquer momento informações sobre os dados armazenados ou pedir a exclusão deles, entrando em contato pelo e-mail <a href="mailto:pediu.recebaa@gmail.com" style="color:var(--ocean-600)">pediu.recebaa@gmail.com</a>.</p>'
     +'<p style="margin-bottom:0;color:#94a3b8;font-size:11.5px">Ao aceitar, você confirma que leu e concorda com estes termos. Última atualização: '+new Date().toLocaleDateString('pt-BR')+'.</p>'
     +'</div>'
@@ -4906,7 +4804,7 @@ async function placeOrder(){
 // ══════════════════════════════════════════════════════
 var STATUS_STEPS_DEF=[
   {key:'pending',   label:'Pedido recebido',  sub:'Aguardando confirmação',     icon:'📋'},
-  {key:'accepted',  label:'Confirmado',        sub:'O quiosque aceitou!',        icon:'✅'},
+  {key:'accepted',  label:'Confirmado',        sub:'O negócio aceitou!',        icon:'✅'},
   {key:'preparing', label:'Em preparo',        sub:'Preparando com carinho',     icon:'👨‍🍳'},
   {key:'delivering',label:'A caminho',         sub:'Indo ao seu guarda-sol',     icon:'🏃'},
   {key:'delivered', label:'Entregue!',         sub:'Bom apetite! 🌊',            icon:'🎉'},
@@ -5044,7 +4942,7 @@ function openBillModal(){
     return ACCEPTED_STATUSES.indexOf(o.status) > -1;
   });
   if(!hasAccepted){
-    toast('⚠️ Aguarde o quiosque aceitar seu pedido antes de pedir a conta.');
+    toast('⚠️ Aguarde o negócio aceitar seu pedido antes de pedir a conta.');
     return;
   }
   var old = document.getElementById('dynamic-bill-modal');
@@ -5158,7 +5056,7 @@ async function requestBill(type, personName, personTotal){
     return ACCEPTED_STATUSES_RB.indexOf(o.status) > -1;
   });
   if(!hasAcceptedRB){
-    toast('⚠️ Aguarde o quiosque aceitar seu pedido antes de pedir a conta.');
+    toast('⚠️ Aguarde o negócio aceitar seu pedido antes de pedir a conta.');
     closeBillModal();
     return;
   }
@@ -5404,12 +5302,12 @@ function renderMyOrders(){
 
 async function clientCancelOrder(orderId){
   if(!orderId) return;
-  if(!confirm('Tem certeza que deseja cancelar este pedido?\n\nAtenção: só é possível cancelar pedidos que ainda não foram aceitos pelo quiosque.')) return;
+  if(!confirm('Tem certeza que deseja cancelar este pedido?\n\nAtenção: só é possível cancelar pedidos que ainda não foram aceitos pelo negócio.')) return;
 
   // Localizar pedido em memória para checar status atual
   var mo = myOrders.find(function(x){ return x.id === orderId; });
   if(mo && mo.status !== 'pending'){
-    toast('⚠️ Este pedido já foi confirmado pelo quiosque e não pode mais ser cancelado.');
+    toast('⚠️ Este pedido já foi confirmado pelo negócio e não pode mais ser cancelado.');
     return;
   }
 
@@ -5426,7 +5324,7 @@ async function clientCancelOrder(orderId){
     }
     if(!data || !data.length){
       // O quiosque aceitou entre a checagem local e a atualização
-      toast('⚠️ Pedido já foi aceito pelo quiosque. Não é mais possível cancelar.');
+      toast('⚠️ Pedido já foi aceito pelo negócio. Não é mais possível cancelar.');
       return;
     }
     await decrementPromoSold(orderId);
@@ -5651,26 +5549,26 @@ async function doLogin(){
       }
       var w = wRows[0];
       if(!w.is_active){
-        toast('⛔ Seu acesso de garçom foi desativado. Fale com o responsável pelo quiosque.');
+        toast('⛔ Seu acesso de garçom foi desativado. Fale com o responsável pelo negócio.');
         setLoading('login-btn',false,'Entrar');
         return;
       }
       // Buscar dados básicos do quiosque a que esse garçom pertence
       var kResp = await sb.from('kiosks').select('id,name,owner_name,blocked,approved,is_active,business_type').eq('id', w.kiosk_id).single();
       if(kResp.error || !kResp.data){
-        toast('❌ Não foi possível localizar o quiosque vinculado.');
+        toast('❌ Não foi possível localizar o negócio vinculado.');
         setLoading('login-btn',false,'Entrar');
         return;
       }
       const k = kResp.data;
-      if(k.blocked){ toast('⛔ Quiosque bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+      if(k.blocked){ toast('⛔ Negócio bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
       if(k.approved === false){ toast('⏳ Cadastro aguardando aprovação do administrador.'); setLoading('login-btn',false,'Entrar'); return; }
-      if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+      if(!k.is_active){ toast('⏸️ Negócio inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
       currentKiosk = k;
       window._currentWaiter = { id: w.id, name: w.name, canEditMenu: !!w.can_edit_menu };
     } else {
-      currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_name:'Demo',business_type:'quiosque'};
+      currentKiosk={id:'demo',name:'Negócio Pôr do Sol (Demo)',owner_name:'Demo',business_type:'quiosque'};
       window._currentWaiter = { id:'demo-waiter', name:'Garçom Demo' };
     }
     window._isWaiterMode = true;
@@ -5699,9 +5597,9 @@ async function doLogin(){
     }
     const k = rows[0];
 
-    if(k.blocked){ toast('⛔ Quiosque bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+    if(k.blocked){ toast('⛔ Negócio bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
     if(k.approved === false){ toast('⏳ Seu cadastro está aguardando aprovação do administrador.'); setLoading('login-btn',false,'Entrar'); return; }
-    if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+    if(!k.is_active){ toast('⏸️ Negócio inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
     currentKiosk=k;
     // login_kiosk (RPC) pode não retornar business_type; busca à parte, sem quebrar se a coluna não existir.
@@ -5710,7 +5608,7 @@ async function doLogin(){
       if(btResp && btResp.data) currentKiosk.business_type = btResp.data.business_type;
     }catch(e){}
   } else {
-    currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo',business_type:'quiosque'};
+    currentKiosk={id:'demo',name:'Negócio Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo',business_type:'quiosque'};
   }
   window._isWaiterMode = false;
   window._currentWaiter = null;
@@ -5851,7 +5749,7 @@ async function doRegister(){
     // Limpar formulário e voltar pra tela de login com aviso
     ['reg-owner','reg-email','reg-pass','reg-phone','reg-kname','reg-doc','reg-city','reg-beach'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
     showCard('login');
-    toast('✅ Cadastro enviado! Seu quiosque está aguardando aprovação do administrador. Você receberá um aviso quando for liberado.');
+    toast('✅ Cadastro enviado! Seu negócio está aguardando aprovação do administrador. Você receberá um aviso quando for liberado.');
     window._registeringInProgress = false;
     return;
   } else {
@@ -5869,7 +5767,7 @@ async function checkKioskAccess(){
   var {data} = await sb.from('kiosks').select('is_active,blocked,approved').eq('id',currentKiosk.id).single();
   if(!data) return true;
   if(data.blocked){
-    toast('⛔ Quiosque bloqueado pelo administrador.');
+    toast('⛔ Negócio bloqueado pelo administrador.');
     doLogout();
     return false;
   }
@@ -5879,7 +5777,7 @@ async function checkKioskAccess(){
     return false;
   }
   if(!data.is_active){
-    toast('⏸️ Quiosque desativado pelo administrador.');
+    toast('⏸️ Negócio desativado pelo administrador.');
     doLogout();
     return false;
   }
@@ -6043,13 +5941,13 @@ async function closeUmbrellaSession(umbNum, applyService){
       // O total original pode estar desatualizado (cliente pediu a conta antes de
       // todos os pedidos, ou ficou 0 por bug anterior). Sempre usa a soma real.
       var newNotes = (contasExist[0].notes ? contasExist[0].notes + ' · ' : '')
-        + 'FATURADO pelo quiosque · ' + resumo;
+        + 'FATURADO pelo negócio · ' + resumo;
       await sb.from('orders')
         .update({status:'delivered', total: totalComServico, service_amount: serviceAmt, notes: newNotes, last_updated_by: getCurrentActorName()})
         .eq('id', contasExist[0].id);
     } else {
       // Não existia: criar pedido de conta retroativo
-      var notes = 'Encerrado pelo quiosque · ' + resumo + ' · FATURADO';
+      var notes = 'Encerrado pelo negócio · ' + resumo + ' · FATURADO';
 
       // Pegar próximo order_number
       var {data: lastNum} = await sb.from('orders')
@@ -6163,7 +6061,7 @@ function renderForgotStep1(){
   var div = document.getElementById('dyn-forgot-pwd');
   if(!div) return;
   div.innerHTML = fpShell('Recuperar senha',
-    '<div style="font-size:12.5px;color:#64748b">Informe o e-mail cadastrado no seu quiosque. Vamos enviar um código de verificação para ele.</div>'
+    '<div style="font-size:12.5px;color:#64748b">Informe o e-mail cadastrado no seu negócio. Vamos enviar um código de verificação para ele.</div>'
     +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">E-mail cadastrado *</label>'
     +'<input id="fp-email" type="email" class="input" style="width:100%" placeholder="seu@email.com"/></div>'
     +'<div style="display:flex;gap:8px;margin-top:6px">'
@@ -6325,10 +6223,10 @@ function subscribeRealtime(){
       function(payload){
         var k = payload.new;
         if(k.blocked){
-          toast('⛔ Quiosque bloqueado pelo administrador.');
+          toast('⛔ Negócio bloqueado pelo administrador.');
           setTimeout(doLogout, 2000);
         } else if(!k.is_active){
-          toast('⏸️ Quiosque desativado pelo administrador.');
+          toast('⏸️ Negócio desativado pelo administrador.');
           setTimeout(doLogout, 2000);
         }
       })
@@ -6602,7 +6500,7 @@ function kPage(name,btn){
   var waiterBlocked = ['overview','history','reports','waiters'];
   var waiterCanEditMenu = !!(window._currentWaiter && window._currentWaiter.canEditMenu);
   if(window._isWaiterMode && name === 'menu' && !waiterCanEditMenu){
-    toast('⛔ Você não tem permissão para acessar o Cardápio. Fale com o responsável pelo quiosque.');
+    toast('⛔ Você não tem permissão para acessar o Cardápio. Fale com o responsável pelo negócio.');
     return;
   }
   if(window._isWaiterMode && waiterBlocked.indexOf(name) !== -1){
@@ -7333,7 +7231,7 @@ function exportHistExcel(){
   var blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  a.href=url; a.download='historico-'+(currentKiosk?currentKiosk.name.replace(/\s+/g,'-'):'quiosque')+'-'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.csv';
+  a.href=url; a.download='historico-'+(currentKiosk?currentKiosk.name.replace(/\s+/g,'-'):'negocio')+'-'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   toast('📊 Exportado!');
 }
@@ -7343,14 +7241,14 @@ function printHist(){
   if(!tableEl){ return; }
   var period = document.querySelector('.hf-btn[id^="hp-"].active');
   var periodTxt = period ? period.textContent.trim() : '';
-  var kname = currentKiosk ? currentKiosk.name : 'Quiosque';
+  var kname = currentKiosk ? currentKiosk.name : 'Negócio';
   var css = 'body{font-family:Arial,sans-serif;padding:20px;font-size:12px}h2{font-size:16px;margin-bottom:4px}.sub{color:#64748b;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#f8fafc;padding:7px;text-align:left;font-size:11px;border-bottom:2px solid #e2e8f0}td{padding:7px;border-bottom:1px solid #f1f5f9}.footer{margin-top:16px;text-align:center;color:#94a3b8;font-size:11px}@media print{.no-print{display:none}}';
   var win = window.open('','_blank','width=960,height=700');
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Histórico '+esc(kname)+'</title><style>'+css+'</style></head><body>'
     +'<div style="display:flex;justify-content:space-between"><div><h2>Histórico — '+esc(kname)+'</h2><div class="sub">Período: '+esc(periodTxt)+' · '+new Date().toLocaleString('pt-BR')+'</div></div>'
     +'<button class="no-print" onclick="window.print()" style="padding:8px 16px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;cursor:pointer;height:fit-content">Imprimir</button></div>'
     +tableEl.outerHTML
-    +'<div class="footer">Recebaa · Sistema de pedidos para quiosques de praia</div>'
+    +'<div class="footer">Recebaa · Sistema de pedidos para negócios de praia</div>'
     +'</body></html>');
   win.document.close(); win.focus();
 }
@@ -8493,11 +8391,11 @@ async function renderUmbrellas(){
   var baseUrl = getKioskUrl();
   var kioskId = currentKiosk ? currentKiosk.id : '';
   var qrUrl = baseUrl + '?kiosk=' + kioskId;
-  var kioskName = currentKiosk ? currentKiosk.name : 'Quiosque';
+  var kioskName = currentKiosk ? currentKiosk.name : 'Negócio';
   var qrImgUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(qrUrl);
 
   var qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:20px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
-    + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code do Quiosque</div>'
+    + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code do Negócio</div>'
     + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">Fixe este QR Code em cada guarda-sol.</div>'
     + '<img src="' + qrImgUrl + '" style="margin:0 auto 12px;display:block;border-radius:8px"/>'
     + '<div style="font-size:11px;color:var(--ocean-600);word-break:break-all;margin-bottom:12px">' + qrUrl + '</div>'
@@ -8700,7 +8598,7 @@ function exportToExcel(){
     return 0;
   });
 
-  var kioskName = (currentKiosk && currentKiosk.name) || 'Quiosque';
+  var kioskName = (currentKiosk && currentKiosk.name) || 'Negócio';
   var periodLabel = '';
   if(reportPeriod === 'today') periodLabel = 'Hoje';
   else if(reportPeriod === 'week') periodLabel = 'Últimos 7 dias';
@@ -8793,7 +8691,7 @@ function exportToExcel(){
 }
 
 function printReports(){
-  var kioskName = (currentKiosk && currentKiosk.name) || 'Quiosque';
+  var kioskName = (currentKiosk && currentKiosk.name) || 'Negócio';
   var period = document.querySelector('.hf-btn.active') ? document.querySelector('.hf-btn.active').textContent : '';
   var rev = $('r-rev') ? $('r-rev').textContent : 'R$ 0';
   var ordersCount = $('r-orders') ? $('r-orders').textContent : '0';
@@ -8833,7 +8731,7 @@ function printReports(){
     '</div>',
     '<h3>Itens mais pedidos</h3>'+topProds,
     '<h3 style="margin-top:16px">Pedidos no periodo</h3>'+tableHtml,
-    '<div class="footer">Recebaa - Sistema de pedidos para quiosques de praia</div>'
+    '<div class="footer">Recebaa - Sistema de pedidos para negócios de praia</div>'
   ].join('');
 
   var win = window.open('','_blank','width=900,height=700');
@@ -9283,12 +9181,12 @@ async function loadAdminData(){
     renderAdminKiosksTable(filterKiosksByType(list, window._adminKioskTypeFilter));
 
     var sw=$('admin-subs-wrap');
-    if(sw) sw.innerHTML='<table><thead><tr><th>Quiosque</th><th>Plano</th><th>Status</th></tr></thead><tbody>'
+    if(sw) sw.innerHTML='<table><thead><tr><th>Negócio</th><th>Plano</th><th>Status</th></tr></thead><tbody>'
       +list.map(function(k){return '<tr><td>'+k.name+'</td><td><span class="plan-badge plan-starter">starter</span></td><td><span class="active-dot">'+(k.is_active?'Ativa':'Inativa')+'</span></td></tr>';}).join('')
       +'</tbody></table>';
 
     var mg=$('admin-metrics-grid');
-    if(mg) mg.innerHTML='<div class="metric-card"><div class="metric-label">Quiosques</div><div class="metric-val">'+list.length+'</div></div>'
+    if(mg) mg.innerHTML='<div class="metric-card"><div class="metric-label">Negócios</div><div class="metric-val">'+list.length+'</div></div>'
       +'<div class="metric-card"><div class="metric-label">Ativos</div><div class="metric-val">'+list.filter(function(k){return k.is_active && !k.blocked && k.approved!==false;}).length+'</div></div>'
       +'<div class="metric-card"><div class="metric-label">⏳ Aguardando aprovação</div><div class="metric-val" style="color:#6d28d9">'+list.filter(function(k){return k.approved===false;}).length+'</div></div>'
       +'<div class="metric-card"><div class="metric-label">Inativos / Bloqueados</div><div class="metric-val">'+list.filter(function(k){return (!k.is_active || k.blocked) && k.approved!==false;}).length+'</div></div>';
@@ -9311,7 +9209,7 @@ function setAdminKioskTypeFilter(type, btn){
 function renderAdminKiosksTable(list){
   var kw=$('admin-kiosks-wrap'); if(!kw) return;
   if(!list||!list.length){
-    kw.innerHTML='<div style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum quiosque cadastrado.</div>';
+    kw.innerHTML='<div style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum negócio cadastrado.</div>';
     return;
   }
   // Ordenar: pendentes de aprovação no topo, depois o resto pela ordem original
@@ -9321,7 +9219,7 @@ function renderAdminKiosksTable(list){
     return ap - bp;
   });
   kw.innerHTML='<table><thead><tr>'
-    +'<th>Quiosque</th><th>Tipo</th><th>Responsável</th><th>E-mail</th><th>Cidade</th>'
+    +'<th>Negócio</th><th>Tipo</th><th>Responsável</th><th>E-mail</th><th>Cidade</th>'
     +'<th>Status</th><th>Ações</th>'
     +'</tr></thead><tbody>'
     +sorted.map(function(k){
@@ -9366,7 +9264,7 @@ function setKioskStatusBtn(btn){
 
 async function setKioskStatus(id, newStatus){
   var labels = {active:'ativado',inactive:'desativado',blocked:'bloqueado',approve:'aprovado'};
-  if(!confirm('Confirmar: quiosque será '+labels[newStatus]+'?')) return;
+  if(!confirm('Confirmar: negócio será '+labels[newStatus]+'?')) return;
 
   var updates = {};
   if(newStatus === 'approve')  { updates.approved = true;  updates.is_active = true;  updates.blocked = false; }
@@ -9400,7 +9298,7 @@ async function setKioskStatus(id, newStatus){
   var {data:kiosks} = await sb.from('kiosks').select('*').order('created_at',{ascending:false});
   window._adminKiosksAll = kiosks||[];
   renderAdminKiosksTable(filterKiosksByType(window._adminKiosksAll, window._adminKioskTypeFilter));
-  toast('✅ Quiosque '+labels[newStatus]+' com sucesso!');
+  toast('✅ Negócio '+labels[newStatus]+' com sucesso!');
 
   // Enviar e-mail de aprovação se for o caso (somente quando aprovar)
   if(newStatus === 'approve'){
@@ -9409,7 +9307,7 @@ async function setKioskStatus(id, newStatus){
       sendAprovacaoEmail({
         to_name: approvedKiosk.owner_name || 'Responsável',
         to_email: approvedKiosk.owner_email,
-        kiosk_name: approvedKiosk.name || 'Seu quiosque'
+        kiosk_name: approvedKiosk.name || 'Seu negócio'
       });
     }
   }
@@ -9475,7 +9373,7 @@ function exportAdminExcel(){
   // Tabela de quiosques
   var tableEl = $('am-kiosk-table');
   if(tableEl && tableEl.querySelector('table')){
-    rows.push('"Detalhamento por quiosque"');
+    rows.push('"Detalhamento por negócio"');
     var ths = tableEl.querySelectorAll('thead th');
     var headers = [];
     ths.forEach(function(th){ headers.push('"'+th.textContent.trim()+'"'); });
@@ -9549,13 +9447,13 @@ function printAdminMetrics(){
     '<div class="metric"><div class="metric-label">GMV Total</div><div class="metric-val">'+gmv+'</div></div>',
     '<div class="metric"><div class="metric-label">Pedidos</div><div class="metric-val">'+orders+'</div></div>',
     '<div class="metric"><div class="metric-label">Ticket Médio</div><div class="metric-val">'+ticket+'</div></div>',
-    '<div class="metric"><div class="metric-label">Quiosques Ativos</div><div class="metric-val">'+activeKiosks+'</div></div>',
+    '<div class="metric"><div class="metric-label">Negócios Ativos</div><div class="metric-val">'+activeKiosks+'</div></div>',
     '<div class="metric"><div class="metric-label">Entregues</div><div class="metric-val">'+delivered+'</div></div>',
     '<div class="metric"><div class="metric-label">Cancelamentos</div><div class="metric-val">'+cancelled+'</div></div>',
     '</div>',
-    '<h3 style="margin-bottom:12px">Ranking de quiosques</h3>',
+    '<h3 style="margin-bottom:12px">Ranking de negócios</h3>',
     rankingHtml,
-    '<h3 style="margin:20px 0 8px">Detalhamento por quiosque</h3>',
+    '<h3 style="margin:20px 0 8px">Detalhamento por negócio</h3>',
     tableHtml,
     '<div class="footer">Recebaa · Painel administrativo</div>'
   ].join('');
@@ -9651,7 +9549,7 @@ async function loadAdminMetrics(){
     }).sort(function(a,b){ return b.revenue-a.revenue; });
 
     tableEl.innerHTML = '<table><thead><tr>'
-      +'<th>Quiosque</th><th>Faturamento</th><th>Custo</th><th>Lucro</th><th>Margem</th><th>Pedidos</th><th>Entregues</th><th>Cancelamentos</th><th>Ticket médio</th><th>Status</th>'
+      +'<th>Negócio</th><th>Faturamento</th><th>Custo</th><th>Lucro</th><th>Margem</th><th>Pedidos</th><th>Entregues</th><th>Cancelamentos</th><th>Ticket médio</th><th>Status</th>'
       +'</tr></thead><tbody>'
       +allKioskData.map(function(k){
         var avg = k.delivered ? k.revenue/k.delivered : 0;
