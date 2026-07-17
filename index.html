@@ -314,11 +314,14 @@ tr:hover td{background:var(--sand-50)}
   .sidebar,.admin-sidebar{
     display:flex;
     position:fixed;left:-220px;top:0;bottom:0;z-index:200;
-    height:auto;max-height:100vh;max-height:100dvh;overflow:hidden;
+    height:auto;max-height:100vh;max-height:100dvh;
+    overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
     transition:left .3s cubic-bezier(.4,0,.2,1);
     padding-top:52px;
   }
   .sidebar.open,.admin-sidebar.open{left:0}
+  .sidebar-nav{flex:none;overflow:visible;min-height:0}
+  .sidebar-foot{flex:none}
   .kiosk-main,.admin-main{padding:14px}
   .orders-grid{grid-template-columns:1fr}
   .grid-2{grid-template-columns:1fr}
@@ -1678,11 +1681,14 @@ tr:hover td{background:var(--sand-50)}
   .sidebar,.admin-sidebar{
     display:flex;
     position:fixed;left:-220px;top:0;bottom:0;z-index:200;
-    height:auto;max-height:100vh;max-height:100dvh;overflow:hidden;
+    height:auto;max-height:100vh;max-height:100dvh;
+    overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
     transition:left .3s cubic-bezier(.4,0,.2,1);
     padding-top:52px;
   }
   .sidebar.open,.admin-sidebar.open{left:0}
+  .sidebar-nav{flex:none;overflow:visible;min-height:0}
+  .sidebar-foot{flex:none}
   .kiosk-main,.admin-main{padding:14px}
   .orders-grid{grid-template-columns:1fr}
   .grid-2{grid-template-columns:1fr}
