@@ -464,7 +464,8 @@ tr:hover td{background:var(--sand-50)}
   </div>
   <div class="lp-nav-btns">
     <button class="lp-btn-outline" onclick="goToClient()">📱 Sou cliente</button>
-    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Meu quiosque</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
@@ -476,7 +477,8 @@ tr:hover td{background:var(--sand-50)}
   </button>
   <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:32px;width:auto"/></div>
   <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
-  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Quiosque</button>
+  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this);setRegBusinessType('quiosque')">🏪 Quiosque</button>
+  <button class="nav-btn" id="nav-bar" onclick="showScreen('kiosk',this);setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -512,7 +514,8 @@ tr:hover td{background:var(--sand-50)}
       <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToClient()">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Quero meu quiosque</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">🍽️ Quero meu bar/restaurante</button>
       </div>
 
     </div>
@@ -628,6 +631,47 @@ tr:hover td{background:var(--sand-50)}
 
     <div class="lp-divider"></div>
 
+    <!-- PARA O BAR/RESTAURANTE -->
+    <div class="lp-section" style="position:relative;z-index:10">
+      <div class="lp-section-tag">Para o bar/restaurante</div>
+      <div class="lp-section-title">Comandas digitais<br/>sem complicação</div>
+      <div class="lp-section-sub">Painel completo para gerenciar pedidos por mesa, cardápio e relatórios em tempo real.</div>
+      <div class="lp-cards">
+        <div class="lp-card">
+          <div class="lp-card-icon blue">📋</div>
+          <h3>Pedidos ao vivo</h3>
+          <p>Receba e gerencie pedidos em tempo real. Alertas sonoros para nenhum pedido passar.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card-icon purple">🍔</div>
+          <h3>Cardápio digital</h3>
+          <p>Atualize preços, fotos e disponibilidade na hora. Sem precisar reimprimir nada.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card-icon green">📈</div>
+          <h3>Relatórios detalhados</h3>
+          <p>Faturamento por dia, semana e mês. Veja quais produtos vendem mais.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card-icon amber">🪑</div>
+          <h3>Gestão de mesas</h3>
+          <p>Controle cada mesa, gere QR Codes e feche a comanda quando a conta for paga.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card-icon blue">📱</div>
+          <h3>Funciona no celular</h3>
+          <p>Painel responsivo. Gerencie pelo celular, tablet ou computador com a mesma facilidade.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card-icon purple">🚀</div>
+          <h3>Setup em minutos</h3>
+          <p>Cadastre seu bar ou restaurante, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="lp-divider"></div>
+
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.75);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Nossa missão</div>
@@ -665,10 +709,16 @@ tr:hover td{background:var(--sand-50)}
           <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
           <button class="lp-access-btn blue">Fazer pedido →</button>
         </div>
-        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk')">
+        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">
           <div class="lp-access-icon">🏪</div>
           <div class="lp-access-title">Quiosque</div>
           <div class="lp-access-desc">Acesse o painel do seu quiosque, gerencie pedidos e cardápio.</div>
+          <button class="lp-access-btn indigo">Entrar no painel →</button>
+        </div>
+        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">
+          <div class="lp-access-icon">🍽️</div>
+          <div class="lp-access-title">Bar/Restaurante</div>
+          <div class="lp-access-desc">Acesse o painel do seu bar ou restaurante, gerencie pedidos e cardápio.</div>
           <button class="lp-access-btn indigo">Entrar no painel →</button>
         </div>
         <div class="lp-access-card admin" onclick="goToScreen('admin')">
@@ -860,7 +910,11 @@ tr:hover td{background:var(--sand-50)}
     <div class="auth-card wide hidden" id="card-register">
       <div class="auth-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:80%;max-height:80%;object-fit:contain"/></div>
       <div class="auth-title">Criar conta</div>
-      <div class="auth-sub">Preencha os dados do seu quiosque</div>
+      <div class="auth-sub" id="reg-auth-sub">Preencha os dados do seu quiosque</div>
+      <div class="biz-type-toggle" style="display:flex;gap:8px;margin-bottom:14px">
+        <button type="button" class="hf-btn active" id="regtype-kiosk" onclick="setRegBusinessType('quiosque')">🏪 Quiosque</button>
+        <button type="button" class="hf-btn" id="regtype-bar" onclick="setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
+      </div>
       <div class="grid-2">
         <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
@@ -869,7 +923,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo"/><div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div></div>
         <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
       </div>
-      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label" id="reg-kname-label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
       <div class="field" style="margin-top:12px;margin-bottom:0">
         <label class="label">CPF ou CNPJ *</label>
         <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)"/>
@@ -1243,7 +1297,12 @@ tr:hover td{background:var(--sand-50)}
     </aside>
     <main class="admin-main">
       <div class="apage active" id="apage-kiosks">
-        <div class="page-header"><div class="page-title">Quiosques</div></div>
+        <div class="page-header"><div class="page-title">Estabelecimentos</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="hf-btn active" id="adk-filter-all" onclick="setAdminKioskTypeFilter('all',this)">Todos</button>
+          <button class="hf-btn" id="adk-filter-kiosk" onclick="setAdminKioskTypeFilter('quiosque',this)">🏪 Quiosques</button>
+          <button class="hf-btn" id="adk-filter-bar" onclick="setAdminKioskTypeFilter('bar_restaurante',this)">🍽️ Bares/Restaurantes</button>
+        </div>
         <div class="table-wrap" id="admin-kiosks-wrap"><div class="page-loading"></div></div>
       </div>
       <div class="apage" id="apage-subs">
@@ -1741,7 +1800,8 @@ tr:hover td{background:var(--sand-50)}
   </div>
   <div class="lp-nav-btns">
     <button class="lp-btn-outline" onclick="goToClient()">📱 Sou cliente</button>
-    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Meu quiosque</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
@@ -1753,7 +1813,8 @@ tr:hover td{background:var(--sand-50)}
   </button>
   <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:32px;width:auto"/></div>
   <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
-  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Quiosque</button>
+  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this);setRegBusinessType('quiosque')">🏪 Quiosque</button>
+  <button class="nav-btn" id="nav-bar" onclick="showScreen('kiosk',this);setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -1833,7 +1894,8 @@ tr:hover td{background:var(--sand-50)}
       <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToClient()">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">🏪 Quero meu quiosque</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">🍽️ Quero meu bar/restaurante</button>
       </div>
 
     </div>
@@ -1949,6 +2011,47 @@ tr:hover td{background:var(--sand-50)}
 
     <div class="lp-divider"></div>
 
+    <!-- PARA O BAR/RESTAURANTE -->
+    <div class="lp-section" style="position:relative;z-index:10">
+      <div class="lp-section-tag">Para o bar/restaurante</div>
+      <div class="lp-section-title">Comandas digitais<br/>sem complicação</div>
+      <div class="lp-section-sub">Painel completo para gerenciar pedidos por mesa, cardápio e relatórios em tempo real.</div>
+      <div class="lp-cards">
+        <div class="lp-card">
+          <div class="lp-card-icon blue">📋</div>
+          <h3>Pedidos ao vivo</h3>
+          <p>Receba e gerencie pedidos em tempo real. Alertas sonoros para nenhum pedido passar.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card-icon purple">🍔</div>
+          <h3>Cardápio digital</h3>
+          <p>Atualize preços, fotos e disponibilidade na hora. Sem precisar reimprimir nada.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card-icon green">📈</div>
+          <h3>Relatórios detalhados</h3>
+          <p>Faturamento por dia, semana e mês. Veja quais produtos vendem mais.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card-icon amber">🪑</div>
+          <h3>Gestão de mesas</h3>
+          <p>Controle cada mesa, gere QR Codes e feche a comanda quando a conta for paga.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card-icon blue">📱</div>
+          <h3>Funciona no celular</h3>
+          <p>Painel responsivo. Gerencie pelo celular, tablet ou computador com a mesma facilidade.</p>
+        </div>
+        <div class="lp-card">
+          <div class="lp-card-icon purple">🚀</div>
+          <h3>Setup em minutos</h3>
+          <p>Cadastre seu bar ou restaurante, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="lp-divider"></div>
+
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.75);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Nossa missão</div>
@@ -1986,10 +2089,16 @@ tr:hover td{background:var(--sand-50)}
           <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
           <button class="lp-access-btn blue">Fazer pedido →</button>
         </div>
-        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk')">
+        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk');setRegBusinessType('quiosque')">
           <div class="lp-access-icon">🏪</div>
           <div class="lp-access-title">Quiosque</div>
           <div class="lp-access-desc">Acesse o painel do seu quiosque, gerencie pedidos e cardápio.</div>
+          <button class="lp-access-btn indigo">Entrar no painel →</button>
+        </div>
+        <div class="lp-access-card kiosk" onclick="goToScreen('kiosk');setRegBusinessType('bar_restaurante')">
+          <div class="lp-access-icon">🍽️</div>
+          <div class="lp-access-title">Bar/Restaurante</div>
+          <div class="lp-access-desc">Acesse o painel do seu bar ou restaurante, gerencie pedidos e cardápio.</div>
           <button class="lp-access-btn indigo">Entrar no painel →</button>
         </div>
         <div class="lp-access-card admin" onclick="goToScreen('admin')">
@@ -2114,7 +2223,11 @@ tr:hover td{background:var(--sand-50)}
     <div class="auth-card wide hidden" id="card-register">
       <div class="auth-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:80%;max-height:80%;object-fit:contain"/></div>
       <div class="auth-title">Criar conta</div>
-      <div class="auth-sub">Preencha os dados do seu quiosque</div>
+      <div class="auth-sub" id="reg-auth-sub">Preencha os dados do seu quiosque</div>
+      <div class="biz-type-toggle" style="display:flex;gap:8px;margin-bottom:14px">
+        <button type="button" class="hf-btn active" id="regtype-kiosk" onclick="setRegBusinessType('quiosque')">🏪 Quiosque</button>
+        <button type="button" class="hf-btn" id="regtype-bar" onclick="setRegBusinessType('bar_restaurante')">🍽️ Bar/Restaurante</button>
+      </div>
       <div class="grid-2">
         <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
@@ -2123,7 +2236,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo"/><div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div></div>
         <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
       </div>
-      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label" id="reg-kname-label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
       <div class="field" style="margin-top:12px;margin-bottom:0">
         <label class="label">CPF ou CNPJ *</label>
         <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)"/>
@@ -2360,7 +2473,12 @@ tr:hover td{background:var(--sand-50)}
     </aside>
     <main class="admin-main">
       <div class="apage active" id="apage-kiosks">
-        <div class="page-header"><div class="page-title">Quiosques</div></div>
+        <div class="page-header"><div class="page-title">Estabelecimentos</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="hf-btn active" id="adk-filter-all" onclick="setAdminKioskTypeFilter('all',this)">Todos</button>
+          <button class="hf-btn" id="adk-filter-kiosk" onclick="setAdminKioskTypeFilter('quiosque',this)">🏪 Quiosques</button>
+          <button class="hf-btn" id="adk-filter-bar" onclick="setAdminKioskTypeFilter('bar_restaurante',this)">🍽️ Bares/Restaurantes</button>
+        </div>
         <div class="table-wrap" id="admin-kiosks-wrap"><div class="page-loading"></div></div>
       </div>
       <div class="apage" id="apage-subs">
@@ -2684,6 +2802,61 @@ if(!isConfigured){
 // ESTADO GLOBAL
 // ══════════════════════════════════════════════════════
 var currentKiosk = null;   // objeto kiosk do quiosque logado
+var _regBusinessType = 'quiosque';  // tipo de negócio selecionado no cadastro/entrada: 'quiosque' | 'bar_restaurante'
+var BIZ_LABELS = {
+  quiosque:       { icon:'🏪', name:'Quiosque',        nameLabel:'Nome do quiosque *',        placeholder:'Ex: Quiosque Pôr do Sol', sub:'Preencha os dados do seu quiosque' },
+  bar_restaurante:{ icon:'🍽️', name:'Bar/Restaurante', nameLabel:'Nome do bar/restaurante *', placeholder:'Ex: Bar do Zé',           sub:'Preencha os dados do seu bar ou restaurante' }
+};
+
+// ── Terminologia dinâmica: no painel de Bar/Restaurante, "guarda-sol"
+// vira "mesa" em toda a interface (menu, filtros, tabelas, toasts, etc.) ──
+function isBarBiz(){ return !!(currentKiosk && currentKiosk.business_type === 'bar_restaurante'); }
+function swapUmbrellaWords(str){
+  if(!isBarBiz() || typeof str !== 'string') return str;
+  return str
+    .replace(/Guarda-sóis/g,'Mesas')
+    .replace(/guarda-sóis/g,'mesas')
+    .replace(/GUARDA-SOL/g,'MESA')
+    .replace(/Guarda-sol/g,'Mesa')
+    .replace(/guarda-sol/g,'mesa')
+    .replace(/☂️/g,'🪑')
+    .replace(/☂/g,'🪑');
+}
+// Percorre um elemento e troca o texto (e placeholders/títulos) de "guarda-sol"
+// para "mesa" quando o painel logado é de bar/restaurante. Assim cobrimos telas
+// geradas dinamicamente (tabelas, cards, modais) sem precisar editar cada uma.
+function applyBizTerminology(root){
+  if(!isBarBiz() || !root) return;
+  var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  var node;
+  while((node = walker.nextNode())){
+    var swapped = swapUmbrellaWords(node.nodeValue);
+    if(swapped !== node.nodeValue) node.nodeValue = swapped;
+  }
+  root.querySelectorAll('[placeholder]').forEach(function(el){
+    var s = swapUmbrellaWords(el.getAttribute('placeholder'));
+    if(s !== el.getAttribute('placeholder')) el.setAttribute('placeholder', s);
+  });
+  root.querySelectorAll('[title]').forEach(function(el){
+    var s = swapUmbrellaWords(el.getAttribute('title'));
+    if(s !== el.getAttribute('title')) el.setAttribute('title', s);
+  });
+}
+var _bizTermObserver = null;
+// Observa o painel do dono e reaplica a troca de terminologia sempre que o
+// conteúdo é re-renderizado (pedidos, mesas, histórico, contas, etc.).
+function startBizTerminologyWatcher(){
+  var target = $('kiosk-dash');
+  if(!target) return;
+  applyBizTerminology(target);
+  if(_bizTermObserver) _bizTermObserver.disconnect();
+  if(!isBarBiz()) return;
+  _bizTermObserver = new MutationObserver(function(){
+    clearTimeout(window._bizTermTimer);
+    window._bizTermTimer = setTimeout(function(){ applyBizTerminology(target); }, 30);
+  });
+  _bizTermObserver.observe(target, {childList:true, subtree:true, characterData:true});
+}
 var catalog = [];          // produtos do kiosk atual
 var dbCategories = [];     // categorias do kiosk atual
 var orders = [];           // pedidos em memória (sincronizados com DB)
@@ -3089,6 +3262,7 @@ function setLoading(btnId, loading, text){
 }
 
 function toast(msg){
+  msg = swapUmbrellaWords(msg);
   const t=$('toast'); t.textContent=msg; t.classList.add('show');
   clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2800);
 }
@@ -5257,6 +5431,19 @@ function showCard(name){
   $('card-register').classList.toggle('hidden',name!=='register');
 }
 
+// Define o tipo de negócio (quiosque ou bar/restaurante) usado no cadastro,
+// e atualiza os textos/labels do formulário e o toggle visual.
+function setRegBusinessType(type){
+  if(!BIZ_LABELS[type]) type = 'quiosque';
+  _regBusinessType = type;
+  var lbl = BIZ_LABELS[type];
+  document.querySelectorAll('#regtype-kiosk').forEach(function(b){ b.classList.toggle('active', type==='quiosque'); });
+  document.querySelectorAll('#regtype-bar').forEach(function(b){ b.classList.toggle('active', type==='bar_restaurante'); });
+  document.querySelectorAll('#reg-auth-sub').forEach(function(el){ el.textContent = lbl.sub; });
+  document.querySelectorAll('#reg-kname-label').forEach(function(el){ el.textContent = lbl.nameLabel; });
+  document.querySelectorAll('#reg-kname').forEach(function(el){ el.placeholder = lbl.placeholder; });
+}
+
 // Retorna quem está executando a ação agora: nome do garçom logado, ou o
 // dono/gerente do quiosque. Usado para rastrear quem alterou cada pedido.
 function getCurrentActorName(){
@@ -5450,7 +5637,7 @@ async function doLogin(){
         return;
       }
       // Buscar dados básicos do quiosque a que esse garçom pertence
-      var kResp = await sb.from('kiosks').select('id,name,owner_name,blocked,approved,is_active').eq('id', w.kiosk_id).single();
+      var kResp = await sb.from('kiosks').select('id,name,owner_name,blocked,approved,is_active,business_type').eq('id', w.kiosk_id).single();
       if(kResp.error || !kResp.data){
         toast('❌ Não foi possível localizar o quiosque vinculado.');
         setLoading('login-btn',false,'Entrar');
@@ -5464,7 +5651,7 @@ async function doLogin(){
       currentKiosk = k;
       window._currentWaiter = { id: w.id, name: w.name, canEditMenu: !!w.can_edit_menu };
     } else {
-      currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_name:'Demo'};
+      currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_name:'Demo',business_type:'quiosque'};
       window._currentWaiter = { id:'demo-waiter', name:'Garçom Demo' };
     }
     window._isWaiterMode = true;
@@ -5498,8 +5685,13 @@ async function doLogin(){
     if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
     currentKiosk=k;
+    // login_kiosk (RPC) pode não retornar business_type; busca à parte, sem quebrar se a coluna não existir.
+    try{
+      var btResp = await sb.from('kiosks').select('business_type').eq('id',k.id).single();
+      if(btResp && btResp.data) currentKiosk.business_type = btResp.data.business_type;
+    }catch(e){}
   } else {
-    currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo'};
+    currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo',business_type:'quiosque'};
   }
   window._isWaiterMode = false;
   window._currentWaiter = null;
@@ -5620,6 +5812,10 @@ async function doRegister(){
       return;
     }
     var data = rows[0];
+    // Grava o tipo de negócio (quiosque ou bar/restaurante) escolhido no cadastro.
+    // Feito à parte pois register_kiosk (RPC) não recebe esse parâmetro.
+    // Se a coluna business_type ainda não existir no banco, falha em silêncio.
+    try{ await sb.from('kiosks').update({business_type:_regBusinessType}).eq('id',data.id); }catch(e){}
     // Criar categorias padrão (mesmo aguardando aprovação, pra já estar pronto quando aprovar)
     await sb.from('categories').insert(MOCK_CATS.map((c,i)=>({kiosk_id:data.id,name:c.name,emoji:c.emoji,sort_order:i+1})));
     setLoading('register-btn',false,'Criar conta 🚀');
@@ -5641,7 +5837,7 @@ async function doRegister(){
     return;
   } else {
     // Modo demo (sem Supabase): entra direto, sem precisar de aprovação
-    currentKiosk={id:'demo',name:kname,owner_email:email,owner_name:owner};
+    currentKiosk={id:'demo',name:kname,owner_email:email,owner_name:owner,business_type:_regBusinessType};
   }
   setLoading('register-btn',false,'Criar conta 🚀');
   toast('✅ Bem-vindo(a), '+owner.split(' ')[0]+'!');
@@ -5675,6 +5871,13 @@ async function enterDash(){
   $('kiosk-auth').classList.add('hidden');
   $('kiosk-dash').classList.remove('hidden');
   $('dash-kname').textContent=currentKiosk.name;
+  // Destaca na barra superior o botão correspondente ao tipo de negócio logado.
+  var isBar = currentKiosk.business_type === 'bar_restaurante';
+  document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll(isBar ? '#nav-bar' : '#nav-kiosk').forEach(function(b){ b.classList.add('active'); });
+  // Se for bar/restaurante, troca "guarda-sol" por "mesa" em todo o painel
+  // (inclusive no que for renderizado dinamicamente daqui pra frente).
+  startBizTerminologyWatcher();
   document.querySelectorAll('.kpage').forEach(p=>p.classList.remove('active'));
 
   // Modo garçom: esconder Dashboard, Histórico, Relatórios e Garçons, e abrir direto em "Ao vivo"
@@ -5745,7 +5948,7 @@ async function closeUmbrellaSession(umbNum, applyService){
   applyService = !!applyService;
   var confirmMsg = 'Faturar e encerrar guarda-sol '+umbNum+'?\nIsso vai marcar todos os pedidos como faturados e limpar a sessão do cliente.';
   if(applyService) confirmMsg += '\n\nSerá adicionada a taxa de serviço de 10% sobre o total.';
-  if(!confirm(confirmMsg)) return;
+  if(!confirm(swapUmbrellaWords(confirmMsg))) return;
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     var kid = currentKiosk.id;
@@ -5885,6 +6088,7 @@ async function closeUmbrellaSession(umbNum, applyService){
 function doLogout(){
   if(window._accessChecker){ clearInterval(window._accessChecker); window._accessChecker=null; }
   if(realtimeChannel) sb.removeChannel(realtimeChannel);
+  if(_bizTermObserver){ _bizTermObserver.disconnect(); _bizTermObserver=null; }
   currentKiosk=null; catalog=[]; dbCategories=[]; orders=[];
   window._isWaiterMode = false;
   window._currentWaiter = null;
@@ -8429,7 +8633,7 @@ async function saveUmbrella(){
 }
 
 async function deleteUmbrella(id, number){
-  if(!confirm('Remover guarda-sol Nº ' + number + '?')) return;
+  if(!confirm(swapUmbrellaWords('Remover guarda-sol Nº ' + number + '?'))) return;
   if(isConfigured && !String(id).startsWith('u')){
     var {error} = await sb.from('umbrellas').delete().eq('id', id);
     if(error){ toast('Erro: ' + error.message); return; }
@@ -8448,7 +8652,7 @@ function copyQrUrl(elOrUrl){
 function printQr(url,num){
   var win=window.open('','_blank');
   win.document.write('<html><body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">'
-    +'<h2>Guarda-sol Nº '+num+'</h2>'
+    +'<h2>'+swapUmbrellaWords('Guarda-sol Nº '+num)+'</h2>'
     +'<img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(url)+'" style="margin:20px"/>'
     +'<p style="font-size:12px;color:#666;max-width:300px;text-align:center">'+url+'</p>'
     +'<button onclick="window.print()" style="margin-top:20px;padding:10px 24px;background:#1e293b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">🖨️ Imprimir</button>'
@@ -8721,6 +8925,7 @@ function renderPieChart(data){
 }
 var marginSortBy = 'margin';
 var marginTableData = [];
+var reportServiceTotal = 0;
 
 function sortMarginTable(by, btn){
   marginSortBy = by;
@@ -8739,7 +8944,7 @@ function renderMarginTable(){
   var el = $('r-margin-table');
   if(!el) return;
 
-  if(!marginTableData.length){
+  if(!marginTableData.length && reportServiceTotal <= 0){
     el.innerHTML = '<div style="color:var(--sl-400);font-size:13px;padding:16px">Nenhuma venda no período.</div>';
     return;
   }
@@ -8767,6 +8972,17 @@ function renderMarginTable(){
     +'<th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Margem</th>'
     +'<th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--sl-400);text-transform:uppercase;border-bottom:2px solid var(--sand-100)">Visualização</th>'
     +'</tr></thead><tbody>'
+    + (reportServiceTotal > 0
+        ? '<tr style="background:#eff6ff;border-bottom:2px solid #bfdbfe">'
+          +'<td style="padding:10px 12px;font-size:13px;font-weight:700;color:#0369a1">💼 Serviço (10%) <span style="font-weight:400;color:#64748b;font-size:11px">— não é produto</span></td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:13px;color:#94a3b8">—</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:13px;font-weight:700;color:#0369a1">'+fmt(reportServiceTotal)+'</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:12px;color:#94a3b8">—</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:12px;color:#94a3b8">—</td>'
+          +'<td style="padding:10px 12px;text-align:right;font-size:12px;color:#94a3b8">—</td>'
+          +'<td style="padding:10px 12px;font-size:11px;color:#94a3b8">Cobrado ao faturar contas</td>'
+          +'</tr>'
+        : '')
     + sorted.map(function(p, i){
       if(!p.hasCost){
         return '<tr style="border-bottom:1px solid var(--sand-50);opacity:.7">'
@@ -8899,6 +9115,7 @@ async function loadReports(){
     return o.customer_name==='PEDIDO DE CONTA' && Number(o.service_amount||0) > 0;
   });
   var serviceTotalReport = serviceReport.reduce(function(s,o){ return s+Number(o.service_amount||0); }, 0);
+  reportServiceTotal = serviceTotalReport;
   var serviceEl = $('r-service');
   if(serviceEl) serviceEl.textContent = fmt(serviceTotalReport);
 
@@ -9043,7 +9260,8 @@ async function loadAdminData(){
   if(isConfigured){
     var {data:kiosks}=await sb.from('kiosks').select('*').order('created_at',{ascending:false});
     var list=kiosks||[];
-    renderAdminKiosksTable(list);
+    window._adminKiosksAll = list;
+    renderAdminKiosksTable(filterKiosksByType(list, window._adminKioskTypeFilter));
 
     var sw=$('admin-subs-wrap');
     if(sw) sw.innerHTML='<table><thead><tr><th>Quiosque</th><th>Plano</th><th>Status</th></tr></thead><tbody>'
@@ -9060,6 +9278,17 @@ async function loadAdminData(){
   }
 }
 
+window._adminKioskTypeFilter = 'all';
+function filterKiosksByType(list, type){
+  if(!type || type==='all') return list;
+  return list.filter(function(k){ return (k.business_type||'quiosque') === type; });
+}
+function setAdminKioskTypeFilter(type, btn){
+  window._adminKioskTypeFilter = type;
+  document.querySelectorAll('#apage-kiosks .hf-btn').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  renderAdminKiosksTable(filterKiosksByType(window._adminKiosksAll||[], type));
+}
 function renderAdminKiosksTable(list){
   var kw=$('admin-kiosks-wrap'); if(!kw) return;
   if(!list||!list.length){
@@ -9073,7 +9302,7 @@ function renderAdminKiosksTable(list){
     return ap - bp;
   });
   kw.innerHTML='<table><thead><tr>'
-    +'<th>Quiosque</th><th>Responsável</th><th>E-mail</th><th>Cidade</th>'
+    +'<th>Quiosque</th><th>Tipo</th><th>Responsável</th><th>E-mail</th><th>Cidade</th>'
     +'<th>Status</th><th>Ações</th>'
     +'</tr></thead><tbody>'
     +sorted.map(function(k){
@@ -9098,8 +9327,10 @@ function renderAdminKiosksTable(list){
         if(status!=='inactive') actions += '<button class="btn btn-sm btn-ghost" data-kid="'+k.id+'" data-st="inactive" onclick="setKioskStatusBtn(this)">⏸️ Desativar</button>';
         if(status!=='blocked')  actions += '<button class="btn btn-sm btn-danger" data-kid="'+k.id+'" data-st="blocked" onclick="setKioskStatusBtn(this)">🚫 Bloquear</button>';
       }
+      var bizType = k.business_type === 'bar_restaurante' ? '🍽️ Bar/Restaurante' : '🏪 Quiosque';
       return '<tr>'
         +'<td><b>'+esc(k.name)+'</b></td>'
+        +'<td style="font-size:12px;white-space:nowrap">'+bizType+'</td>'
         +'<td>'+esc(k.owner_name||'—')+'</td>'
         +'<td style="font-size:11px">'+esc(k.owner_email||'')+'</td>'
         +'<td>'+esc(k.city||'—')+'</td>'
@@ -9148,7 +9379,8 @@ async function setKioskStatus(id, newStatus){
 
   // Recarregar a tabela
   var {data:kiosks} = await sb.from('kiosks').select('*').order('created_at',{ascending:false});
-  renderAdminKiosksTable(kiosks||[]);
+  window._adminKiosksAll = kiosks||[];
+  renderAdminKiosksTable(filterKiosksByType(window._adminKiosksAll, window._adminKioskTypeFilter));
   toast('✅ Quiosque '+labels[newStatus]+' com sucesso!');
 
   // Enviar e-mail de aprovação se for o caso (somente quando aprovar)
