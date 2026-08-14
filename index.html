@@ -131,6 +131,13 @@ body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webk
 .cart-fab{position:fixed;bottom:20px;left:16px;right:16px;z-index:100;background:var(--sl-800);color:#fff;border:none;border-radius:14px;padding:15px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 8px 28px rgba(15,23,42,.3);transition:all .2s;font-family:var(--font)}
 .cart-fab-count{background:var(--ocean-500);color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 body[data-bill-blocked="1"] .cart-fab{display:none !important}
+/* Pedido direto desativado pelo negócio: esconde os controles de adicionar item,
+   deixando o cliente só ver o cardápio (peça ao garçom aparece no lugar). */
+body[data-direct-orders-off="1"] .cart-fab{display:none !important}
+body[data-direct-orders-off="1"] .add-btn,
+body[data-direct-orders-off="1"] .qty-ctrl{display:none !important}
+body[data-direct-orders-off="1"] .direct-orders-off-badge{display:inline-block !important}
+.direct-orders-off-badge{display:none;font-size:11px;color:var(--sl-500);background:var(--sand-100);padding:4px 9px;border-radius:99px;white-space:nowrap}
 body[data-bill-blocked="1"] .menu-cat-tabs{opacity:.4;pointer-events:none}
 body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
 
@@ -196,7 +203,7 @@ body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
 .sidebar-icon img{width:100%;height:100%;object-fit:cover}
 .sidebar-kname{font-size:12px;font-weight:500;color:#fff}
 .sidebar-ksub{font-size:10px;color:rgba(255,255,255,.4)}
-.sidebar-nav{flex:1;padding:10px 8px;overflow-y:auto}
+.sidebar-nav{flex:1;min-height:0;padding:10px 8px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .s-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;font-size:12px;color:rgba(255,255,255,.55);font-weight:500;transition:all .15s;margin-bottom:2px;border:none;background:transparent;width:100%;font-family:var(--font)}
 .s-item:hover{background:rgba(255,255,255,.06);color:#fff}
 .s-item.active{background:rgba(255,255,255,.11);color:#fff}
@@ -302,19 +309,48 @@ tr:hover td{background:var(--sand-50)}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:150}
 .sidebar-overlay.open{display:block}
 
-@media(max-width:700px){
+@media(max-width:700px),(max-height:500px) and (orientation:landscape){
   .hamburger{display:block}
   .sidebar,.admin-sidebar{
     display:flex;
     position:fixed;left:-220px;top:0;bottom:0;z-index:200;
+    height:auto;max-height:100vh;max-height:100dvh;
+    overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
     transition:left .3s cubic-bezier(.4,0,.2,1);
     padding-top:52px;
   }
   .sidebar.open,.admin-sidebar.open{left:0}
+  .sidebar-nav{flex:none;overflow:visible;min-height:0}
+  .sidebar-foot{flex:none}
   .kiosk-main,.admin-main{padding:14px}
   .orders-grid{grid-template-columns:1fr}
+  .reports-row{grid-template-columns:1fr}
+  .report-card{padding:14px;min-height:0}
   .grid-2{grid-template-columns:1fr}
   .metrics-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Alvos de toque maiores no menu lateral e nos botões pequenos */
+  .s-item{padding:13px 12px;font-size:13.5px;min-height:46px}
+  .s-icon{font-size:16px}
+  .btn-sm{padding:9px 15px;font-size:13px}
+  .hf-btn{padding:9px 15px;font-size:13px}
+  .page-title{font-size:17px}
+  .page-header{flex-wrap:wrap;gap:10px}
+
+  /* Cards de pedido (Ao vivo): texto maior e mais legível, menos espaço vazio */
+  .oc-head{padding:11px 14px 7px}
+  .oc-num{font-size:16px}
+  .oc-customer{font-size:14px}
+  .oc-item-row{font-size:13.5px;padding:2px 0}
+  .oc-note{font-size:13px}
+  .oc-total{font-size:15px}
+  .oc-actions{padding:10px 14px 14px}
+  .oc-actions .btn{flex:1;min-width:100px;padding:10px 12px}
+
+  /* Tabelas: fonte maior e rolagem horizontal mais suave no celular */
+  table{font-size:13px}
+  th{font-size:10.5px}
+  .table-wrap{-webkit-overflow-scrolling:touch}
 }
 @media(max-width:480px){
   .nav-btn{padding:4px 9px;font-size:11px}
@@ -333,7 +369,7 @@ tr:hover td{background:var(--sand-50)}
 /* Sol */
 .lp-sun{position:absolute;top:95%;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,#fffde7 0%,#ffd700 35%,#ffa500 65%,rgba(255,165,0,0) 100%);border-radius:50%;box-shadow:0 0 100px 50px rgba(255,210,0,.55),0 0 200px 100px rgba(255,150,0,.25),0 0 300px 150px rgba(255,120,0,.1);animation:sunrise 3s ease-out forwards, sunpulse 4s ease-in-out 3s infinite;z-index:2}
 @keyframes sunpulse{0%,100%{box-shadow:0 0 100px 50px rgba(255,210,0,.55),0 0 200px 100px rgba(255,150,0,.25),0 0 300px 150px rgba(255,120,0,.1);transform:translateX(-50%) scale(1)}50%{box-shadow:0 0 130px 65px rgba(255,220,0,.7),0 0 260px 130px rgba(255,160,0,.35),0 0 400px 200px rgba(255,120,0,.15);transform:translateX(-50%) scale(1.05)}}
-@keyframes sunrise{0%{top:100vh;opacity:0}50%{opacity:1}100%{top:180px;opacity:1}}50%{box-shadow:0 0 80px 40px rgba(255,220,0,.5),0 0 160px 80px rgba(255,150,0,.25)}}
+@keyframes sunrise{0%{top:100vh;opacity:0}50%{opacity:1}100%{top:180px;opacity:1}}
 
 /* Raios do sol */
 .lp-sun-rays{position:absolute;top:95%;left:50%;transform:translateX(-50%);width:200px;height:200px;z-index:1;animation:sunrise 3s ease-out forwards}
@@ -464,7 +500,7 @@ tr:hover td{background:var(--sand-50)}
   </div>
   <div class="lp-nav-btns">
     <button class="lp-btn-outline" onclick="goToClient()">📱 Sou cliente</button>
-    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu negócio</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
@@ -476,7 +512,7 @@ tr:hover td{background:var(--sand-50)}
   </button>
   <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:32px;width:auto"/></div>
   <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
-  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Quiosque</button>
+  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Negócio</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -507,12 +543,11 @@ tr:hover td{background:var(--sand-50)}
       </div>
     </div>
     <div class="lp-hero" style="position:relative;z-index:10;background:rgba(3,60,100,.55);backdrop-filter:blur(2px);margin:0;padding-top:100px;padding-bottom:60px">
-      <div class="lp-badge" id="lp-badge">🌊 Tecnologia para a beira-mar</div>
-      <h1><span id="lp-h1-main">Peça na praia,</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
-      <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
+      <h1><span id="lp-h1-main">Peça</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
+      <p>O Recebaa conecta clientes aos negócios via QR Code.<br/>Sem filas, sem espera.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToClient()">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu negócio</button>
       </div>
 
     </div>
@@ -523,11 +558,11 @@ tr:hover td{background:var(--sand-50)}
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.7);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Como funciona</div>
       <div class="lp-section-title" id="lp-how-title">Simples como deve ser</div>
-      <div class="lp-section-sub" id="lp-how-sub" style="margin:0 auto">Três passos e o pedido está a caminho do seu guarda-sol.</div>
+      <div class="lp-section-sub" id="lp-how-sub" style="margin:0 auto">Três passos e o pedido está a caminho da sua mesa.</div>
       <div class="lp-steps">
         <div class="lp-step">
           <div class="lp-step-num">1</div>
-          <h3 id="lp-step1-t">Escaneie o QR Code</h3><p id="lp-step1-p">Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.</p>
+          <h3 id="lp-step1-t">Escaneie o QR Code</h3><p id="lp-step1-p">Cada mesa tem um QR Code. Aponte a câmera, selecione sua mesa e pronto.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">2</div>
@@ -535,7 +570,7 @@ tr:hover td{background:var(--sand-50)}
         </div>
         <div class="lp-step">
           <div class="lp-step-num">3</div>
-          <h3 id="lp-step3-t">Receba no lugar</h3><p id="lp-step3-p">O quiosque recebe o pedido e entrega direto no seu guarda-sol.</p>
+          <h3 id="lp-step3-t">Receba no lugar</h3><p id="lp-step3-p">O negócio recebe o pedido e entrega direto na sua mesa.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">4</div>
@@ -550,7 +585,7 @@ tr:hover td{background:var(--sand-50)}
     <div class="lp-section" style="position:relative;z-index:10">
       <div class="lp-section-tag">Para o cliente</div>
       <div class="lp-section-title">Mais tempo curtindo,<br/>menos tempo esperando</div>
-      <div class="lp-section-sub">Chega de levantar do guarda-sol para pedir ou pagar. Tudo pelo celular.</div>
+      <div class="lp-section-sub">Tudo pelo celular.</div>
       <div class="lp-cards">
         <div class="lp-card">
           <div class="lp-card-icon blue">📱</div>
@@ -587,9 +622,9 @@ tr:hover td{background:var(--sand-50)}
 
     <div class="lp-divider"></div>
 
-    <!-- PARA O QUIOSQUE -->
+    <!-- PARA O NEGÓCIO -->
     <div class="lp-section" style="position:relative;z-index:10">
-      <div class="lp-section-tag">Para o quiosque</div>
+      <div class="lp-section-tag">Para o negócio</div>
       <div class="lp-section-title">Venda mais com<br/>menos esforço</div>
       <div class="lp-section-sub">Painel completo para gerenciar pedidos, cardápio e relatórios em tempo real.</div>
       <div class="lp-cards">
@@ -610,8 +645,8 @@ tr:hover td{background:var(--sand-50)}
         </div>
         <div class="lp-card">
           <div class="lp-card-icon amber">☂️</div>
-          <h3>Gestão de guarda-sóis</h3>
-          <p>Controle cada guarda-sol, gere QR Codes e encerre sessões quando a conta for paga.</p>
+          <h3>Gestão de mesas</h3>
+          <p>Controle cada mesa, gere QR Codes e encerre sessões quando a conta for paga.</p>
         </div>
         <div class="lp-card">
           <div class="lp-card-icon blue">📱</div>
@@ -621,7 +656,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-card">
           <div class="lp-card-icon purple">🚀</div>
           <h3>Setup em minutos</h3>
-          <p>Cadastre seu quiosque, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
+          <p>Cadastre seu negócio, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
         </div>
       </div>
     </div>
@@ -631,8 +666,8 @@ tr:hover td{background:var(--sand-50)}
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.75);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Nossa missão</div>
-      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
-      <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
+      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>no Brasil</div>
+      <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o dia ao dono de negócio que quer aumentar suas vendas e melhorar seus controles de gestão.</div>
       <div class="lp-cards">
         <div class="lp-card">
           <div class="lp-card-icon blue">💙</div>
@@ -642,7 +677,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-card">
           <div class="lp-card-icon green">🤝</div>
           <h3>Parceria</h3>
-          <p>Crescemos junto com os quiosques. Seu sucesso é o nosso sucesso.</p>
+          <p>Crescemos junto com os negócios. Seu sucesso é o nosso sucesso.</p>
         </div>
         <div class="lp-card">
           <div class="lp-card-icon amber">⚡</div>
@@ -662,13 +697,13 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-access-card client" onclick="goToClient()">
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
-          <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
+          <div class="lp-access-desc">Escaneie o QR Code da sua mesa e faça seu pedido agora mesmo.</div>
           <button class="lp-access-btn blue">Fazer pedido →</button>
         </div>
         <div class="lp-access-card kiosk" onclick="goToScreen('kiosk')">
           <div class="lp-access-icon">🏪</div>
-          <div class="lp-access-title">Quiosque</div>
-          <div class="lp-access-desc">Acesse o painel do seu quiosque, gerencie pedidos e cardápio.</div>
+          <div class="lp-access-title">Negócio</div>
+          <div class="lp-access-desc">Acesse o painel do seu negócio, gerencie pedidos e cardápio.</div>
           <button class="lp-access-btn indigo">Entrar no painel →</button>
         </div>
         <div class="lp-access-card admin" onclick="goToScreen('admin')">
@@ -683,7 +718,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- FOOTER -->
     <div class="lp-footer" style="padding:20px 24px">
       <div style="margin-bottom:4px;opacity:.6"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:24px;width:auto;filter:brightness(2)"/></div>
-      <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
+      <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para negócios · Feito com ❤️ no Brasil</div>
       <div style="margin-top:10px;font-size:12px;opacity:.6">
         <a href="/privacy.html" style="color:inherit;text-decoration:underline;margin:0 8px">Política de Privacidade</a>
         ·
@@ -750,7 +785,7 @@ tr:hover td{background:var(--sand-50)}
 <div id="screen-client" class="screen" style="display:none">
   <div id="client-splash">
     <div class="splash">
-      <div class="splash-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
+      <div class="splash-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img id="splash-logo-img" src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
       <h1 id="splash-kname">Recebaa</h1>
       <p>Peça direto do seu guarda-sol</p>
       <div class="splash-field">
@@ -763,9 +798,9 @@ tr:hover td{background:var(--sand-50)}
 
   <div id="client-menu" class="hidden">
     <div class="menu-header">
-      <div class="menu-kiosk-logo" id="menu-logo" style="background:#fff;padding:4px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
+      <div class="menu-kiosk-logo" id="menu-logo" style="background:#fff;padding:4px;display:flex;align-items:center;justify-content:center"><img id="menu-logo-img" src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
       <div>
-        <div class="menu-kiosk-name" id="menu-kname">Quiosque</div>
+        <div class="menu-kiosk-name" id="menu-kname">Negócio</div>
         <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
       </div>
       <div class="menu-tab-row">
@@ -849,7 +884,12 @@ tr:hover td{background:var(--sand-50)}
       </label>
       <div class="field"><label class="label" id="login-email-label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
       <div id="login-pass-wrap">
-        <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
+        <div class="field"><label class="label">Senha</label>
+          <div style="position:relative">
+            <input class="input" id="login-pass" type="password" placeholder="••••••••" style="padding-right:38px"/>
+            <button type="button" onclick="togglePasswordVisibility('login-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+          </div>
+        </div>
         <div style="text-align:right;margin:-8px 0 14px" id="login-forgot-wrap"><a class="auth-link" href="#" style="font-size:12.5px" onclick="openForgotPasswordModal();return false">Esqueci minha senha</a></div>
       </div>
       <button class="btn btn-dark" id="login-btn" style="width:100%" onclick="doLogin()">Entrar</button>
@@ -860,16 +900,40 @@ tr:hover td{background:var(--sand-50)}
     <div class="auth-card wide hidden" id="card-register">
       <div class="auth-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:80%;max-height:80%;object-fit:contain"/></div>
       <div class="auth-title">Criar conta</div>
-      <div class="auth-sub">Preencha os dados do seu quiosque</div>
+      <div class="auth-sub" id="reg-auth-sub">Preencha os dados do seu quiosque</div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Tipo de negócio *</label>
+        <select class="input" id="reg-biztype" onchange="setRegBusinessType(this.value)">
+          <option value="" disabled selected>Selecione o tipo de negócio</option>
+          <option value="quiosque" id="regtype-kiosk">🏪 Quiosque</option>
+          <option value="bar_restaurante" id="regtype-bar">🍽️ Bar/Restaurante</option>
+        </select>
+      </div>
       <div class="grid-2">
         <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo"/><div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div></div>
-        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
+        <div class="field" style="margin-bottom:0">
+          <label class="label">Senha *</label>
+          <div style="position:relative">
+            <input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo" style="padding-right:38px"/>
+            <button type="button" onclick="togglePasswordVisibility('reg-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+          </div>
+          <div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="label">Confirmar senha *</label>
+          <div style="position:relative">
+            <input class="input" id="reg-pass-confirm" type="password" placeholder="Repita a senha" style="padding-right:38px"/>
+            <button type="button" onclick="togglePasswordVisibility('reg-pass-confirm',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+          </div>
+        </div>
       </div>
-      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      <div class="grid-2" style="margin-top:12px">
+        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label" id="reg-kname-label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      </div>
       <div class="field" style="margin-top:12px;margin-bottom:0">
         <label class="label">CPF ou CNPJ *</label>
         <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)"/>
@@ -904,7 +968,7 @@ tr:hover td{background:var(--sand-50)}
     <aside class="sidebar">
       <div class="sidebar-top">
         <div id="dash-logo" class="hidden" style="background:#fff;padding:8px 10px;border-radius:10px;width:100%;display:flex;align-items:center;justify-content:center"><img id="dash-logo-img" src="" alt="Logo do quiosque" style="width:100%;max-width:160px;height:auto;display:block"/></div>
-        <div class="sidebar-kname" id="dash-kname" style="text-align:center;font-size:13px;margin-top:2px">Quiosque</div>
+        <div class="sidebar-kname" id="dash-kname" style="text-align:center;font-size:13px;margin-top:2px">Negócio</div>
       </div>
       <nav class="sidebar-nav">
         <button class="s-item active" onclick="kPage('overview',this)"><span class="s-icon">📊</span>Dashboard</button>
@@ -1037,8 +1101,12 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </div>
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:12px 14px;margin-bottom:12px">
-          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por guarda-sol</div>
-          <input class="input" id="hist-umb-filter" type="number" min="1" placeholder="Ex: 7 (deixe vazio para ver todos)" oninput="renderHist()" style="width:100%;max-width:300px"/>
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por guarda-sol/mesa (digite o número e toque em Adicionar)</div>
+          <div style="display:flex;gap:8px">
+            <input class="input" id="hist-umb-filter" type="number" min="1" inputmode="numeric" placeholder="Ex: 7 (deixe vazio para ver todos)" style="flex:1;max-width:300px" onkeydown="if(event.key==='Enter'){event.preventDefault();addHistUmbFilter();}"/>
+            <button type="button" class="btn btn-ocean btn-sm" style="white-space:nowrap" onclick="addHistUmbFilter()">+ Adicionar</button>
+          </div>
+          <div id="hist-umb-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"></div>
         </div>
         <div id="hist-bulk-bar" class="hidden" style="background:#0f172a;color:#fff;border-radius:var(--r);padding:10px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <span id="hist-bulk-count" style="font-size:13px;font-weight:600">0 selecionados</span>
@@ -1062,6 +1130,15 @@ tr:hover td{background:var(--sand-50)}
         <div class="page-header">
           <div class="page-title">Guarda-sóis</div>
           <button class="btn btn-ocean btn-sm" onclick="toggleUmbForm()">+ Guarda-sol</button>
+        </div>
+
+        <!-- Controle: cliente pode pedir direto pelo celular, ou só pelo garçom? -->
+        <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:13.5px;font-weight:600;color:var(--sl-800)">Pedido direto pelo cliente</div>
+            <div style="font-size:12px;color:var(--sl-500);margin-top:2px">Quando desativado, o cliente só vê o cardápio, chama o garçom, acompanha os pedidos e pede a conta — sem poder pedir sozinho pelo celular.</div>
+          </div>
+          <button class="btn btn-sm" id="direct-orders-toggle" onclick="toggleDirectOrders()" style="white-space:nowrap">Carregando...</button>
         </div>
 
         <!-- Formulário inline (aparece/some) -->
@@ -1228,7 +1305,10 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="field">
         <label class="label">Senha</label>
-        <input class="input" id="admin-pass" type="password" placeholder="••••••••"/>
+        <div style="position:relative">
+          <input class="input" id="admin-pass" type="password" placeholder="••••••••" style="padding-right:38px"/>
+          <button type="button" onclick="togglePasswordVisibility('admin-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+        </div>
       </div>
       <button class="btn btn-dark" style="width:100%" onclick="doAdminLogin()">Entrar</button>
     </div>
@@ -1242,7 +1322,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="sidebar-kname" style="text-align:center;margin-top:4px">Admin SaaS</div>
       </div>
       <nav class="sidebar-nav">
-        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Quiosques</button>
+        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Negócios</button>
         <button class="s-item" onclick="aPage('subs',this)"><span class="s-icon">💳</span>Assinaturas</button>
         <button class="s-item" onclick="aPage('metrics',this)"><span class="s-icon">📊</span>Métricas</button>
       </nav>
@@ -1252,7 +1332,12 @@ tr:hover td{background:var(--sand-50)}
     </aside>
     <main class="admin-main">
       <div class="apage active" id="apage-kiosks">
-        <div class="page-header"><div class="page-title">Quiosques</div></div>
+        <div class="page-header"><div class="page-title">Estabelecimentos</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="hf-btn active" id="adk-filter-all" onclick="setAdminKioskTypeFilter('all',this)">Todos</button>
+          <button class="hf-btn" id="adk-filter-kiosk" onclick="setAdminKioskTypeFilter('quiosque',this)">🏪 Quiosques</button>
+          <button class="hf-btn" id="adk-filter-bar" onclick="setAdminKioskTypeFilter('bar_restaurante',this)">🍽️ Bares/Restaurantes</button>
+        </div>
         <div class="table-wrap" id="admin-kiosks-wrap"><div class="page-loading"></div></div>
       </div>
       <div class="apage" id="apage-subs">
@@ -1294,7 +1379,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="metric-card"><div class="metric-label">GMV total</div><div class="metric-val" id="am-gmv">—</div><div class="metric-sub">faturamento global</div></div>
           <div class="metric-card"><div class="metric-label">Total pedidos</div><div class="metric-val" id="am-orders">—</div></div>
           <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-val" id="am-ticket">—</div></div>
-          <div class="metric-card"><div class="metric-label">Quiosques ativos</div><div class="metric-val" id="am-active-kiosks">—</div></div>
+          <div class="metric-card"><div class="metric-label">Negócios ativos</div><div class="metric-val" id="am-active-kiosks">—</div></div>
           <div class="metric-card"><div class="metric-label">Pedidos entregues</div><div class="metric-val" id="am-delivered">—</div></div>
           <div class="metric-card"><div class="metric-label">Cancelamentos</div><div class="metric-val" id="am-cancelled">—</div></div>
         </div>
@@ -1302,14 +1387,14 @@ tr:hover td{background:var(--sand-50)}
         <!-- Ranking de quiosques -->
         <div class="reports-row">
           <div class="report-card" style="grid-column:1/-1">
-            <div class="report-title">🏆 Ranking de quiosques por faturamento</div>
+            <div class="report-title">🏆 Ranking de negócios por faturamento</div>
             <div id="am-kiosk-ranking" style="margin-top:8px"><div style="color:var(--sl-400);font-size:13px">Carregando...</div></div>
           </div>
         </div>
 
         <!-- Tabela detalhada -->
         <div class="report-card" style="margin-top:16px">
-          <div class="report-title">Detalhamento por quiosque</div>
+          <div class="report-title">Detalhamento por negócio</div>
           <div id="am-kiosk-table" style="overflow:auto;margin-top:12px"><div style="color:var(--sl-400);font-size:13px;padding:16px">Carregando...</div></div>
         </div>
       </div>
@@ -1435,6 +1520,13 @@ body{font-family:var(--font);background:var(--sand-50);color:var(--sl-800);-webk
 .cart-fab{position:fixed;bottom:20px;left:16px;right:16px;z-index:100;background:var(--sl-800);color:#fff;border:none;border-radius:14px;padding:15px 20px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 8px 28px rgba(15,23,42,.3);transition:all .2s;font-family:var(--font)}
 .cart-fab-count{background:var(--ocean-500);color:#fff;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
 body[data-bill-blocked="1"] .cart-fab{display:none !important}
+/* Pedido direto desativado pelo negócio: esconde os controles de adicionar item,
+   deixando o cliente só ver o cardápio (peça ao garçom aparece no lugar). */
+body[data-direct-orders-off="1"] .cart-fab{display:none !important}
+body[data-direct-orders-off="1"] .add-btn,
+body[data-direct-orders-off="1"] .qty-ctrl{display:none !important}
+body[data-direct-orders-off="1"] .direct-orders-off-badge{display:inline-block !important}
+.direct-orders-off-badge{display:none;font-size:11px;color:var(--sl-500);background:var(--sand-100);padding:4px 9px;border-radius:99px;white-space:nowrap}
 body[data-bill-blocked="1"] .menu-cat-tabs{opacity:.4;pointer-events:none}
 body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
 
@@ -1500,7 +1592,7 @@ body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
 .sidebar-icon img{width:100%;height:100%;object-fit:cover}
 .sidebar-kname{font-size:12px;font-weight:500;color:#fff}
 .sidebar-ksub{font-size:10px;color:rgba(255,255,255,.4)}
-.sidebar-nav{flex:1;padding:10px 8px;overflow-y:auto}
+.sidebar-nav{flex:1;min-height:0;padding:10px 8px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .s-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--rs);cursor:pointer;font-size:12px;color:rgba(255,255,255,.55);font-weight:500;transition:all .15s;margin-bottom:2px;border:none;background:transparent;width:100%;font-family:var(--font)}
 .s-item:hover{background:rgba(255,255,255,.06);color:#fff}
 .s-item.active{background:rgba(255,255,255,.11);color:#fff}
@@ -1606,19 +1698,48 @@ tr:hover td{background:var(--sand-50)}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:150}
 .sidebar-overlay.open{display:block}
 
-@media(max-width:700px){
+@media(max-width:700px),(max-height:500px) and (orientation:landscape){
   .hamburger{display:block}
   .sidebar,.admin-sidebar{
     display:flex;
     position:fixed;left:-220px;top:0;bottom:0;z-index:200;
+    height:auto;max-height:100vh;max-height:100dvh;
+    overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
     transition:left .3s cubic-bezier(.4,0,.2,1);
     padding-top:52px;
   }
   .sidebar.open,.admin-sidebar.open{left:0}
+  .sidebar-nav{flex:none;overflow:visible;min-height:0}
+  .sidebar-foot{flex:none}
   .kiosk-main,.admin-main{padding:14px}
   .orders-grid{grid-template-columns:1fr}
+  .reports-row{grid-template-columns:1fr}
+  .report-card{padding:14px;min-height:0}
   .grid-2{grid-template-columns:1fr}
   .metrics-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Alvos de toque maiores no menu lateral e nos botões pequenos */
+  .s-item{padding:13px 12px;font-size:13.5px;min-height:46px}
+  .s-icon{font-size:16px}
+  .btn-sm{padding:9px 15px;font-size:13px}
+  .hf-btn{padding:9px 15px;font-size:13px}
+  .page-title{font-size:17px}
+  .page-header{flex-wrap:wrap;gap:10px}
+
+  /* Cards de pedido (Ao vivo): texto maior e mais legível, menos espaço vazio */
+  .oc-head{padding:11px 14px 7px}
+  .oc-num{font-size:16px}
+  .oc-customer{font-size:14px}
+  .oc-item-row{font-size:13.5px;padding:2px 0}
+  .oc-note{font-size:13px}
+  .oc-total{font-size:15px}
+  .oc-actions{padding:10px 14px 14px}
+  .oc-actions .btn{flex:1;min-width:100px;padding:10px 12px}
+
+  /* Tabelas: fonte maior e rolagem horizontal mais suave no celular */
+  table{font-size:13px}
+  th{font-size:10.5px}
+  .table-wrap{-webkit-overflow-scrolling:touch}
 }
 @media(max-width:480px){
   .nav-btn{padding:4px 9px;font-size:11px}
@@ -1637,7 +1758,7 @@ tr:hover td{background:var(--sand-50)}
 /* Sol */
 .lp-sun{position:absolute;top:95%;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,#fffde7 0%,#ffd700 35%,#ffa500 65%,rgba(255,165,0,0) 100%);border-radius:50%;box-shadow:0 0 100px 50px rgba(255,210,0,.55),0 0 200px 100px rgba(255,150,0,.25),0 0 300px 150px rgba(255,120,0,.1);animation:sunrise 3s ease-out forwards, sunpulse 4s ease-in-out 3s infinite;z-index:2}
 @keyframes sunpulse{0%,100%{box-shadow:0 0 100px 50px rgba(255,210,0,.55),0 0 200px 100px rgba(255,150,0,.25),0 0 300px 150px rgba(255,120,0,.1);transform:translateX(-50%) scale(1)}50%{box-shadow:0 0 130px 65px rgba(255,220,0,.7),0 0 260px 130px rgba(255,160,0,.35),0 0 400px 200px rgba(255,120,0,.15);transform:translateX(-50%) scale(1.05)}}
-@keyframes sunrise{0%{top:100vh;opacity:0}50%{opacity:1}100%{top:180px;opacity:1}}50%{box-shadow:0 0 80px 40px rgba(255,220,0,.5),0 0 160px 80px rgba(255,150,0,.25)}}
+@keyframes sunrise{0%{top:100vh;opacity:0}50%{opacity:1}100%{top:180px;opacity:1}}
 
 /* Raios do sol */
 .lp-sun-rays{position:absolute;top:95%;left:50%;transform:translateX(-50%);width:200px;height:200px;z-index:1;animation:sunrise 3s ease-out forwards}
@@ -1750,7 +1871,7 @@ tr:hover td{background:var(--sand-50)}
   </div>
   <div class="lp-nav-btns">
     <button class="lp-btn-outline" onclick="goToClient()">📱 Sou cliente</button>
-    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu quiosque</button>
+    <button class="lp-btn-outline" onclick="goToScreen('kiosk')">🏪 Meu negócio</button>
     <button class="lp-btn-primary" onclick="goToScreen('admin')">⚙️ Admin</button>
   </div>
 </nav>
@@ -1762,7 +1883,7 @@ tr:hover td{background:var(--sand-50)}
   </button>
   <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:32px;width:auto"/></div>
   <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
-  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Quiosque</button>
+  <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Negócio</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
 </nav>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -1795,7 +1916,7 @@ tr:hover td{background:var(--sand-50)}
       </svg>
     </div>
 
-    <!-- Guarda-sóis decorativos -->
+    <!-- Mesas decorativas -->
     <div class="lp-umbrella-deco" style="left:8%;animation-delay:0s">
       <svg width="60" height="80" viewBox="0 0 60 80">
         <ellipse cx="30" cy="22" rx="28" ry="18" fill="#ef4444" opacity=".9"/>
@@ -1837,12 +1958,11 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- HERO -->
     <div class="lp-hero">
-      <div class="lp-badge" id="lp-badge">🌊 Tecnologia para a beira-mar</div>
-      <h1><span id="lp-h1-main">Peça na praia,</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
-      <p>O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.</p>
+      <h1><span id="lp-h1-main">Peça</span><br/><span id="lp-h1-span">sem sair do lugar</span></h1>
+      <p>O Recebaa conecta clientes aos negócios via QR Code.<br/>Sem filas, sem espera.</p>
       <div class="lp-cta-group">
         <button class="lp-cta-main" onclick="goToClient()">📱 Fazer um pedido</button>
-        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu quiosque</button>
+        <button class="lp-cta-sec" onclick="goToScreen('kiosk')">🏪 Quero meu negócio</button>
       </div>
 
     </div>
@@ -1853,11 +1973,11 @@ tr:hover td{background:var(--sand-50)}
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.7);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Como funciona</div>
       <div class="lp-section-title" id="lp-how-title">Simples como deve ser</div>
-      <div class="lp-section-sub" id="lp-how-sub" style="margin:0 auto">Três passos e o pedido está a caminho do seu guarda-sol.</div>
+      <div class="lp-section-sub" id="lp-how-sub" style="margin:0 auto">Três passos e o pedido está a caminho da sua mesa.</div>
       <div class="lp-steps">
         <div class="lp-step">
           <div class="lp-step-num">1</div>
-          <h3 id="lp-step1-t">Escaneie o QR Code</h3><p id="lp-step1-p">Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.</p>
+          <h3 id="lp-step1-t">Escaneie o QR Code</h3><p id="lp-step1-p">Cada mesa tem um QR Code. Aponte a câmera, selecione sua mesa e pronto.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">2</div>
@@ -1865,7 +1985,7 @@ tr:hover td{background:var(--sand-50)}
         </div>
         <div class="lp-step">
           <div class="lp-step-num">3</div>
-          <h3 id="lp-step3-t">Receba no lugar</h3><p id="lp-step3-p">O quiosque recebe o pedido e entrega direto no seu guarda-sol.</p>
+          <h3 id="lp-step3-t">Receba no lugar</h3><p id="lp-step3-p">O negócio recebe o pedido e entrega direto na sua mesa.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step-num">4</div>
@@ -1880,7 +2000,7 @@ tr:hover td{background:var(--sand-50)}
     <div class="lp-section" style="position:relative;z-index:10">
       <div class="lp-section-tag">Para o cliente</div>
       <div class="lp-section-title">Mais tempo curtindo,<br/>menos tempo esperando</div>
-      <div class="lp-section-sub">Chega de levantar do guarda-sol para pedir ou pagar. Tudo pelo celular.</div>
+      <div class="lp-section-sub">Tudo pelo celular.</div>
       <div class="lp-cards">
         <div class="lp-card">
           <div class="lp-card-icon blue">📱</div>
@@ -1917,9 +2037,9 @@ tr:hover td{background:var(--sand-50)}
 
     <div class="lp-divider"></div>
 
-    <!-- PARA O QUIOSQUE -->
+    <!-- PARA O NEGÓCIO -->
     <div class="lp-section" style="position:relative;z-index:10">
-      <div class="lp-section-tag">Para o quiosque</div>
+      <div class="lp-section-tag">Para o negócio</div>
       <div class="lp-section-title">Venda mais com<br/>menos esforço</div>
       <div class="lp-section-sub">Painel completo para gerenciar pedidos, cardápio e relatórios em tempo real.</div>
       <div class="lp-cards">
@@ -1940,8 +2060,8 @@ tr:hover td{background:var(--sand-50)}
         </div>
         <div class="lp-card">
           <div class="lp-card-icon amber">☂️</div>
-          <h3>Gestão de guarda-sóis</h3>
-          <p>Controle cada guarda-sol, gere QR Codes e encerre sessões quando a conta for paga.</p>
+          <h3>Gestão de mesas</h3>
+          <p>Controle cada mesa, gere QR Codes e encerre sessões quando a conta for paga.</p>
         </div>
         <div class="lp-card">
           <div class="lp-card-icon blue">📱</div>
@@ -1951,7 +2071,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-card">
           <div class="lp-card-icon purple">🚀</div>
           <h3>Setup em minutos</h3>
-          <p>Cadastre seu quiosque, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
+          <p>Cadastre seu negócio, monte o cardápio e comece a receber pedidos no mesmo dia.</p>
         </div>
       </div>
     </div>
@@ -1961,8 +2081,8 @@ tr:hover td{background:var(--sand-50)}
     <!-- MISSÃO E VALORES -->
     <div class="lp-section" style="text-align:center;position:relative;z-index:10;background:rgba(3,60,100,.75);backdrop-filter:blur(4px);max-width:100%;padding:60px 24px">
       <div class="lp-section-tag">Nossa missão</div>
-      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>de praia no Brasil</div>
-      <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o sol ao dono de quiosque que trabalha duro todo dia.</div>
+      <div class="lp-section-title" id="lp-mission-title" style="margin:0 auto">Transformar a experiência<br/>no Brasil</div>
+      <div class="lp-section-sub" id="lp-mission-sub" style="margin:16px auto 48px">Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil — do cliente que quer aproveitar o dia ao dono de negócio que quer aumentar suas vendas e melhorar seus controles de gestão.</div>
       <div class="lp-cards">
         <div class="lp-card">
           <div class="lp-card-icon blue">💙</div>
@@ -1972,7 +2092,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-card">
           <div class="lp-card-icon green">🤝</div>
           <h3>Parceria</h3>
-          <p>Crescemos junto com os quiosques. Seu sucesso é o nosso sucesso.</p>
+          <p>Crescemos junto com os negócios. Seu sucesso é o nosso sucesso.</p>
         </div>
         <div class="lp-card">
           <div class="lp-card-icon amber">⚡</div>
@@ -1992,13 +2112,13 @@ tr:hover td{background:var(--sand-50)}
         <div class="lp-access-card client" onclick="goToClient()">
           <div class="lp-access-icon">📱</div>
           <div class="lp-access-title">Cliente</div>
-          <div class="lp-access-desc">Escaneie o QR Code do seu guarda-sol e faça seu pedido agora mesmo.</div>
+          <div class="lp-access-desc">Escaneie o QR Code da sua mesa e faça seu pedido agora mesmo.</div>
           <button class="lp-access-btn blue">Fazer pedido →</button>
         </div>
         <div class="lp-access-card kiosk" onclick="goToScreen('kiosk')">
           <div class="lp-access-icon">🏪</div>
-          <div class="lp-access-title">Quiosque</div>
-          <div class="lp-access-desc">Acesse o painel do seu quiosque, gerencie pedidos e cardápio.</div>
+          <div class="lp-access-title">Negócio</div>
+          <div class="lp-access-desc">Acesse o painel do seu negócio, gerencie pedidos e cardápio.</div>
           <button class="lp-access-btn indigo">Entrar no painel →</button>
         </div>
         <div class="lp-access-card admin" onclick="goToScreen('admin')">
@@ -2013,7 +2133,7 @@ tr:hover td{background:var(--sand-50)}
     <!-- FOOTER -->
     <div class="lp-footer" style="padding:20px 24px">
       <div style="margin-bottom:4px;opacity:.6"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:24px;width:auto;filter:brightness(2)"/></div>
-      <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil</div>
+      <div id="lp-footer-txt">© 2025 Recebaa · Tecnologia para negócios · Feito com ❤️ no Brasil</div>
       <div style="margin-top:10px;font-size:12px;opacity:.6">
         <a href="/privacy.html" style="color:inherit;text-decoration:underline;margin:0 8px">Política de Privacidade</a>
         ·
@@ -2043,7 +2163,7 @@ tr:hover td{background:var(--sand-50)}
     <div class="menu-header">
       <div class="menu-kiosk-logo" id="menu-logo" style="background:#fff;padding:4px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
       <div>
-        <div class="menu-kiosk-name" id="menu-kname">Quiosque</div>
+        <div class="menu-kiosk-name" id="menu-kname">Negócio</div>
         <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
       </div>
       <div class="menu-tab-row">
@@ -2114,7 +2234,12 @@ tr:hover td{background:var(--sand-50)}
       <div class="auth-title">Painel Recebaa</div>
       <div class="auth-sub">Entre com suas credenciais</div>
       <div class="field"><label class="label">E-mail</label><input class="input" id="login-email" placeholder="seu@email.com"/></div>
-      <div class="field"><label class="label">Senha</label><input class="input" id="login-pass" type="password" placeholder="••••••••"/></div>
+      <div class="field"><label class="label">Senha</label>
+        <div style="position:relative">
+          <input class="input" id="login-pass" type="password" placeholder="••••••••" style="padding-right:38px"/>
+          <button type="button" onclick="togglePasswordVisibility('login-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+        </div>
+      </div>
       <button class="btn btn-dark" id="login-btn" style="width:100%" onclick="doLogin()">Entrar</button>
       <p style="text-align:center;font-size:13px;color:var(--sl-400);margin-top:16px">
         Não tem conta? <a class="auth-link" href="#" onclick="showCard('register');return false">Criar conta grátis</a>
@@ -2123,16 +2248,40 @@ tr:hover td{background:var(--sand-50)}
     <div class="auth-card wide hidden" id="card-register">
       <div class="auth-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:80%;max-height:80%;object-fit:contain"/></div>
       <div class="auth-title">Criar conta</div>
-      <div class="auth-sub">Preencha os dados do seu quiosque</div>
+      <div class="auth-sub" id="reg-auth-sub">Preencha os dados do seu quiosque</div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Tipo de negócio *</label>
+        <select class="input" id="reg-biztype" onchange="setRegBusinessType(this.value)">
+          <option value="" disabled selected>Selecione o tipo de negócio</option>
+          <option value="quiosque" id="regtype-kiosk">🏪 Quiosque</option>
+          <option value="bar_restaurante" id="regtype-bar">🍽️ Bar/Restaurante</option>
+        </select>
+      </div>
       <div class="grid-2">
         <div class="field" style="margin-bottom:0"><label class="label">Nome do responsável *</label><input class="input" id="reg-owner" placeholder="Seu nome"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">E-mail *</label><input class="input" id="reg-email" type="email" placeholder="seu@email.com"/></div>
       </div>
       <div class="grid-2" style="margin-top:12px">
-        <div class="field" style="margin-bottom:0"><label class="label">Senha *</label><input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo"/><div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div></div>
-        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
+        <div class="field" style="margin-bottom:0">
+          <label class="label">Senha *</label>
+          <div style="position:relative">
+            <input class="input" id="reg-pass" type="password" placeholder="Mín. 6 chars, 1 maiúscula, 1 número, 1 símbolo" style="padding-right:38px"/>
+            <button type="button" onclick="togglePasswordVisibility('reg-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+          </div>
+          <div style="font-size:11px;color:var(--sl-500);margin-top:4px;line-height:1.4">Mínimo 6 caracteres, com pelo menos 1 letra maiúscula, 1 número e 1 símbolo (ex: !@#$).</div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="label">Confirmar senha *</label>
+          <div style="position:relative">
+            <input class="input" id="reg-pass-confirm" type="password" placeholder="Repita a senha" style="padding-right:38px"/>
+            <button type="button" onclick="togglePasswordVisibility('reg-pass-confirm',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+          </div>
+        </div>
       </div>
-      <div class="field" style="margin-top:12px;margin-bottom:0"><label class="label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      <div class="grid-2" style="margin-top:12px">
+        <div class="field" style="margin-bottom:0"><label class="label">WhatsApp *</label><input class="input" id="reg-phone" placeholder="(21) 99999-9999"/></div>
+        <div class="field" style="margin-bottom:0"><label class="label" id="reg-kname-label">Nome do quiosque *</label><input class="input" id="reg-kname" placeholder="Ex: Quiosque Pôr do Sol"/></div>
+      </div>
       <div class="field" style="margin-top:12px;margin-bottom:0">
         <label class="label">CPF ou CNPJ *</label>
         <input class="input" id="reg-doc" placeholder="000.000.000-00 ou 00.000.000/0001-00" oninput="formatDoc(this)"/>
@@ -2161,7 +2310,7 @@ tr:hover td{background:var(--sand-50)}
     <aside class="sidebar">
       <div class="sidebar-top">
         <div id="dash-logo" style="background:#fff;padding:8px 10px;border-radius:10px;width:100%;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="width:100%;max-width:160px;height:auto;display:block"/></div>
-        <div class="sidebar-kname" id="dash-kname" style="text-align:center;font-size:13px;margin-top:2px">Quiosque</div>
+        <div class="sidebar-kname" id="dash-kname" style="text-align:center;font-size:13px;margin-top:2px">Negócio</div>
       </div>
       <nav class="sidebar-nav">
         <button class="s-item active" onclick="kPage('overview',this)"><span class="s-icon">📊</span>Dashboard</button>
@@ -2345,7 +2494,10 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="field">
         <label class="label">Senha</label>
-        <input class="input" id="admin-pass" type="password" placeholder="••••••••"/>
+        <div style="position:relative">
+          <input class="input" id="admin-pass" type="password" placeholder="••••••••" style="padding-right:38px"/>
+          <button type="button" onclick="togglePasswordVisibility('admin-pass',this)" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--sl-500);padding:4px;line-height:1" aria-label="Mostrar senha">👁️</button>
+        </div>
       </div>
       <button class="btn btn-dark" style="width:100%" onclick="doAdminLogin()">Entrar</button>
     </div>
@@ -2359,7 +2511,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="sidebar-kname" style="text-align:center;margin-top:4px">Admin SaaS</div>
       </div>
       <nav class="sidebar-nav">
-        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Quiosques</button>
+        <button class="s-item active" onclick="aPage('kiosks',this)"><span class="s-icon">🏪</span>Negócios</button>
         <button class="s-item" onclick="aPage('subs',this)"><span class="s-icon">💳</span>Assinaturas</button>
         <button class="s-item" onclick="aPage('metrics',this)"><span class="s-icon">📊</span>Métricas</button>
       </nav>
@@ -2369,7 +2521,12 @@ tr:hover td{background:var(--sand-50)}
     </aside>
     <main class="admin-main">
       <div class="apage active" id="apage-kiosks">
-        <div class="page-header"><div class="page-title">Quiosques</div></div>
+        <div class="page-header"><div class="page-title">Estabelecimentos</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="hf-btn active" id="adk-filter-all" onclick="setAdminKioskTypeFilter('all',this)">Todos</button>
+          <button class="hf-btn" id="adk-filter-kiosk" onclick="setAdminKioskTypeFilter('quiosque',this)">🏪 Quiosques</button>
+          <button class="hf-btn" id="adk-filter-bar" onclick="setAdminKioskTypeFilter('bar_restaurante',this)">🍽️ Bares/Restaurantes</button>
+        </div>
         <div class="table-wrap" id="admin-kiosks-wrap"><div class="page-loading"></div></div>
       </div>
       <div class="apage" id="apage-subs">
@@ -2491,25 +2648,25 @@ var LANG_CURRENT = 'pt';
 var I18N = {
   pt: {
     // Nav landing
-    lp_client: '📱 Sou cliente', lp_kiosk: '🏪 Meu quiosque', lp_admin: '⚙️ Admin',
+    lp_client: '📱 Sou cliente', lp_kiosk: '🏪 Meu negócio', lp_admin: '⚙️ Admin',
     // Hero
     lp_badge: '🌊 Tecnologia para a beira-mar',
-    lp_h1: 'Peça na praia,', lp_h1s: 'sem sair do lugar',
-    lp_p: 'O Recebaa conecta clientes aos quiosques de praia via QR Code. Sem filas, sem espera. Só aproveitar o sol.',
-    lp_cta1: '☂️ Fazer um pedido', lp_cta2: '🏪 Quero meu quiosque',
+    lp_h1: 'Peça', lp_h1s: 'sem sair do lugar',
+    lp_p: 'O Recebaa conecta clientes aos negócios via QR Code. Sem filas, sem espera.',
+    lp_cta1: '☂️ Fazer um pedido', lp_cta2: '🏪 Quero meu negócio',
     // Seções
     lp_how: 'Como funciona', lp_how_title: 'Simples como deve ser',
-    lp_how_sub: 'Três passos e o pedido está a caminho do seu guarda-sol.',
-    lp_step1_t: 'Escaneie o QR Code', lp_step1_p: 'Cada guarda-sol tem um QR Code. Aponte a câmera, selecione seu guarda-sol e pronto.',
+    lp_how_sub: 'Três passos e o pedido está a caminho da sua mesa.',
+    lp_step1_t: 'Escaneie o QR Code', lp_step1_p: 'Cada mesa tem um QR Code. Aponte a câmera, selecione sua mesa e pronto.',
     lp_step2_t: 'Escolha no cardápio', lp_step2_p: 'Veja fotos, preços e descrições. Monte seu pedido com calma.',
-    lp_step3_t: 'Receba no lugar', lp_step3_p: 'O quiosque recebe o pedido e entrega direto no seu guarda-sol.',
+    lp_step3_t: 'Receba no lugar', lp_step3_p: 'O negócio recebe o pedido e entrega direto na sua mesa.',
     lp_step4_t: 'Peça a conta', lp_step4_p: 'Quando quiser, solicite a conta pelo celular. Sem precisar chamar ninguém.',
     lp_client_tag: 'Para o cliente', lp_client_title: 'Mais tempo curtindo,\nmenos tempo esperando',
-    lp_kiosk_tag: 'Para o quiosque', lp_kiosk_title: 'Venda mais com\nmenos esforço',
-    lp_mission_tag: 'Nossa missão', lp_mission_title: 'Transformar a experiência\nde praia no Brasil',
+    lp_kiosk_tag: 'Para o negócio', lp_kiosk_title: 'Venda mais com\nmenos esforço',
+    lp_mission_tag: 'Nossa missão', lp_mission_title: 'Transformar a experiência\nno Brasil',
     lp_mission_sub: 'Acreditamos que tecnologia deve ser simples, acessível e fazer a vida de todos mais fácil.',
     lp_access_tag: 'Acesse agora', lp_access_title: 'Por onde você quer entrar?',
-    lp_footer: '© 2025 Recebaa · Tecnologia para quiosques de praia · Feito com ❤️ no Brasil',
+    lp_footer: '© 2025 Recebaa · Tecnologia para negócios · Feito com ❤️ no Brasil',
     // Cliente splash
     splash_title: 'Bem-vindo!', splash_sub: 'Digite o número do seu guarda-sol para ver o cardápio',
     splash_ph: 'Número do guarda-sol', splash_btn: 'Ver Cardápio →',
@@ -2520,7 +2677,7 @@ var I18N = {
     order_btn: 'Enviar Pedido 🚀',
     // Status
     s_pending: 'Pedido recebido', s_pending_sub: 'Aguardando confirmação',
-    s_accepted: 'Confirmado', s_accepted_sub: 'O quiosque aceitou!',
+    s_accepted: 'Confirmado', s_accepted_sub: 'O negócio aceitou!',
     s_preparing: 'Em preparo', s_preparing_sub: 'Preparando com carinho',
     s_delivering: 'A caminho', s_delivering_sub: 'Indo ao seu guarda-sol',
     s_delivered: 'Entregue!', s_delivered_sub: 'Bom apetite! 🌊',
@@ -2693,6 +2850,71 @@ if(!isConfigured){
 // ESTADO GLOBAL
 // ══════════════════════════════════════════════════════
 var currentKiosk = null;   // objeto kiosk do quiosque logado
+var _regBusinessType = '';  // tipo de negócio selecionado no cadastro: '' (nenhum ainda) | 'quiosque' | 'bar_restaurante'
+var BIZ_LABELS = {
+  quiosque:       { icon:'🏪', name:'Quiosque',        nameLabel:'Nome do quiosque *',        placeholder:'Ex: Quiosque Pôr do Sol', sub:'Preencha os dados do seu quiosque' },
+  bar_restaurante:{ icon:'🍽️', name:'Bar/Restaurante', nameLabel:'Nome do bar/restaurante *', placeholder:'Ex: Bar do Zé',           sub:'Preencha os dados do seu bar ou restaurante' }
+};
+
+// ── Terminologia dinâmica: no painel de Bar/Restaurante, "guarda-sol"
+// vira "mesa" em toda a interface (menu, filtros, tabelas, toasts, etc.) ──
+function isBarBiz(){ return !!(currentKiosk && currentKiosk.business_type === 'bar_restaurante'); }
+function swapUmbrellaWords(str){
+  if(!isBarBiz() || typeof str !== 'string') return str;
+  return str
+    .replace(/Guarda-sóis/g,'Mesas')
+    .replace(/guarda-sóis/g,'mesas')
+    .replace(/GUARDA-SOL/g,'MESA')
+    .replace(/Guarda-sol/g,'Mesa')
+    .replace(/guarda-sol/g,'mesa')
+    .replace(/☂️/g,'🍽️')
+    .replace(/☂/g,'🍽️');
+}
+// Percorre um elemento e troca o texto (e placeholders/títulos) de "guarda-sol"
+// para "mesa" quando o painel logado é de bar/restaurante. Assim cobrimos telas
+// geradas dinamicamente (tabelas, cards, modais) sem precisar editar cada uma.
+function applyBizTerminology(root){
+  if(!isBarBiz() || !root) return;
+  var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  var node;
+  while((node = walker.nextNode())){
+    var swapped = swapUmbrellaWords(node.nodeValue);
+    if(swapped !== node.nodeValue) node.nodeValue = swapped;
+  }
+  root.querySelectorAll('[placeholder]').forEach(function(el){
+    var s = swapUmbrellaWords(el.getAttribute('placeholder'));
+    if(s !== el.getAttribute('placeholder')) el.setAttribute('placeholder', s);
+  });
+  root.querySelectorAll('[title]').forEach(function(el){
+    var s = swapUmbrellaWords(el.getAttribute('title'));
+    if(s !== el.getAttribute('title')) el.setAttribute('title', s);
+  });
+}
+var _bizTermObserver = null;
+// Observa TUDO que fica direto dentro do <body> (painel do dono, tela do
+// cliente e também os modais avulsos como "Pedir a conta" e "Consumo", que
+// são criados fora dessas telas) e reaplica a troca "guarda-sol" → "mesa"
+// sempre que algo é re-renderizado. Não mexe na landing page (texto de
+// marketing fixo, que já tem uma seção própria para cada tipo de negócio).
+function startBizTerminologyWatcher(){
+  function sweepAll(){
+    Array.prototype.forEach.call(document.body.children, function(n){
+      if(n.id === 'screen-landing') return;
+      applyBizTerminology(n);
+    });
+  }
+  sweepAll();
+  if(_bizTermObserver) _bizTermObserver.disconnect();
+  if(!isBarBiz()) return;
+  _bizTermObserver = new MutationObserver(function(){
+    if(!isBarBiz()) return;
+    clearTimeout(window._bizTermTimer);
+    window._bizTermTimer = setTimeout(sweepAll, 30);
+  });
+  _bizTermObserver.observe(document.body, {childList:true, subtree:true, characterData:true});
+}
+// Mantido por compatibilidade — aponta pro mesmo watcher único acima.
+function startClientBizTerminologyWatcher(){ startBizTerminologyWatcher(); }
 var catalog = [];          // produtos do kiosk atual
 var dbCategories = [];     // categorias do kiosk atual
 var orders = [];           // pedidos em memória (sincronizados com DB)
@@ -3043,7 +3265,7 @@ function handleQrDecoded(decodedText){
   }
 
   if(!kioskId){
-    showQrError('⚠️ QR Code não reconhecido. Use um QR Code de quiosque Recebaa.');
+    showQrError('⚠️ QR Code não reconhecido. Use um QR Code de negócio Recebaa.');
     return;
   }
 
@@ -3098,6 +3320,7 @@ function setLoading(btnId, loading, text){
 }
 
 function toast(msg){
+  msg = swapUmbrellaWords(msg);
   const t=$('toast'); t.textContent=msg; t.classList.add('show');
   clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2800);
 }
@@ -3170,13 +3393,19 @@ function showScreen(name, btn){
 }
 
 function toggleSidebar(){
-  var sidebar = document.querySelector('.sidebar.active-screen, .dash-layout .sidebar, .admin-layout .admin-sidebar');
+  // Primeiro: identificar qual tela está realmente ativa/visível (kiosk ou admin)
+  // e pegar a sidebar correspondente. Isso evita pegar por engano a sidebar
+  // de uma tela escondida quando há blocos duplicados no HTML.
+  var sidebar = null;
+  var admin = $('screen-admin');
+  var kiosk = $('kiosk-dash');
+  if(admin && admin.classList.contains('active')){
+    sidebar = admin.querySelector('.admin-sidebar');
+  } else if(kiosk && !kiosk.classList.contains('hidden')){
+    sidebar = kiosk.querySelector('.sidebar');
+  }
   if(!sidebar){
-    // Tentar pegar qualquer sidebar visível
-    var kiosk = $('kiosk-dash');
-    var admin = $('screen-admin');
-    if(kiosk && !kiosk.classList.contains('hidden')) sidebar = kiosk.querySelector('.sidebar');
-    else if(admin && admin.classList.contains('active')) sidebar = admin.querySelector('.admin-sidebar');
+    sidebar = document.querySelector('.sidebar.active-screen, .dash-layout .sidebar, .admin-layout .admin-sidebar');
   }
   if(sidebar){
     sidebar.classList.toggle('open');
@@ -3198,20 +3427,26 @@ window.addEventListener('load', async function(){
   var urlParams = new URLSearchParams(window.location.search);
   var kioskId = urlParams.get('kiosk');
   var umbNum = urlParams.get('umbrella');
-  if(umbNum){
-    $('umbrella-input').value = umbNum;
-  }
+  if(umbNum) $('umbrella-input').value = umbNum;
   if(kioskId && isConfigured){
-    // Buscar nome do kiosk para mostrar na splash — independente de já ter
-    // o número do guarda-sol na URL ou não (o guarda-sol normalmente é
-    // digitado pelo cliente, não vem no QR Code).
-    var {data} = await sb.from('kiosks').select('name').eq('id',kioskId).single();
-    if(data) $('splash-kname').textContent = data.name;
+    // Buscar nome, tipo de negócio e logo do kiosk para mostrar na splash já com o
+    // termo certo ("guarda-sol" ou "mesa") antes mesmo do cliente digitar o número
+    // (mesmo quando o QR Code só tem o kiosk, sem o número já preenchido).
+    var {data} = await sb.from('kiosks').select('name,business_type,logo_url').eq('id',kioskId).single();
+    if(data){
+      $('splash-kname').textContent = data.name;
+      currentKiosk = {id:kioskId, name:data.name, business_type:data.business_type, logo_url:data.logo_url};
+      startClientBizTerminologyWatcher();
+      if(data.logo_url){
+        var splashImg = $('splash-logo-img');
+        if(splashImg) splashImg.src = data.logo_url;
+      }
+    }
   }
 
   // QR Code escaneado (URL já vem com ?kiosk=ID): pula a landing page e vai
-  // direto pra tela de "informe o número do guarda-sol", sem exigir clique
-  // em "Fazer pedido".
+  // direto pra tela de "informe o número do guarda-sol/mesa", sem exigir
+  // clique em "Fazer pedido".
   if(kioskId){
     showScreen('client', document.getElementById('nav-client'));
   }
@@ -3449,9 +3684,10 @@ async function goToMenu(){
     // Validar que o quiosque existe e está ativo
     if(!currentKiosk){
       setLoading('splash-btn',false,'Ver Cardápio →');
-      toast('❌ Quiosque não encontrado ou inativo. Verifique o QR Code.');
+      toast('❌ Negócio não encontrado ou inativo. Verifique o QR Code.');
       return;
     }
+    applyClientKioskLogo();
 
     // Validar que o guarda-sol existe e está ativo neste quiosque
     const {data:umbCheck} = await sb.from('umbrellas')
@@ -3490,14 +3726,20 @@ async function goToMenu(){
   } else {
     catalog=MOCK_PRODUCTS;
     dbCategories=MOCK_CATS;
-    currentKiosk={id:'demo',name:'Quiosque Pôr do Sol'};
+    currentKiosk={id:'demo',name:'Negócio Pôr do Sol'};
   }
   setLoading('splash-btn',false,'Ver Cardápio →');
-  $('umbrella-label').textContent='☂️ Guarda-sol '+window._umb;
-  $('menu-kname').textContent=currentKiosk?currentKiosk.name:'Quiosque';
+  $('umbrella-label').textContent=swapUmbrellaWords('☂️ Guarda-sol '+window._umb);
+  $('menu-kname').textContent=currentKiosk?currentKiosk.name:'Negócio';
   $('splash-kname').textContent=currentKiosk?currentKiosk.name:'Recebaa';
   $('client-splash').classList.add('hidden');
   $('client-menu').classList.remove('hidden');
+  // Garante que "guarda-sol" vire "mesa" em todo o cardápio/pedidos deste cliente,
+  // caso o tipo de negócio só tenha sido confirmado agora (ex: sessão restaurada).
+  startClientBizTerminologyWatcher();
+  // Reflete se o negócio permite pedido direto pelo cliente (senão, o
+  // cardápio fica só pra visualização e os botões de adicionar somem).
+  document.body.dataset.directOrdersOff = (currentKiosk && currentKiosk.allow_direct_orders === false) ? '1' : '0';
   buildCatTabs();
   buildMenu();
   maybeShowPromoPopup();
@@ -3516,6 +3758,10 @@ async function goToMenu(){
     if(window._clientProductsChannel){
       try{ sb.removeChannel(window._clientProductsChannel); }catch(e){}
       window._clientProductsChannel = null;
+    }
+    if(window._clientKioskChannel){
+      try{ sb.removeChannel(window._clientKioskChannel); }catch(e){}
+      window._clientKioskChannel = null;
     }
 
     window._clientRealtimeChannel = sb.channel(chName)
@@ -3676,6 +3922,25 @@ async function goToMenu(){
           catalog = catalog.filter(function(p){ return p.id !== payload.old.id; });
           var vm = $('view-menu');
           if(vm && !vm.classList.contains('hidden')) buildMenu();
+        })
+      .subscribe();
+
+    // Escutar em tempo real se o negócio liga/desliga o pedido direto do cliente
+    window._clientKioskChannel = sb.channel('client-kiosk-'+currentKiosk.id)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'kiosks',
+        filter:'id=eq.'+currentKiosk.id},
+        function(payload){
+          var updated = payload.new;
+          if(!currentKiosk) return;
+          var wasOff = currentKiosk.allow_direct_orders === false;
+          currentKiosk.allow_direct_orders = updated.allow_direct_orders;
+          var isOff = currentKiosk.allow_direct_orders === false;
+          document.body.dataset.directOrdersOff = isOff ? '1' : '0';
+          if(isOff && !wasOff){
+            toast('🙋 Este negócio agora atende só pelo garçom. Chame quando quiser pedir!');
+          } else if(!isOff && wasOff){
+            toast('✅ Pedido direto pelo celular liberado novamente!');
+          }
         })
       .subscribe();
   }
@@ -3902,7 +4167,7 @@ function productCard(p){
   return '<div class="product-card" id="pc-'+p.id+'">'+img
     +'<div class="product-body"><div class="product-name">'+esc(p.name)+'</div>'
     +'<div class="product-desc">'+esc(p.description||p.desc||'')+'</div>'
-    +'<div class="product-footer">'+priceHtml+ctrl+'</div>'
+    +'<div class="product-footer">'+priceHtml+ctrl+'<span class="direct-orders-off-badge">🙋 Peça ao garçom</span></div>'
     +'</div></div>';
 }
 
@@ -4115,13 +4380,15 @@ function openTermsModal(){
     +'<button onclick="closeTermsModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
     +'</div>'
     +'<div style="padding:20px;font-size:13px;line-height:1.6;color:#334155">'
-    +'<p style="margin-bottom:12px"><b>1. Sobre o Recebaa</b><br>O Recebaa é uma plataforma que conecta clientes a quiosques de praia, permitindo fazer pedidos pelo celular via QR Code. Não somos os vendedores dos produtos — cada quiosque é responsável pelo preparo, qualidade e entrega dos itens pedidos.</p>'
-    +'<p style="margin-bottom:12px"><b>2. Pedidos e pagamento</b><br>O pedido feito pelo app é enviado diretamente ao quiosque. O pagamento é combinado e realizado diretamente com o quiosque (o app não processa pagamentos). Preços e disponibilidade dos produtos são definidos e atualizados pelo próprio quiosque.</p>'
-    +'<p style="margin-bottom:12px"><b>3. Dados que coletamos</b><br>Para processar seu pedido, coletamos o nome informado, o número do guarda-sol/mesa e os itens pedidos. Não pedimos dados de pagamento, CPF ou endereço pelo app.</p>'
-    +'<p style="margin-bottom:12px"><b>4. Uso dos dados</b><br>Usamos essas informações apenas para viabilizar seu pedido junto ao quiosque (nome para identificação, itens para preparo). Não vendemos nem compartilhamos seus dados com terceiros para fins de marketing.</p>'
-    +'<p style="margin-bottom:12px"><b>5. Responsabilidade</b><br>O Recebaa atua como intermediário tecnológico. Questões sobre qualidade dos produtos, tempo de preparo ou atendimento devem ser resolvidas diretamente com o quiosque responsável.</p>'
-    +'<p style="margin-bottom:12px"><b>6. Seus direitos (LGPD)</b><br>Você pode solicitar a qualquer momento informações sobre os dados armazenados ou pedir a exclusão deles, entrando em contato pelo e-mail <a href="mailto:pediu.recebaa@gmail.com" style="color:var(--ocean-600)">pediu.recebaa@gmail.com</a>.</p>'
-    +'<p style="margin-bottom:0;color:#94a3b8;font-size:11.5px">Ao aceitar, você confirma que leu e concorda com estes termos. Última atualização: '+new Date().toLocaleDateString('pt-BR')+'.</p>'
+    +'<p style="margin-bottom:12px"><b>1. Sobre o Recebaa</b><br>O Recebaa é uma plataforma de tecnologia que conecta clientes a negócios de praia via QR Code. Atuamos exclusivamente como intermediário tecnológico — não somos parte das transações comerciais entre cliente e negócio.</p>'
+    +'<p style="margin-bottom:12px"><b>2. Cadastro do negócio</b><br>O negócio deve fornecer dados verdadeiros e atualizados, e o cadastro passa por aprovação do administrador. O negócio é responsável pelo preparo, qualidade, entrega e conformidade legal (fiscal, sanitária) dos itens pedidos.</p>'
+    +'<p style="margin-bottom:12px"><b>3. Pedidos e pagamento</b><br>O pedido feito pelo app é enviado diretamente ao negócio. O pagamento é combinado e realizado diretamente com o negócio — o Recebaa não processa pagamentos.</p>'
+    +'<p style="margin-bottom:12px"><b>4. Dados que coletamos</b><br>Do cliente final, apenas o nome informado no pedido. Do negócio, dados de cadastro (nome, e-mail, telefone, CPF/CNPJ). Não pedimos dados de pagamento pelo app.</p>'
+    +'<p style="margin-bottom:12px"><b>5. Uso e compartilhamento dos dados</b><br>Usamos esses dados só para viabilizar o pedido e operar a plataforma. Não vendemos dados a terceiros; compartilhamos apenas com prestadores essenciais de infraestrutura (banco de dados e hospedagem), sob confidencialidade.</p>'
+    +'<p style="margin-bottom:12px"><b>6. Responsabilidade e limitações</b><br>Questões sobre qualidade dos produtos, atrasos ou disputas comerciais (cobrança, troco, reembolso) devem ser resolvidas diretamente com o negócio responsável, não com o Recebaa.</p>'
+    +'<p style="margin-bottom:12px"><b>7. Seus direitos (LGPD)</b><br>Você pode solicitar a qualquer momento acesso, correção ou exclusão dos seus dados, pelo e-mail <a href="mailto:pediu.recebaa@gmail.com" style="color:var(--ocean-600)">pediu.recebaa@gmail.com</a>.</p>'
+    +'<p style="margin-bottom:12px;font-size:12px">Este é um resumo. Leia os documentos completos: <a href="/terms.html" target="_blank" style="color:var(--ocean-600)">Termos de Uso</a> e <a href="/privacy.html" target="_blank" style="color:var(--ocean-600)">Política de Privacidade</a>.</p>'
+    +'<p style="margin-bottom:0;color:#94a3b8;font-size:11.5px">Ao aceitar, você confirma que leu e concorda com estes termos. Última atualização: 26/05/2026.</p>'
     +'</div>'
     +'<div style="padding:0 20px 20px">'
     +'<button onclick="closeTermsModal()" style="width:100%;padding:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Entendi</button>'
@@ -4733,7 +5000,7 @@ async function placeOrder(){
 // ══════════════════════════════════════════════════════
 var STATUS_STEPS_DEF=[
   {key:'pending',   label:'Pedido recebido',  sub:'Aguardando confirmação',     icon:'📋'},
-  {key:'accepted',  label:'Confirmado',        sub:'O quiosque aceitou!',        icon:'✅'},
+  {key:'accepted',  label:'Confirmado',        sub:'O negócio aceitou!',        icon:'✅'},
   {key:'preparing', label:'Em preparo',        sub:'Preparando com carinho',     icon:'👨‍🍳'},
   {key:'delivering',label:'A caminho',         sub:'Indo ao seu guarda-sol',     icon:'🏃'},
   {key:'delivered', label:'Entregue!',         sub:'Bom apetite! 🌊',            icon:'🎉'},
@@ -4763,6 +5030,16 @@ function simulateProgress(oid){
     if(i<seq.length) setTimeout(go,4000);
   };
   setTimeout(go,3000);
+}
+
+// Aplica o logo próprio do quiosque nas telas do cliente (splash e cardápio),
+// se cadastrado — senão mantém o logo padrão do Recebaa que já está lá.
+function applyClientKioskLogo(){
+  if(!currentKiosk || !currentKiosk.logo_url) return;
+  var splashImg = $('splash-logo-img');
+  if(splashImg) splashImg.src = currentKiosk.logo_url;
+  var menuImg = $('menu-logo-img');
+  if(menuImg) menuImg.src = currentKiosk.logo_url;
 }
 
 function encerrarSessaoCliente(){
@@ -4905,7 +5182,7 @@ function openBillModal(){
     return ACCEPTED_STATUSES.indexOf(o.status) > -1;
   });
   if(!hasAccepted){
-    toast('⚠️ Aguarde o quiosque aceitar seu pedido antes de pedir a conta.');
+    toast('⚠️ Aguarde o negócio aceitar seu pedido antes de pedir a conta.');
     return;
   }
   var old = document.getElementById('dynamic-bill-modal');
@@ -5019,7 +5296,7 @@ async function requestBill(type, personName, personTotal){
     return ACCEPTED_STATUSES_RB.indexOf(o.status) > -1;
   });
   if(!hasAcceptedRB){
-    toast('⚠️ Aguarde o quiosque aceitar seu pedido antes de pedir a conta.');
+    toast('⚠️ Aguarde o negócio aceitar seu pedido antes de pedir a conta.');
     closeBillModal();
     return;
   }
@@ -5265,12 +5542,12 @@ function renderMyOrders(){
 
 async function clientCancelOrder(orderId){
   if(!orderId) return;
-  if(!confirm('Tem certeza que deseja cancelar este pedido?\n\nAtenção: só é possível cancelar pedidos que ainda não foram aceitos pelo quiosque.')) return;
+  if(!confirm('Tem certeza que deseja cancelar este pedido?\n\nAtenção: só é possível cancelar pedidos que ainda não foram aceitos pelo negócio.')) return;
 
   // Localizar pedido em memória para checar status atual
   var mo = myOrders.find(function(x){ return x.id === orderId; });
   if(mo && mo.status !== 'pending'){
-    toast('⚠️ Este pedido já foi confirmado pelo quiosque e não pode mais ser cancelado.');
+    toast('⚠️ Este pedido já foi confirmado pelo negócio e não pode mais ser cancelado.');
     return;
   }
 
@@ -5287,7 +5564,7 @@ async function clientCancelOrder(orderId){
     }
     if(!data || !data.length){
       // O quiosque aceitou entre a checagem local e a atualização
-      toast('⚠️ Pedido já foi aceito pelo quiosque. Não é mais possível cancelar.');
+      toast('⚠️ Pedido já foi aceito pelo negócio. Não é mais possível cancelar.');
       return;
     }
     await decrementPromoSold(orderId);
@@ -5309,6 +5586,32 @@ async function clientCancelOrder(orderId){
 function showCard(name){
   $('card-login').classList.toggle('hidden',name!=='login');
   $('card-register').classList.toggle('hidden',name!=='register');
+}
+
+// Define o tipo de negócio (quiosque ou bar/restaurante) usado no cadastro,
+// e atualiza os textos/labels do formulário e o toggle visual.
+function setRegBusinessType(type){
+  if(!BIZ_LABELS[type]) return; // sem seleção ainda — mantém os campos no estado neutro
+  _regBusinessType = type;
+  var lbl = BIZ_LABELS[type];
+  document.querySelectorAll('#reg-biztype').forEach(function(sel){ sel.value = type; });
+  document.querySelectorAll('#reg-auth-sub').forEach(function(el){ el.textContent = lbl.sub; });
+  document.querySelectorAll('#reg-kname-label').forEach(function(el){ el.textContent = lbl.nameLabel; });
+  document.querySelectorAll('#reg-kname').forEach(function(el){ el.placeholder = lbl.placeholder; });
+}
+
+// Alterna a visibilidade de um campo de senha (mostra/esconde o texto digitado)
+// e troca o ícone do olho de acordo com o estado atual.
+function togglePasswordVisibility(inputId, btn){
+  document.querySelectorAll('#'+inputId).forEach(function(input){
+    var showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+  });
+  if(btn){
+    var nowShowing = btn.parentElement.querySelector('#'+inputId) ? btn.parentElement.querySelector('#'+inputId).type === 'text' : false;
+    btn.textContent = '👁️';
+    btn.setAttribute('aria-label', nowShowing ? 'Esconder senha' : 'Mostrar senha');
+  }
 }
 
 // Retorna quem está executando a ação agora: nome do garçom logado, ou o
@@ -5368,7 +5671,7 @@ async function toggleWaiterMenuPermission(waiterId, newState){
 }
 
 // ══════════════════════════════════════════════════════
-// QUIOSQUE — CONFIGURAÇÕES (avaliação no Google, etc.)
+// QUIOSQUE — AVALIAÇÕES DOS CLIENTES (link do Google) + LOGO PRÓPRIO
 // ══════════════════════════════════════════════════════
 function openKioskSettingsModal(){
   if(window._isWaiterMode){ toast('⛔ Acesso restrito no modo garçom.'); return; }
@@ -5496,7 +5799,6 @@ async function saveKioskSettings(){
       return;
     }
   } else if(window._kioskLogoFile){
-    // Modo demo: só mostra a prévia localmente, sem upload de verdade
     updates.logo_url = $('kiosk-logo-preview') ? $('kiosk-logo-preview').src : null;
   } else if(window._kioskLogoRemove){
     updates.logo_url = null;
@@ -5656,26 +5958,26 @@ async function doLogin(){
       }
       var w = wRows[0];
       if(!w.is_active){
-        toast('⛔ Seu acesso de garçom foi desativado. Fale com o responsável pelo quiosque.');
+        toast('⛔ Seu acesso de garçom foi desativado. Fale com o responsável pelo negócio.');
         setLoading('login-btn',false,'Entrar');
         return;
       }
       // Buscar dados básicos do quiosque a que esse garçom pertence
-      var kResp = await sb.from('kiosks').select('id,name,owner_name,blocked,approved,is_active,logo_url').eq('id', w.kiosk_id).single();
+      var kResp = await sb.from('kiosks').select('id,name,owner_name,blocked,approved,is_active,business_type,logo_url').eq('id', w.kiosk_id).single();
       if(kResp.error || !kResp.data){
-        toast('❌ Não foi possível localizar o quiosque vinculado.');
+        toast('❌ Não foi possível localizar o negócio vinculado.');
         setLoading('login-btn',false,'Entrar');
         return;
       }
       const k = kResp.data;
-      if(k.blocked){ toast('⛔ Quiosque bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+      if(k.blocked){ toast('⛔ Negócio bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
       if(k.approved === false){ toast('⏳ Cadastro aguardando aprovação do administrador.'); setLoading('login-btn',false,'Entrar'); return; }
-      if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+      if(!k.is_active){ toast('⏸️ Negócio inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
       currentKiosk = k;
       window._currentWaiter = { id: w.id, name: w.name, canEditMenu: !!w.can_edit_menu };
     } else {
-      currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_name:'Demo'};
+      currentKiosk={id:'demo',name:'Negócio Pôr do Sol (Demo)',owner_name:'Demo',business_type:'quiosque'};
       window._currentWaiter = { id:'demo-waiter', name:'Garçom Demo' };
     }
     window._isWaiterMode = true;
@@ -5704,17 +6006,21 @@ async function doLogin(){
     }
     const k = rows[0];
 
-    if(k.blocked){ toast('⛔ Quiosque bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+    if(k.blocked){ toast('⛔ Negócio bloqueado. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
     if(k.approved === false){ toast('⏳ Seu cadastro está aguardando aprovação do administrador.'); setLoading('login-btn',false,'Entrar'); return; }
-    if(!k.is_active){ toast('⏸️ Quiosque inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
+    if(!k.is_active){ toast('⏸️ Negócio inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
     currentKiosk=k;
-    // Busca o logo_url separadamente (a RPC de login não traz essa coluna,
-    // evitando mexer numa função crítica de autenticação)
-    var logoResp = await sb.from('kiosks').select('logo_url').eq('id', k.id).single();
-    if(logoResp.data) currentKiosk.logo_url = logoResp.data.logo_url;
+    // login_kiosk (RPC) pode não retornar business_type/logo_url; busca à parte, sem quebrar se a coluna não existir.
+    try{
+      var btResp = await sb.from('kiosks').select('business_type,logo_url').eq('id',k.id).single();
+      if(btResp && btResp.data){
+        currentKiosk.business_type = btResp.data.business_type;
+        currentKiosk.logo_url = btResp.data.logo_url;
+      }
+    }catch(e){}
   } else {
-    currentKiosk={id:'demo',name:'Quiosque Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo'};
+    currentKiosk={id:'demo',name:'Negócio Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo',business_type:'quiosque'};
   }
   window._isWaiterMode = false;
   window._currentWaiter = null;
@@ -5824,14 +6130,17 @@ async function doRegister(){
   window._registeringInProgress = true;
 
   const owner=$('reg-owner').value.trim(), email=$('reg-email').value.trim(),
-    pass=$('reg-pass').value.trim(), phone=$('reg-phone').value.trim(),
+    pass=$('reg-pass').value.trim(), passConfirm=($('reg-pass-confirm')&&$('reg-pass-confirm').value.trim())||'',
+    phone=$('reg-phone').value.trim(),
     kname=$('reg-kname').value.trim(), doc=($('reg-doc')&&$('reg-doc').value.trim())||'';
   if(!owner||!email||!pass||!phone||!kname){ toast('Preencha todos os campos obrigatórios *'); window._registeringInProgress=false; return; }
+  if(!_regBusinessType){ toast('⚠️ Selecione o tipo de negócio (Quiosque ou Bar/Restaurante)'); window._registeringInProgress=false; return; }
   if(!doc){ toast('Informe o CPF ou CNPJ *'); window._registeringInProgress=false; return; }
   if(pass.length<6){ toast('Senha deve ter mínimo 6 caracteres'); window._registeringInProgress=false; return; }
   if(!/[A-Z]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 letra MAIÚSCULA'); window._registeringInProgress=false; return; }
   if(!/[0-9]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 número'); window._registeringInProgress=false; return; }
   if(!/[^A-Za-z0-9]/.test(pass)){ toast('⚠️ A senha deve conter pelo menos 1 símbolo (ex: !@#$%&*?)'); window._registeringInProgress=false; return; }
+  if(pass!==passConfirm){ toast('⚠️ As senhas digitadas não coincidem'); window._registeringInProgress=false; return; }
   // Validar aceite dos Termos e Política
   var termsBoxes = document.querySelectorAll('[id="reg-terms"]');
   var accepted = false;
@@ -5870,6 +6179,10 @@ async function doRegister(){
       return;
     }
     var data = rows[0];
+    // Grava o tipo de negócio (quiosque ou bar/restaurante) escolhido no cadastro.
+    // Feito à parte pois register_kiosk (RPC) não recebe esse parâmetro.
+    // Se a coluna business_type ainda não existir no banco, falha em silêncio.
+    try{ await sb.from('kiosks').update({business_type:_regBusinessType}).eq('id',data.id); }catch(e){}
     // Criar categorias padrão (mesmo aguardando aprovação, pra já estar pronto quando aprovar)
     await sb.from('categories').insert(MOCK_CATS.map((c,i)=>({kiosk_id:data.id,name:c.name,emoji:c.emoji,sort_order:i+1})));
 
@@ -5896,17 +6209,18 @@ async function doRegister(){
       kiosk_doc: doc
     });
     // Limpar formulário e voltar pra tela de login com aviso
-    ['reg-owner','reg-email','reg-pass','reg-phone','reg-kname','reg-doc','reg-city','reg-beach'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
+    ['reg-owner','reg-email','reg-pass','reg-pass-confirm','reg-phone','reg-kname','reg-doc','reg-city','reg-beach','reg-biztype'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
+    _regBusinessType = '';
     window._regLogoFile = null;
     var regLogoInput = $('reg-logo-file'); if(regLogoInput) regLogoInput.value = '';
     var regLogoPrev = $('reg-logo-preview'); if(regLogoPrev){ regLogoPrev.src=''; regLogoPrev.classList.add('hidden'); }
     showCard('login');
-    toast('✅ Cadastro enviado! Seu quiosque está aguardando aprovação do administrador. Você receberá um aviso quando for liberado.');
+    toast('✅ Cadastro enviado! Seu negócio está aguardando aprovação do administrador. Você receberá um aviso quando for liberado.');
     window._registeringInProgress = false;
     return;
   } else {
     // Modo demo (sem Supabase): entra direto, sem precisar de aprovação
-    currentKiosk={id:'demo',name:kname,owner_email:email,owner_name:owner};
+    currentKiosk={id:'demo',name:kname,owner_email:email,owner_name:owner,business_type:_regBusinessType};
   }
   setLoading('register-btn',false,'Criar conta 🚀');
   toast('✅ Bem-vindo(a), '+owner.split(' ')[0]+'!');
@@ -5919,7 +6233,7 @@ async function checkKioskAccess(){
   var {data} = await sb.from('kiosks').select('is_active,blocked,approved').eq('id',currentKiosk.id).single();
   if(!data) return true;
   if(data.blocked){
-    toast('⛔ Quiosque bloqueado pelo administrador.');
+    toast('⛔ Negócio bloqueado pelo administrador.');
     doLogout();
     return false;
   }
@@ -5929,7 +6243,7 @@ async function checkKioskAccess(){
     return false;
   }
   if(!data.is_active){
-    toast('⏸️ Quiosque desativado pelo administrador.');
+    toast('⏸️ Negócio desativado pelo administrador.');
     doLogout();
     return false;
   }
@@ -5940,7 +6254,6 @@ async function enterDash(){
   $('kiosk-auth').classList.add('hidden');
   $('kiosk-dash').classList.remove('hidden');
   $('dash-kname').textContent=currentKiosk.name;
-  document.querySelectorAll('.kpage').forEach(p=>p.classList.remove('active'));
 
   // Logo próprio do quiosque (se cadastrado) no menu lateral — fica escondido
   // por padrão; só aparece quando o quiosque optou por colocar sua própria marca
@@ -5952,6 +6265,14 @@ async function enterDash(){
   } else if(dashLogo){
     dashLogo.classList.add('hidden');
   }
+  // Destaca na barra superior o botão correspondente ao tipo de negócio logado.
+  var isBar = currentKiosk.business_type === 'bar_restaurante';
+  document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll(isBar ? '#nav-bar' : '#nav-kiosk').forEach(function(b){ b.classList.add('active'); });
+  // Se for bar/restaurante, troca "guarda-sol" por "mesa" em todo o painel
+  // (inclusive no que for renderizado dinamicamente daqui pra frente).
+  startBizTerminologyWatcher();
+  document.querySelectorAll('.kpage').forEach(p=>p.classList.remove('active'));
 
   // Modo garçom: esconder Dashboard, Histórico, Relatórios e Garçons, e abrir direto em "Ao vivo"
   // Cardápio só fica visível se esse garçom específico tiver a permissão liberada
@@ -5980,6 +6301,7 @@ async function enterDash(){
   await loadKioskData();
   subscribeRealtime();
   loadMuteState();
+  requestWakeLock();
   // Verificar acesso periodicamente a cada 30 segundos
   if(window._accessChecker) clearInterval(window._accessChecker);
   window._accessChecker = setInterval(checkKioskAccess, 30000);
@@ -6021,7 +6343,7 @@ async function closeUmbrellaSession(umbNum, applyService){
   applyService = !!applyService;
   var confirmMsg = 'Faturar e encerrar guarda-sol '+umbNum+'?\nIsso vai marcar todos os pedidos como faturados e limpar a sessão do cliente.';
   if(applyService) confirmMsg += '\n\nSerá adicionada a taxa de serviço de 10% sobre o total.';
-  if(!confirm(confirmMsg)) return;
+  if(!confirm(swapUmbrellaWords(confirmMsg))) return;
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     var kid = currentKiosk.id;
@@ -6097,13 +6419,13 @@ async function closeUmbrellaSession(umbNum, applyService){
       // O total original pode estar desatualizado (cliente pediu a conta antes de
       // todos os pedidos, ou ficou 0 por bug anterior). Sempre usa a soma real.
       var newNotes = (contasExist[0].notes ? contasExist[0].notes + ' · ' : '')
-        + 'FATURADO pelo quiosque · ' + resumo;
+        + 'FATURADO pelo negócio · ' + resumo;
       await sb.from('orders')
         .update({status:'delivered', total: totalComServico, service_amount: serviceAmt, notes: newNotes, last_updated_by: getCurrentActorName()})
         .eq('id', contasExist[0].id);
     } else {
       // Não existia: criar pedido de conta retroativo
-      var notes = 'Encerrado pelo quiosque · ' + resumo + ' · FATURADO';
+      var notes = 'Encerrado pelo negócio · ' + resumo + ' · FATURADO';
 
       // Pegar próximo order_number
       var {data: lastNum} = await sb.from('orders')
@@ -6159,8 +6481,10 @@ async function closeUmbrellaSession(umbNum, applyService){
 
 
 function doLogout(){
+  releaseWakeLock();
   if(window._accessChecker){ clearInterval(window._accessChecker); window._accessChecker=null; }
   if(realtimeChannel) sb.removeChannel(realtimeChannel);
+  if(_bizTermObserver){ _bizTermObserver.disconnect(); _bizTermObserver=null; }
   currentKiosk=null; catalog=[]; dbCategories=[]; orders=[];
   window._isWaiterMode = false;
   window._currentWaiter = null;
@@ -6216,7 +6540,7 @@ function renderForgotStep1(){
   var div = document.getElementById('dyn-forgot-pwd');
   if(!div) return;
   div.innerHTML = fpShell('Recuperar senha',
-    '<div style="font-size:12.5px;color:#64748b">Informe o e-mail cadastrado no seu quiosque. Vamos enviar um código de verificação para ele.</div>'
+    '<div style="font-size:12.5px;color:#64748b">Informe o e-mail cadastrado no seu negócio. Vamos enviar um código de verificação para ele.</div>'
     +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">E-mail cadastrado *</label>'
     +'<input id="fp-email" type="email" class="input" style="width:100%" placeholder="seu@email.com"/></div>'
     +'<div style="display:flex;gap:8px;margin-top:6px">'
@@ -6369,6 +6693,61 @@ async function submitForgotPasswordReset(){
 // ══════════════════════════════════════════════════════
 // QUIOSQUE — REALTIME
 // ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// TELA SEMPRE ATIVA (Wake Lock) — evita que o celular apague/bloqueie a
+// tela sozinho por inatividade enquanto o quiosque está com o painel
+// aberto, o que já resolve a maior parte dos casos de "alerta sonoro não
+// tocou". Não impede alguém de apertar o botão físico e travar na mão —
+// isso nenhum site consegue evitar.
+var _wakeLock = null;
+// Vídeo de 1x1 preto, mudo, em loop — truque clássico (usado por libs como
+// NoSleep.js) que funciona em QUALQUER iPhone, mesmo em versões de iOS
+// anteriores à 16.4 (que é quando a API Wake Lock nativa passou a existir).
+// Reproduzir um vídeo silencioso e invisível é o único jeito confiável de
+// impedir o iOS de apagar a tela sozinho em iPhones mais antigos.
+var NOSLEEP_VIDEO_DATA = "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMXbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAA+gAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAkF0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAA+gAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAIAAAACAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAPoAAAAAAABAAAAAAG5bWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAQABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABZG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAASRzdGJsAAAAwHN0c2QAAAAAAAAAAQAAALBhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAIAAgBIAAAASAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGP//AAAANmF2Y0MBZAAK/+EAGWdkAAqs2V+IiMBEAAADAAQAAAMACDxIllgBAAZo6+PLIsD9+PgAAAAAEHBhc3AAAAABAAAAAQAAABRidHJ0AAAAAAAAFigAABYoAAAAGHN0dHMAAAAAAAAAAQAAAAEAAEAAAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAABAAAAAQAAABRzdHN6AAAAAAAAAsUAAAABAAAAFHN0Y28AAAAAAAAAAQAAA0cAAABidWR0YQAAAFptZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAAC1pbHN0AAAAJal0b28AAAAdZGF0YQAAAAEAAAAATGF2ZjU4Ljc2LjEwMAAAAAhmcmVlAAACzW1kYXQAAAKtBgX//6ncRem95tlIt5Ys2CDZI+7veDI2NCAtIGNvcmUgMTYzIHIzMDYwIDVkYjZhYTYgLSBILjI2NC9NUEVHLTQgQVZDIGNvZGVjIC0gQ29weWxlZnQgMjAwMy0yMDIxIC0gaHR0cDovL3d3dy52aWRlb2xhbi5vcmcveDI2NC5odG1sIC0gb3B0aW9uczogY2FiYWM9MSByZWY9MyBkZWJsb2NrPTE6MDowIGFuYWx5c2U9MHgzOjB4MTEzIG1lPWhleCBzdWJtZT03IHBzeT0xIHBzeV9yZD0xLjAwOjAuMDAgbWl4ZWRfcmVmPTEgbWVfcmFuZ2U9MTYgY2hyb21hX21lPTEgdHJlbGxpcz0xIDh4OGRjdD0xIGNxbT0wIGRlYWR6b25lPTIxLDExIGZhc3RfcHNraXA9MSBjaHJvbWFfcXBfb2Zmc2V0PS0yIHRocmVhZHM9MSBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTMgYl9weXJhbWlkPTIgYl9hZGFwdD0xIGJfYmlhcz0wIGRpcmVjdD0xIHdlaWdodGI9MSBvcGVuX2dvcD0wIHdlaWdodHA9MiBrZXlpbnQ9MjUwIGtleWludF9taW49MSBzY2VuZWN1dD00MCBpbnRyYV9yZWZyZXNoPTAgcmNfbG9va2FoZWFkPTQwIHJjPWNyZiBtYnRyZWU9MSBjcmY9MjMuMCBxY29tcD0wLjYwIHFwbWluPTAgcXBtYXg9NjkgcXBzdGVwPTQgaXBfcmF0aW89MS40MCBhcT0xOjEuMDAAgAAAABBliIQAFf/+98nvwKbr29+B";
+var _noSleepVideo = null;
+function getNoSleepVideo(){
+  if(_noSleepVideo) return _noSleepVideo;
+  var v = document.createElement('video');
+  v.setAttribute('playsinline', '');
+  v.setAttribute('webkit-playsinline', '');
+  v.muted = true;
+  v.loop = true;
+  v.src = NOSLEEP_VIDEO_DATA;
+  v.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1';
+  document.body.appendChild(v);
+  _noSleepVideo = v;
+  return v;
+}
+async function requestWakeLock(){
+  // 1) API nativa (Android Chrome e iOS 16.4+)
+  try{
+    if('wakeLock' in navigator){
+      _wakeLock = await navigator.wakeLock.request('screen');
+      _wakeLock.addEventListener('release', function(){ _wakeLock = null; });
+    }
+  }catch(e){ /* alguns navegadores negam se a aba não estiver em foco — ok, tenta de novo depois */ }
+  // 2) Fallback do vídeo silencioso — roda sempre junto, não tem custo real
+  // e cobre iPhones onde a API nativa não existe.
+  try{
+    var v = getNoSleepVideo();
+    var p = v.play();
+    if(p && p.catch) p.catch(function(){});
+  }catch(e){}
+}
+function releaseWakeLock(){
+  try{ if(_wakeLock){ _wakeLock.release(); _wakeLock = null; } }catch(e){}
+  try{ if(_noSleepVideo){ _noSleepVideo.pause(); } }catch(e){}
+}
+// O navegador libera o wake lock sozinho quando a aba fica em segundo
+// plano; reative assim que o quiosque voltar a ficar visível.
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible' && currentKiosk && !$('kiosk-dash').classList.contains('hidden')){
+    requestWakeLock();
+  }
+});
+
 function subscribeRealtime(){
   if(!isConfigured||!currentKiosk||currentKiosk.id==='demo') return;
   // Escutar mudanças no próprio quiosque (bloqueio/inativação pelo admin)
@@ -6378,10 +6757,10 @@ function subscribeRealtime(){
       function(payload){
         var k = payload.new;
         if(k.blocked){
-          toast('⛔ Quiosque bloqueado pelo administrador.');
+          toast('⛔ Negócio bloqueado pelo administrador.');
           setTimeout(doLogout, 2000);
         } else if(!k.is_active){
-          toast('⏸️ Quiosque desativado pelo administrador.');
+          toast('⏸️ Negócio desativado pelo administrador.');
           setTimeout(doLogout, 2000);
         }
       })
@@ -6443,7 +6822,7 @@ var isMuted = false;
 // atualizações, dando a impressão de que "só atualiza em um dos dois".
 // ══════════════════════════════════════════════════════
 var _lastKioskResync = 0;
-function maybeResyncKiosk(trigger){
+async function maybeResyncKiosk(trigger){
   if(!isConfigured || !currentKiosk || currentKiosk.id==='demo') return;
   // Só ressincroniza se o quiosque já passou da tela de login (dashboard visível)
   var kioskDash = document.getElementById('kiosk-dash');
@@ -6452,7 +6831,36 @@ function maybeResyncKiosk(trigger){
   if(now - _lastKioskResync < 800) return;
   _lastKioskResync = now;
   try { console.log('[recebaa] resync quiosque:', trigger); } catch(e){}
-  loadKioskData();
+
+  // Guardar quais pedidos já eram conhecidos ANTES de buscar de novo, pra
+  // detectar o que chegou "no escuro" (app em segundo plano/outra aba) e
+  // avisar com som ao voltar — sem isso o resync só atualiza a lista calado.
+  var knownIds = {};
+  orders.forEach(function(o){ knownIds[o.id] = true; });
+
+  await loadKioskData();
+
+  var newOnes = orders.filter(function(o){
+    if(knownIds[o.id]) return false; // já conhecido, não é novidade
+    if(o.customer_name === 'ENCERRAMENTO') return false; // marcador interno, não é pedido de verdade
+    // Só avisar de pedidos bem recentes (chegaram enquanto estava fora),
+    // pra não disparar alerta de coisa antiga em sincronizações normais.
+    var ageMs = Date.now() - new Date(o.created_at).getTime();
+    return ageMs < 15*60*1000; // até 15 minutos atrás
+  });
+
+  if(newOnes.length){
+    playAlert();
+    var contaCount = newOnes.filter(function(o){ return o.customer_name==='PEDIDO DE CONTA'; }).length;
+    var chamadaCount = newOnes.filter(function(o){ return o.customer_name==='CHAMADA DE ATENDENTE'; }).length;
+    var pedidoCount = newOnes.length - contaCount - chamadaCount;
+    var partes = [];
+    if(pedidoCount) partes.push(pedidoCount+' pedido'+(pedidoCount>1?'s':''));
+    if(chamadaCount) partes.push(chamadaCount+' chamada'+(chamadaCount>1?'s':'')+' de atendente');
+    if(contaCount) partes.push(contaCount+' pedido'+(contaCount>1?'s':'')+' de conta');
+    toast('🔔 Enquanto você estava fora: '+partes.join(', '));
+  }
+
   // Reconecta o canal Realtime se ele estiver fechado
   try {
     if(realtimeChannel && realtimeChannel.state && realtimeChannel.state !== 'joined' && typeof realtimeChannel.subscribe === 'function'){
@@ -6483,9 +6891,8 @@ setInterval(function(){
   if(!isConfigured || !currentKiosk || currentKiosk.id==='demo') return;
   var kioskDash = document.getElementById('kiosk-dash');
   if(!kioskDash || kioskDash.classList.contains('hidden')) return;
-  _lastKioskResync = Date.now();
   try { console.log('[recebaa] resync quiosque: polling 20s'); } catch(e){}
-  loadKioskData();
+  maybeResyncKiosk('polling 20s');
 }, 20000);
 
 function toggleMute(){
@@ -6520,6 +6927,10 @@ function loadMuteState(){
 // Som de alerta (MP3 embutido em base64 — não depende de rede)
 var ALERT_SOUND_DATA = "data:audio/mpeg;base64,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CM//+5JkmwkSui+zOe1giFJF5iBhhpYLMIqsKGsgAPkRGKTyssxaOUz40giLtEkDq1VdDq5dAAwJ4HMzjbz0QzpTTlJUGmTxiOQMjaYQ0ctkZbCb4WYMkGEkbmTlqS0JclDoCRpumYzAMYUBUZlBgQQSIcRbmdgJ6LagVdDm+rf2vNGUrZZOrSW2xRoSxYKFDTkrJjkNRGIZ6CV1sCAAAUZGn58e5xRmefn3tObqCZkMcBgLVsJAIECoxESzHxoOR4g7OvjDksFDBkC+PJ4ygGznhizKbMajI8YuFmxSZxi2HA5gwSYQBg0uOfGFoxgAqZqyiyqbSu1QpjRekv0udWMt2ampqns27AQSEBQZTZczNk7DNpAq3Ph/FsRlg5gVhw4hsyTN7GZyV+bvNExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//uSZLkH81QipctPzSCLZHP1c3pmAFACAA2AACAKAEABsAAEqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkxBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqv/7kmRAj/AAAGkAAAAIAAANIAAAAQAAAaQAAAAgAAA0gAAABKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo=";
 var _alertAudio = null;
+// Som de alerta distinto para o QUIOSQUE (novo pedido / chamada de garçom / pedido de conta),
+// diferente do som usado do lado do cliente (ALERT_SOUND_DATA).
+var KIOSK_ALERT_SOUND_DATA = "data:audio/wav;base64,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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+var _kioskAlertAudio = null;
 var _audioUnlocked = false;
 
 // Destrava o áudio na primeira interação do usuário usando WebAudio API.
@@ -6534,6 +6945,11 @@ function unlockAudio(){
       _alertAudio = new Audio(ALERT_SOUND_DATA);
       _alertAudio.preload = 'auto';
       try{ _alertAudio.load(); }catch(e){}
+    }
+    if(!_kioskAlertAudio){
+      _kioskAlertAudio = new Audio(KIOSK_ALERT_SOUND_DATA);
+      _kioskAlertAudio.preload = 'auto';
+      try{ _kioskAlertAudio.load(); }catch(e){}
     }
 
     // Criar e resumir um AudioContext — isso é o que destrava a permissão
@@ -6557,6 +6973,28 @@ function unlockAudio(){
         source.start(0);
       }catch(e){}
     }
+    // Também criar e destravar o AudioContext compartilhado usado pelos bipes
+    // de alerta (playAlert) já nesse gesto real do usuário. Se ele só for
+    // criado depois, na hora de um pedido chegar via notificação em tempo
+    // real (sem gesto do usuário), o iOS/celular recusa destravar o áudio
+    // e os avisos sonoros ficam mudos.
+    try{
+      var sharedCtx = getSharedAlertCtx();
+      if(sharedCtx && sharedCtx.state === 'suspended'){ sharedCtx.resume(); }
+      // Decodificar o bipe do quiosque já nesse toque real, pra tocar via
+      // Web Audio (com o ganho ampliado) assim que o primeiro pedido chegar.
+      if(typeof decodeKioskAlertBuffer === 'function') decodeKioskAlertBuffer();
+    }catch(e){}
+    // Dar o play() do vídeo "tela sempre ativa" logo nesse toque real —
+    // no iPhone, video.play() é bem mais confiável quando disparado direto
+    // por um gesto do usuário do que depois de vários awaits em cadeia.
+    try{
+      if(typeof getNoSleepVideo === 'function'){
+        var nsv = getNoSleepVideo();
+        var pv = nsv.play();
+        if(pv && pv.catch) pv.catch(function(){});
+      }
+    }catch(e){}
     _audioUnlocked = true;
   }catch(e){
     _audioUnlocked = true;
@@ -6603,39 +7041,101 @@ function getSharedAlertCtx(){
   }
   return _sharedAlertCtx;
 }
+
+// Converte a data URI base64 do bipe do quiosque em ArrayBuffer, decodifica
+// via Web Audio e guarda em cache — feito uma única vez.
+var _kioskAlertBuffer = null;
+var _kioskAlertBufferPromise = null;
+function base64ToArrayBuffer(base64){
+  var binary = atob(base64);
+  var bytes = new Uint8Array(binary.length);
+  for(var i=0;i<binary.length;i++){ bytes[i] = binary.charCodeAt(i); }
+  return bytes.buffer;
+}
+function decodeKioskAlertBuffer(){
+  if(_kioskAlertBuffer || _kioskAlertBufferPromise) return _kioskAlertBufferPromise;
+  var ctx = getSharedAlertCtx();
+  if(!ctx) return null;
+  try{
+    var b64 = KIOSK_ALERT_SOUND_DATA.split(',')[1];
+    var arrBuf = base64ToArrayBuffer(b64);
+    _kioskAlertBufferPromise = ctx.decodeAudioData(arrBuf.slice(0)).then(function(buf){
+      _kioskAlertBuffer = buf;
+      return buf;
+    }).catch(function(){ return null; });
+  }catch(e){ return null; }
+  return _kioskAlertBufferPromise;
+}
+
+// playAlert toca o bipe do quiosque no volume MÁXIMO possível. Um elemento
+// <audio> comum trava em volume 1.0 (100%), então para soar mais alto de
+// verdade usamos o Web Audio API: o buffer decodificado passa por um
+// GainNode com ganho acima de 1 (amplificação real) e depois por um
+// DynamicsCompressor, que evita estouro/distorção mesmo amplificado.
+// Se o Web Audio não estiver disponível/pronto, cai no <audio> como reserva.
+// Curva de "soft clip" (saturação suave via tanh) usada no WaveShaperNode
+// abaixo. Isso deixa a gente empurrar o ganho MUITO mais alto sem gerar
+// aquele estouro digital feio — os picos são arredondados em vez de cortados
+// abruptamente, o que soa bem mais alto na prática sem distorcer tanto.
+function makeSoftClipCurve(amount){
+  var n = 44100, curve = new Float32Array(n);
+  for(var i=0;i<n;i++){
+    var x = (i * 2) / n - 1;
+    curve[i] = Math.tanh(x * amount) / Math.tanh(amount);
+  }
+  return curve;
+}
+function playAlertViaBuffer(){
+  var ctx = getSharedAlertCtx();
+  if(!ctx || !_kioskAlertBuffer) return false;
+  try{
+    if(ctx.state === 'suspended'){ ctx.resume().catch(function(){}); }
+    var source = ctx.createBufferSource();
+    source.buffer = _kioskAlertBuffer;
+
+    var gain = ctx.createGain();
+    gain.gain.value = 14; // amplificação bem acima do volume "normal" de 100%
+
+    var shaper = ctx.createWaveShaper();
+    shaper.curve = makeSoftClipCurve(2.2);
+    shaper.oversample = '4x';
+
+    var comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -32;
+    comp.knee.value = 2;
+    comp.ratio.value = 20;
+    comp.attack.value = 0.0003;
+    comp.release.value = 0.1;
+
+    source.connect(gain);
+    gain.connect(shaper);
+    shaper.connect(comp);
+    comp.connect(ctx.destination);
+    source.start(0);
+    return true;
+  }catch(e){ return false; }
+}
 function playAlert(){
   if(isMuted) return;
   try{
-    var ctx = getSharedAlertCtx();
-    if(!ctx) return;
-    var startBeeps = function(){
-      // Compressor no final da cadeia: maximiza o volume percebido (mais "denso")
-      // sem deixar o som estourar/distorcer feio
-      var comp = ctx.createDynamicsCompressor();
-      comp.threshold.value = -24;
-      comp.knee.value = 10;
-      comp.ratio.value = 12;
-      comp.attack.value = 0.002;
-      comp.release.value = 0.15;
-      comp.connect(ctx.destination);
-
-      // 3 bipes, onda quadrada (mais estridente, corta melhor no barulho de bar/quiosque)
-      [0, 260, 520].forEach(function(delay){
-        var osc = ctx.createOscillator(), g = ctx.createGain();
-        osc.connect(g); g.connect(comp);
-        osc.frequency.value = 1046; osc.type = 'square';
-        g.gain.setValueAtTime(0, ctx.currentTime + delay/1000);
-        g.gain.linearRampToValueAtTime(1, ctx.currentTime + delay/1000 + .03);
-        g.gain.linearRampToValueAtTime(0, ctx.currentTime + delay/1000 + .22);
-        osc.start(ctx.currentTime + delay/1000);
-        osc.stop(ctx.currentTime + delay/1000 + .25);
+    if(playAlertViaBuffer()) return;
+    // Reserva: <audio> normal em volume máximo (1.0)
+    var audio = new Audio(KIOSK_ALERT_SOUND_DATA);
+    audio.preload = 'auto';
+    audio.volume = 1.0;
+    var p = audio.play();
+    if(p && p.catch){
+      p.catch(function(){
+        // Fallback: tentar pelo objeto _kioskAlertAudio pré-carregado/destravado no primeiro toque
+        if(_kioskAlertAudio){
+          try{
+            _kioskAlertAudio.muted = false;
+            _kioskAlertAudio.volume = 1.0;
+            _kioskAlertAudio.currentTime = 0;
+            _kioskAlertAudio.play().catch(function(){});
+          }catch(e){}
+        }
       });
-    };
-    // Se o contexto ficou suspenso (política de autoplay do navegador), retoma antes de tocar
-    if(ctx.state === 'suspended'){
-      ctx.resume().then(startBeeps).catch(function(){});
-    } else {
-      startBeeps();
     }
   }catch(e){}
 }
@@ -6647,6 +7147,15 @@ function playAlert(){
     if(ctx && ctx.state === 'suspended'){ ctx.resume().catch(function(){}); }
   }, { passive: true });
 });
+// Celulares costumam suspender o AudioContext quando a tela é bloqueada ou o
+// app vai para segundo plano. Retomar sempre que a aba volta a ficar visível
+// evita que os avisos sonoros fiquem mudos depois disso.
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible'){
+    var ctx = _sharedAlertCtx;
+    if(ctx && ctx.state === 'suspended'){ ctx.resume().catch(function(){}); }
+  }
+});
 
 // ══════════════════════════════════════════════════════
 // QUIOSQUE — NAVEGAÇÃO
@@ -6655,7 +7164,7 @@ function kPage(name,btn){
   var waiterBlocked = ['overview','history','reports','waiters'];
   var waiterCanEditMenu = !!(window._currentWaiter && window._currentWaiter.canEditMenu);
   if(window._isWaiterMode && name === 'menu' && !waiterCanEditMenu){
-    toast('⛔ Você não tem permissão para acessar o Cardápio. Fale com o responsável pelo quiosque.');
+    toast('⛔ Você não tem permissão para acessar o Cardápio. Fale com o responsável pelo negócio.');
     return;
   }
   if(window._isWaiterMode && waiterBlocked.indexOf(name) !== -1){
@@ -6727,7 +7236,7 @@ function updateDashMetrics(){
   const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   const max=top[0]?top[0][1]:1;
   const ch=$('top-products-chart');
-  if(ch) ch.innerHTML=top.length?top.map(([name,qty])=>'<div class="bar-row"><div class="bar-lbl" style="width:340px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(name)+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(qty/max*100)+'%"></div></div><div class="bar-val">'+qty+'</div></div>').join(''):'<div style="padding:16px;color:var(--sl-400);font-size:13px">Nenhum pedido ainda.</div>';
+  if(ch) ch.innerHTML=top.length?top.map(([name,qty])=>'<div class="bar-row"><div class="bar-lbl" style="flex:0 1 40%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(name)+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(qty/max*100)+'%"></div></div><div class="bar-val">'+qty+'</div></div>').join(''):'<div style="padding:16px;color:var(--sl-400);font-size:13px">Nenhum pedido ainda.</div>';
 }
 
 var STATUS_NEXT={
@@ -7047,9 +7556,38 @@ function histFilter(f,btn){
   btn.classList.add('active'); renderHist();
 }
 
+// Guarda-sóis/mesas selecionadas no filtro (multi-seleção, digitadas pelo garçom). Vazio = mostra todas.
+window._histUmbSelected = window._histUmbSelected || new Set();
+
+function addHistUmbFilter(){
+  var inp = $('hist-umb-filter'); if(!inp) return;
+  var val = String(inp.value||'').trim();
+  if(!val) return;
+  window._histUmbSelected.add(val);
+  inp.value = '';
+  renderHistUmbChips();
+  renderHist();
+}
+
+function removeHistUmbFilter(num){
+  window._histUmbSelected.delete(num);
+  renderHistUmbChips();
+  renderHist();
+}
+
+function renderHistUmbChips(){
+  var box = $('hist-umb-chips'); if(!box) return;
+  var nums = Array.from(window._histUmbSelected);
+  if(!nums.length){ box.innerHTML=''; return; }
+  box.innerHTML = nums.map(function(n){
+    return '<span class="hf-btn active" style="display:inline-flex;align-items:center;gap:6px">☂️ '+n+' <button type="button" onclick="removeHistUmbFilter(\''+n+'\')" style="background:none;border:none;color:inherit;font-size:14px;line-height:1;cursor:pointer;padding:0">×</button></span>';
+  }).join('');
+}
+
 async function renderHist(){
   const el=$('hist-table'); if(!el) return;
   el.innerHTML='<div class="page-loading"></div>';
+  var histUmbArr = Array.from(window._histUmbSelected);
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     var query = sb.from('orders')
@@ -7083,11 +7621,9 @@ async function renderHist(){
       query = query.gte('created_at', dates.from).lte('created_at', dates.to);
     }
 
-    // Filtro por guarda-sol
-    var histUmbEl = $('hist-umb-filter');
-    var histUmbVal = histUmbEl ? String(histUmbEl.value||'').trim() : '';
-    if(histUmbVal){
-      query = query.eq('umbrella_num', histUmbVal);
+    // Filtro por guarda-sol/mesa (uma ou várias selecionadas)
+    if(histUmbArr.length){
+      query = query.in('umbrella_num', histUmbArr);
     }
 
     var {data, error} = await query;
@@ -7121,8 +7657,8 @@ async function renderHist(){
   } else {
     list2 = orders.filter(function(o){ return o.status===histFilterVal && o.customer_name!=='ENCERRAMENTO'; });
   }
-  if(histUmbVal){
-    list2 = list2.filter(function(o){ return String(o.umbrella_num||o.umb||'') === histUmbVal; });
+  if(histUmbArr.length){
+    list2 = list2.filter(function(o){ return histUmbArr.indexOf(String(o.umbrella_num||o.umb||'')) !== -1; });
   }
   window._histRawList = list2;
   renderHistTable(list2);
@@ -7204,11 +7740,11 @@ function renderHistTable(list, skipFilterSetup){
       +'<th style="width:32px"><input type="checkbox" id="hist-select-all" onchange="toggleAllHistSelection(this)"/></th>'
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'num\')"># '+histSortIcon('num')+'</th>'
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'umb\')">Guarda-sol '+histSortIcon('umb')+'</th>'
-      +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'cliente\')">Cliente '+histSortIcon('cliente')+'</th>'
-      +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'hora\')">Hora '+histSortIcon('hora')+'</th>'
-      +'<th>Itens</th>'
+      +'<th style="cursor:pointer;user-select:none;width:90px;max-width:90px" onclick="setHistSort(\'cliente\')">Cliente '+histSortIcon('cliente')+'</th>'
+      +'<th style="width:260px">Itens</th>'
       +'<th>Origem</th>'
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'total\')">Total '+histSortIcon('total')+'</th>'
+      +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'hora\')">Hora '+histSortIcon('hora')+'</th>'
       +'<th>Status</th>'
       +'<th>Ação</th>'
     +'</tr>'
@@ -7241,11 +7777,11 @@ function renderHistTable(list, skipFilterSetup){
         +'<td>'+(!isSpecial && o.status==='pending'?'<input type="checkbox" class="hist-row-check" data-oid="'+o.id+'" '+(isChecked?'checked':'')+' onchange="toggleHistSelection(\''+o.id+'\',this.checked)"/>':'')+'</td>'
         +'<td><b>#'+(o.order_number||'—')+'</b>'+groupChip+'</td>'
         +'<td>☂️ '+esc(o.umb||o.umbrella_num||'?')+'</td>'
-        +'<td>'+esc(o.customer_name||'?')+'</td>'
-        +'<td>'+(o.time||'—')+'</td>'
-        +'<td style="color:var(--sl-500);font-size:11px">'+(isSpecial?esc(notesClean.split(' · ')[0]):(o.items||[]).map(i=>i.qty+'× '+esc(i.name)).join(', '))+'</td>'
+        +'<td style="width:90px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(o.customer_name||'?')+'</td>'
+        +'<td style="color:var(--sl-500);font-size:11px;width:260px;text-align:left">'+(isSpecial?esc(notesClean.split(' · ')[0]):(o.items||[]).map(i=>'<div style="text-align:left;white-space:nowrap">'+i.qty+'× '+esc(i.name)+'</div>').join(''))+'</td>'
         +'<td style="font-size:11px">'+(o.created_by?'🧑‍🍳 '+esc(o.created_by):'<span style="color:var(--sl-400)">📱 Cliente</span>')+'</td>'
         +'<td><b>'+fmt(o.total)+'</b></td>'
+        +'<td>'+(o.time||'—')+'</td>'
         +(function(){
           var isConta = o.customer_name==='PEDIDO DE CONTA';
           var isAtendente = o.customer_name==='CHAMADA DE ATENDENTE';
@@ -7386,7 +7922,7 @@ function exportHistExcel(){
   var blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  a.href=url; a.download='historico-'+(currentKiosk?currentKiosk.name.replace(/\s+/g,'-'):'quiosque')+'-'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.csv';
+  a.href=url; a.download='historico-'+(currentKiosk?currentKiosk.name.replace(/\s+/g,'-'):'negocio')+'-'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.csv';
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   toast('📊 Exportado!');
 }
@@ -7396,14 +7932,14 @@ function printHist(){
   if(!tableEl){ return; }
   var period = document.querySelector('.hf-btn[id^="hp-"].active');
   var periodTxt = period ? period.textContent.trim() : '';
-  var kname = currentKiosk ? currentKiosk.name : 'Quiosque';
+  var kname = currentKiosk ? currentKiosk.name : 'Negócio';
   var css = 'body{font-family:Arial,sans-serif;padding:20px;font-size:12px}h2{font-size:16px;margin-bottom:4px}.sub{color:#64748b;margin-bottom:16px}table{width:100%;border-collapse:collapse}th{background:#f8fafc;padding:7px;text-align:left;font-size:11px;border-bottom:2px solid #e2e8f0}td{padding:7px;border-bottom:1px solid #f1f5f9}.footer{margin-top:16px;text-align:center;color:#94a3b8;font-size:11px}@media print{.no-print{display:none}}';
   var win = window.open('','_blank','width=960,height=700');
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Histórico '+esc(kname)+'</title><style>'+css+'</style></head><body>'
     +'<div style="display:flex;justify-content:space-between"><div><h2>Histórico — '+esc(kname)+'</h2><div class="sub">Período: '+esc(periodTxt)+' · '+new Date().toLocaleString('pt-BR')+'</div></div>'
     +'<button class="no-print" onclick="window.print()" style="padding:8px 16px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;cursor:pointer;height:fit-content">Imprimir</button></div>'
     +tableEl.outerHTML
-    +'<div class="footer">Recebaa · Sistema de pedidos para quiosques de praia</div>'
+    +'<div class="footer">Recebaa · Sistema de pedidos para negócios de praia</div>'
     +'</body></html>');
   win.document.close(); win.focus();
 }
@@ -8475,7 +9011,31 @@ function closeUmbrellaConsumptionModal(){
   if(d) d.remove();
 }
 
+// ── Pedido direto pelo cliente (liga/desliga globalmente pro negócio) ──
+function renderDirectOrdersToggle(){
+  var on = !currentKiosk || currentKiosk.allow_direct_orders !== false;
+  document.querySelectorAll('#direct-orders-toggle').forEach(function(b){
+    b.textContent = on ? '✅ Ativado' : '⏸️ Desativado';
+    b.style.background = on ? 'rgba(16,185,129,.12)' : 'rgba(239,68,68,.1)';
+    b.style.color = on ? '#047857' : 'var(--red)';
+    b.style.fontWeight = '600';
+  });
+}
+async function toggleDirectOrders(){
+  if(!currentKiosk) return;
+  var current = currentKiosk.allow_direct_orders !== false;
+  var next = !current;
+  if(isConfigured && currentKiosk.id !== 'demo'){
+    var {error} = await sb.from('kiosks').update({allow_direct_orders: next}).eq('id', currentKiosk.id);
+    if(error){ toast('Erro ao atualizar: ' + error.message); return; }
+  }
+  currentKiosk.allow_direct_orders = next;
+  renderDirectOrdersToggle();
+  toast(next ? '✅ Pedido direto pelo cliente ativado' : '⏸️ Pedido direto desativado — cliente só vê cardápio, chama garçom, acompanha pedidos e pede a conta');
+}
+
 async function renderUmbrellas(){
+  renderDirectOrdersToggle();
   var grid=$('umb-grid'); if(!grid) return;
   var umbs=[];
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
@@ -8546,11 +9106,11 @@ async function renderUmbrellas(){
   var baseUrl = getKioskUrl();
   var kioskId = currentKiosk ? currentKiosk.id : '';
   var qrUrl = baseUrl + '?kiosk=' + kioskId;
-  var kioskName = currentKiosk ? currentKiosk.name : 'Quiosque';
+  var kioskName = currentKiosk ? currentKiosk.name : 'Negócio';
   var qrImgUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(qrUrl);
 
   var qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:20px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
-    + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code do Quiosque</div>'
+    + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code do Negócio</div>'
     + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">Fixe este QR Code em cada guarda-sol.</div>'
     + '<img src="' + qrImgUrl + '" style="margin:0 auto 12px;display:block;border-radius:8px"/>'
     + '<div style="font-size:11px;color:var(--ocean-600);word-break:break-all;margin-bottom:12px">' + qrUrl + '</div>'
@@ -8705,7 +9265,7 @@ async function saveUmbrella(){
 }
 
 async function deleteUmbrella(id, number){
-  if(!confirm('Remover guarda-sol Nº ' + number + '?')) return;
+  if(!confirm(swapUmbrellaWords('Remover guarda-sol Nº ' + number + '?'))) return;
   if(isConfigured && !String(id).startsWith('u')){
     var {error} = await sb.from('umbrellas').delete().eq('id', id);
     if(error){ toast('Erro: ' + error.message); return; }
@@ -8724,7 +9284,7 @@ function copyQrUrl(elOrUrl){
 function printQr(url,num){
   var win=window.open('','_blank');
   win.document.write('<html><body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">'
-    +'<h2>Guarda-sol Nº '+num+'</h2>'
+    +'<h2>'+swapUmbrellaWords('Guarda-sol Nº '+num)+'</h2>'
     +'<img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(url)+'" style="margin:20px"/>'
     +'<p style="font-size:12px;color:#666;max-width:300px;text-align:center">'+url+'</p>'
     +'<button onclick="window.print()" style="margin-top:20px;padding:10px 24px;background:#1e293b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">🖨️ Imprimir</button>'
@@ -8753,7 +9313,7 @@ function exportToExcel(){
     return 0;
   });
 
-  var kioskName = (currentKiosk && currentKiosk.name) || 'Quiosque';
+  var kioskName = (currentKiosk && currentKiosk.name) || 'Negócio';
   var periodLabel = '';
   if(reportPeriod === 'today') periodLabel = 'Hoje';
   else if(reportPeriod === 'week') periodLabel = 'Últimos 7 dias';
@@ -8846,7 +9406,7 @@ function exportToExcel(){
 }
 
 function printReports(){
-  var kioskName = (currentKiosk && currentKiosk.name) || 'Quiosque';
+  var kioskName = (currentKiosk && currentKiosk.name) || 'Negócio';
   var period = document.querySelector('.hf-btn.active') ? document.querySelector('.hf-btn.active').textContent : '';
   var rev = $('r-rev') ? $('r-rev').textContent : 'R$ 0';
   var ordersCount = $('r-orders') ? $('r-orders').textContent : '0';
@@ -8886,7 +9446,7 @@ function printReports(){
     '</div>',
     '<h3>Itens mais pedidos</h3>'+topProds,
     '<h3 style="margin-top:16px">Pedidos no periodo</h3>'+tableHtml,
-    '<div class="footer">Recebaa - Sistema de pedidos para quiosques de praia</div>'
+    '<div class="footer">Recebaa - Sistema de pedidos para negócios de praia</div>'
   ].join('');
 
   var win = window.open('','_blank','width=900,height=700');
@@ -9299,7 +9859,7 @@ async function loadReports(){
   if(topEl){
     topEl.innerHTML = top.length ? top.map(function(e){
       return '<div class="bar-row">'
-        +'<div class="bar-lbl" style="width:340px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(e[0])+'</div>'
+        +'<div class="bar-lbl" style="flex:0 1 40%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(e[0])+'</div>'
         +'<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(e[1]/maxQ*100)+'%"></div></div>'
         +'<div class="bar-val">'+e[1]+'</div>'
         +'</div>';
@@ -9332,15 +9892,16 @@ async function loadAdminData(){
   if(isConfigured){
     var {data:kiosks}=await sb.from('kiosks').select('*').order('created_at',{ascending:false});
     var list=kiosks||[];
-    renderAdminKiosksTable(list);
+    window._adminKiosksAll = list;
+    renderAdminKiosksTable(filterKiosksByType(list, window._adminKioskTypeFilter));
 
     var sw=$('admin-subs-wrap');
-    if(sw) sw.innerHTML='<table><thead><tr><th>Quiosque</th><th>Plano</th><th>Status</th></tr></thead><tbody>'
+    if(sw) sw.innerHTML='<table><thead><tr><th>Negócio</th><th>Plano</th><th>Status</th></tr></thead><tbody>'
       +list.map(function(k){return '<tr><td>'+k.name+'</td><td><span class="plan-badge plan-starter">starter</span></td><td><span class="active-dot">'+(k.is_active?'Ativa':'Inativa')+'</span></td></tr>';}).join('')
       +'</tbody></table>';
 
     var mg=$('admin-metrics-grid');
-    if(mg) mg.innerHTML='<div class="metric-card"><div class="metric-label">Quiosques</div><div class="metric-val">'+list.length+'</div></div>'
+    if(mg) mg.innerHTML='<div class="metric-card"><div class="metric-label">Negócios</div><div class="metric-val">'+list.length+'</div></div>'
       +'<div class="metric-card"><div class="metric-label">Ativos</div><div class="metric-val">'+list.filter(function(k){return k.is_active && !k.blocked && k.approved!==false;}).length+'</div></div>'
       +'<div class="metric-card"><div class="metric-label">⏳ Aguardando aprovação</div><div class="metric-val" style="color:#6d28d9">'+list.filter(function(k){return k.approved===false;}).length+'</div></div>'
       +'<div class="metric-card"><div class="metric-label">Inativos / Bloqueados</div><div class="metric-val">'+list.filter(function(k){return (!k.is_active || k.blocked) && k.approved!==false;}).length+'</div></div>';
@@ -9349,10 +9910,21 @@ async function loadAdminData(){
   }
 }
 
+window._adminKioskTypeFilter = 'all';
+function filterKiosksByType(list, type){
+  if(!type || type==='all') return list;
+  return list.filter(function(k){ return (k.business_type||'quiosque') === type; });
+}
+function setAdminKioskTypeFilter(type, btn){
+  window._adminKioskTypeFilter = type;
+  document.querySelectorAll('#apage-kiosks .hf-btn').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  renderAdminKiosksTable(filterKiosksByType(window._adminKiosksAll||[], type));
+}
 function renderAdminKiosksTable(list){
   var kw=$('admin-kiosks-wrap'); if(!kw) return;
   if(!list||!list.length){
-    kw.innerHTML='<div style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum quiosque cadastrado.</div>';
+    kw.innerHTML='<div style="padding:24px;text-align:center;color:var(--sl-400)">Nenhum negócio cadastrado.</div>';
     return;
   }
   // Ordenar: pendentes de aprovação no topo, depois o resto pela ordem original
@@ -9362,7 +9934,7 @@ function renderAdminKiosksTable(list){
     return ap - bp;
   });
   kw.innerHTML='<table><thead><tr>'
-    +'<th>Quiosque</th><th>Responsável</th><th>E-mail</th><th>Cidade</th>'
+    +'<th>Negócio</th><th>Tipo</th><th>Responsável</th><th>E-mail</th><th>Cidade</th>'
     +'<th>Status</th><th>Ações</th>'
     +'</tr></thead><tbody>'
     +sorted.map(function(k){
@@ -9387,8 +9959,10 @@ function renderAdminKiosksTable(list){
         if(status!=='inactive') actions += '<button class="btn btn-sm btn-ghost" data-kid="'+k.id+'" data-st="inactive" onclick="setKioskStatusBtn(this)">⏸️ Desativar</button>';
         if(status!=='blocked')  actions += '<button class="btn btn-sm btn-danger" data-kid="'+k.id+'" data-st="blocked" onclick="setKioskStatusBtn(this)">🚫 Bloquear</button>';
       }
+      var bizType = k.business_type === 'bar_restaurante' ? '🍽️ Bar/Restaurante' : '🏪 Quiosque';
       return '<tr>'
         +'<td><b>'+esc(k.name)+'</b></td>'
+        +'<td style="font-size:12px;white-space:nowrap">'+bizType+'</td>'
         +'<td>'+esc(k.owner_name||'—')+'</td>'
         +'<td style="font-size:11px">'+esc(k.owner_email||'')+'</td>'
         +'<td>'+esc(k.city||'—')+'</td>'
@@ -9405,7 +9979,7 @@ function setKioskStatusBtn(btn){
 
 async function setKioskStatus(id, newStatus){
   var labels = {active:'ativado',inactive:'desativado',blocked:'bloqueado',approve:'aprovado'};
-  if(!confirm('Confirmar: quiosque será '+labels[newStatus]+'?')) return;
+  if(!confirm('Confirmar: negócio será '+labels[newStatus]+'?')) return;
 
   var updates = {};
   if(newStatus === 'approve')  { updates.approved = true;  updates.is_active = true;  updates.blocked = false; }
@@ -9437,8 +10011,9 @@ async function setKioskStatus(id, newStatus){
 
   // Recarregar a tabela
   var {data:kiosks} = await sb.from('kiosks').select('*').order('created_at',{ascending:false});
-  renderAdminKiosksTable(kiosks||[]);
-  toast('✅ Quiosque '+labels[newStatus]+' com sucesso!');
+  window._adminKiosksAll = kiosks||[];
+  renderAdminKiosksTable(filterKiosksByType(window._adminKiosksAll, window._adminKioskTypeFilter));
+  toast('✅ Negócio '+labels[newStatus]+' com sucesso!');
 
   // Enviar e-mail de aprovação se for o caso (somente quando aprovar)
   if(newStatus === 'approve'){
@@ -9447,7 +10022,7 @@ async function setKioskStatus(id, newStatus){
       sendAprovacaoEmail({
         to_name: approvedKiosk.owner_name || 'Responsável',
         to_email: approvedKiosk.owner_email,
-        kiosk_name: approvedKiosk.name || 'Seu quiosque'
+        kiosk_name: approvedKiosk.name || 'Seu negócio'
       });
     }
   }
@@ -9513,7 +10088,7 @@ function exportAdminExcel(){
   // Tabela de quiosques
   var tableEl = $('am-kiosk-table');
   if(tableEl && tableEl.querySelector('table')){
-    rows.push('"Detalhamento por quiosque"');
+    rows.push('"Detalhamento por negócio"');
     var ths = tableEl.querySelectorAll('thead th');
     var headers = [];
     ths.forEach(function(th){ headers.push('"'+th.textContent.trim()+'"'); });
@@ -9587,13 +10162,13 @@ function printAdminMetrics(){
     '<div class="metric"><div class="metric-label">GMV Total</div><div class="metric-val">'+gmv+'</div></div>',
     '<div class="metric"><div class="metric-label">Pedidos</div><div class="metric-val">'+orders+'</div></div>',
     '<div class="metric"><div class="metric-label">Ticket Médio</div><div class="metric-val">'+ticket+'</div></div>',
-    '<div class="metric"><div class="metric-label">Quiosques Ativos</div><div class="metric-val">'+activeKiosks+'</div></div>',
+    '<div class="metric"><div class="metric-label">Negócios Ativos</div><div class="metric-val">'+activeKiosks+'</div></div>',
     '<div class="metric"><div class="metric-label">Entregues</div><div class="metric-val">'+delivered+'</div></div>',
     '<div class="metric"><div class="metric-label">Cancelamentos</div><div class="metric-val">'+cancelled+'</div></div>',
     '</div>',
-    '<h3 style="margin-bottom:12px">Ranking de quiosques</h3>',
+    '<h3 style="margin-bottom:12px">Ranking de negócios</h3>',
     rankingHtml,
-    '<h3 style="margin:20px 0 8px">Detalhamento por quiosque</h3>',
+    '<h3 style="margin:20px 0 8px">Detalhamento por negócio</h3>',
     tableHtml,
     '<div class="footer">Recebaa · Painel administrativo</div>'
   ].join('');
@@ -9689,7 +10264,7 @@ async function loadAdminMetrics(){
     }).sort(function(a,b){ return b.revenue-a.revenue; });
 
     tableEl.innerHTML = '<table><thead><tr>'
-      +'<th>Quiosque</th><th>Faturamento</th><th>Custo</th><th>Lucro</th><th>Margem</th><th>Pedidos</th><th>Entregues</th><th>Cancelamentos</th><th>Ticket médio</th><th>Status</th>'
+      +'<th>Negócio</th><th>Faturamento</th><th>Custo</th><th>Lucro</th><th>Margem</th><th>Pedidos</th><th>Entregues</th><th>Cancelamentos</th><th>Ticket médio</th><th>Status</th>'
       +'</tr></thead><tbody>'
       +allKioskData.map(function(k){
         var avg = k.delivered ? k.revenue/k.delivered : 0;
