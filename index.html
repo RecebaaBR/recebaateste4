@@ -3192,9 +3192,13 @@ window.addEventListener('load', async function(){
   var urlParams = new URLSearchParams(window.location.search);
   var kioskId = urlParams.get('kiosk');
   var umbNum = urlParams.get('umbrella');
-  if(kioskId && umbNum && isConfigured){
+  if(umbNum){
     $('umbrella-input').value = umbNum;
-    // Buscar nome do kiosk para mostrar na splash
+  }
+  if(kioskId && isConfigured){
+    // Buscar nome do kiosk para mostrar na splash — independente de já ter
+    // o número do guarda-sol na URL ou não (o guarda-sol normalmente é
+    // digitado pelo cliente, não vem no QR Code).
     var {data} = await sb.from('kiosks').select('name').eq('id',kioskId).single();
     if(data) $('splash-kname').textContent = data.name;
   }
