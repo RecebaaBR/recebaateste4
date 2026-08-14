@@ -3199,6 +3199,13 @@ window.addEventListener('load', async function(){
     if(data) $('splash-kname').textContent = data.name;
   }
 
+  // QR Code escaneado (URL já vem com ?kiosk=ID): pula a landing page e vai
+  // direto pra tela de "informe o número do guarda-sol", sem exigir clique
+  // em "Fazer pedido".
+  if(kioskId){
+    showScreen('client', document.getElementById('nav-client'));
+  }
+
   // ─── Restaurar sessão do cliente após refresh (pull-to-refresh, F5, etc.) ───
   // Só restaura se NÃO houver URL params (que indicam acesso novo via QR Code)
   if(isConfigured && !kioskId && !umbNum){
