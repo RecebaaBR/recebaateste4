@@ -785,7 +785,7 @@ tr:hover td{background:var(--sand-50)}
 <div id="screen-client" class="screen" style="display:none">
   <div id="client-splash">
     <div class="splash">
-      <div class="splash-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
+      <div class="splash-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img id="splash-logo-img" src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
       <h1 id="splash-kname">Recebaa</h1>
       <p>Peça direto do seu guarda-sol</p>
       <div class="splash-field">
@@ -798,7 +798,7 @@ tr:hover td{background:var(--sand-50)}
 
   <div id="client-menu" class="hidden">
     <div class="menu-header">
-      <div class="menu-kiosk-logo" id="menu-logo" style="background:#fff;padding:4px;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
+      <div class="menu-kiosk-logo" id="menu-logo" style="background:#fff;padding:4px;display:flex;align-items:center;justify-content:center"><img id="menu-logo-img" src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
       <div>
         <div class="menu-kiosk-name" id="menu-kname">Negócio</div>
         <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
@@ -942,6 +942,12 @@ tr:hover td{background:var(--sand-50)}
         <div class="field" style="margin-bottom:0"><label class="label">Cidade</label><input class="input" id="reg-city" placeholder="Rio de Janeiro"/></div>
         <div class="field" style="margin-bottom:0"><label class="label">Praia</label><input class="input" id="reg-beach" placeholder="Barra da Tijuca"/></div>
       </div>
+      <div class="field" style="margin-top:12px">
+        <label class="label">Logo do seu negócio (opcional)</label>
+        <div style="font-size:11.5px;color:var(--sl-400);margin-bottom:6px">Se não enviar, usamos o logo padrão do Recebaa. Formatos aceitos: JPG ou PNG, até 2MB.</div>
+        <input type="file" id="reg-logo-file" accept="image/png,image/jpeg" onchange="previewRegLogo(this)"/>
+        <img id="reg-logo-preview" class="hidden" style="max-width:120px;max-height:80px;margin-top:8px;border-radius:8px;border:1px solid var(--sand-100)"/>
+      </div>
       <div style="margin-top:16px;padding:12px 14px;background:#f1f5f9;border-radius:8px;display:flex;align-items:flex-start;gap:10px">
         <input type="checkbox" id="reg-terms" style="margin-top:3px;cursor:pointer"/>
         <label for="reg-terms" style="font-size:13px;color:var(--sl-600);line-height:1.5;cursor:pointer">
@@ -961,7 +967,7 @@ tr:hover td{background:var(--sand-50)}
   <div id="kiosk-dash" class="dash-layout hidden">
     <aside class="sidebar">
       <div class="sidebar-top">
-        <div id="dash-logo" style="background:#fff;padding:8px 10px;border-radius:10px;width:100%;display:flex;align-items:center;justify-content:center"><img src="" class="recebaa-logo-img" alt="Recebaa" style="width:100%;max-width:160px;height:auto;display:block"/></div>
+        <div id="dash-logo" class="hidden" style="background:#fff;padding:8px 10px;border-radius:10px;width:100%;display:flex;align-items:center;justify-content:center"><img id="dash-logo-img" src="" alt="Logo do quiosque" style="width:100%;max-width:160px;height:auto;display:block"/></div>
         <div class="sidebar-kname" id="dash-kname" style="text-align:center;font-size:13px;margin-top:2px">Negócio</div>
       </div>
       <nav class="sidebar-nav">
@@ -978,6 +984,9 @@ tr:hover td{background:var(--sand-50)}
       <div class="sidebar-foot">
         <button class="s-item" id="mute-btn" onclick="toggleMute()" style="margin-bottom:4px">
           <span class="s-icon">🔔</span>Sons ativos
+        </button>
+        <button class="s-item" onclick="openKioskSettingsModal()" style="margin-bottom:4px">
+          <span class="s-icon">⭐</span>Avaliações dos clientes
         </button>
         <button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button>
       </div>
@@ -3420,15 +3429,26 @@ window.addEventListener('load', async function(){
   var umbNum = urlParams.get('umbrella');
   if(umbNum) $('umbrella-input').value = umbNum;
   if(kioskId && isConfigured){
-    // Buscar nome e tipo de negócio do kiosk para mostrar na splash já com o
+    // Buscar nome, tipo de negócio e logo do kiosk para mostrar na splash já com o
     // termo certo ("guarda-sol" ou "mesa") antes mesmo do cliente digitar o número
     // (mesmo quando o QR Code só tem o kiosk, sem o número já preenchido).
-    var {data} = await sb.from('kiosks').select('name,business_type').eq('id',kioskId).single();
+    var {data} = await sb.from('kiosks').select('name,business_type,logo_url').eq('id',kioskId).single();
     if(data){
       $('splash-kname').textContent = data.name;
-      currentKiosk = {id:kioskId, name:data.name, business_type:data.business_type};
+      currentKiosk = {id:kioskId, name:data.name, business_type:data.business_type, logo_url:data.logo_url};
       startClientBizTerminologyWatcher();
+      if(data.logo_url){
+        var splashImg = $('splash-logo-img');
+        if(splashImg) splashImg.src = data.logo_url;
+      }
     }
+  }
+
+  // QR Code escaneado (URL já vem com ?kiosk=ID): pula a landing page e vai
+  // direto pra tela de "informe o número do guarda-sol/mesa", sem exigir
+  // clique em "Fazer pedido".
+  if(kioskId){
+    showScreen('client', document.getElementById('nav-client'));
   }
 
   // ─── Restaurar sessão do cliente após refresh (pull-to-refresh, F5, etc.) ───
@@ -3667,6 +3687,7 @@ async function goToMenu(){
       toast('❌ Negócio não encontrado ou inativo. Verifique o QR Code.');
       return;
     }
+    applyClientKioskLogo();
 
     // Validar que o guarda-sol existe e está ativo neste quiosque
     const {data:umbCheck} = await sb.from('umbrellas')
@@ -5011,7 +5032,21 @@ function simulateProgress(oid){
   setTimeout(go,3000);
 }
 
+// Aplica o logo próprio do quiosque nas telas do cliente (splash e cardápio),
+// se cadastrado — senão mantém o logo padrão do Recebaa que já está lá.
+function applyClientKioskLogo(){
+  if(!currentKiosk || !currentKiosk.logo_url) return;
+  var splashImg = $('splash-logo-img');
+  if(splashImg) splashImg.src = currentKiosk.logo_url;
+  var menuImg = $('menu-logo-img');
+  if(menuImg) menuImg.src = currentKiosk.logo_url;
+}
+
 function encerrarSessaoCliente(){
+  // Guarda o link de avaliação (e nome do negócio) ANTES de limpar currentKiosk
+  var reviewUrl = (currentKiosk && currentKiosk.google_review_url) || '';
+  var kioskName = (currentKiosk && currentKiosk.name) || 'o negócio';
+
   myOrders = [];
   orders = [];
   cart = {};
@@ -5046,9 +5081,39 @@ function encerrarSessaoCliente(){
       u.searchParams.delete('umbrella');
       history.replaceState(null, '', u.pathname + (u.search || '') + (u.hash || ''));
     }catch(e){}
-    // Levar o cliente para a landing page
-    if(typeof goToLanding === 'function') goToLanding();
+
+    // Se o negócio cadastrou um link de avaliação no Google, mostra essa tela
+    // em vez de ir direto pra landing page
+    if(reviewUrl){
+      showGoogleReviewScreen(reviewUrl, kioskName);
+    } else if(typeof goToLanding === 'function'){
+      goToLanding();
+    }
   }, 2000);
+}
+
+// Tela de convite pra avaliação no Google, mostrada ao final da conta
+function showGoogleReviewScreen(reviewUrl, kioskName){
+  var old = document.getElementById('google-review-screen');
+  if(old) old.remove();
+
+  var div = document.createElement('div');
+  div.id = 'google-review-screen';
+  div.style.cssText = 'position:fixed;inset:0;background:linear-gradient(160deg,#0e7c86,#12a3a0 55%,#d9662c);z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
+  div.innerHTML = '<div style="background:#fff;border-radius:20px;max-width:420px;width:100%;padding:36px 28px;box-shadow:0 20px 60px rgba(0,0,0,.25)">'
+    +'<div style="font-size:52px;margin-bottom:12px">⭐</div>'
+    +'<div style="font-size:19px;font-weight:700;color:#0f2a3d;margin-bottom:8px">Gostou de '+esc(kioskName)+'?</div>'
+    +'<div style="font-size:14px;color:#64748b;line-height:1.5;margin-bottom:24px">Sua avaliação no Google ajuda muito esse negócio a crescer. Leva só um minutinho! 🙏</div>'
+    +'<a href="'+esc(reviewUrl)+'" target="_blank" rel="noopener" style="display:block;padding:14px;background:linear-gradient(135deg,#f59e0b,#d9662c);color:#fff;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:12px">⭐ Avaliar no Google</a>'
+    +'<button onclick="closeGoogleReviewScreen()" style="background:none;border:none;color:#94a3b8;font-size:13px;cursor:pointer;padding:8px">Agora não, obrigado</button>'
+    +'</div>';
+  document.body.appendChild(div);
+}
+
+function closeGoogleReviewScreen(){
+  var d = document.getElementById('google-review-screen');
+  if(d) d.remove();
+  if(typeof goToLanding === 'function') goToLanding();
 }
 
 function goBackToMenu(){
@@ -5605,6 +5670,159 @@ async function toggleWaiterMenuPermission(waiterId, newState){
   renderWaiters();
 }
 
+// ══════════════════════════════════════════════════════
+// QUIOSQUE — AVALIAÇÕES DOS CLIENTES (link do Google) + LOGO PRÓPRIO
+// ══════════════════════════════════════════════════════
+function openKioskSettingsModal(){
+  if(window._isWaiterMode){ toast('⛔ Acesso restrito no modo garçom.'); return; }
+  var old = document.getElementById('kiosk-settings-modal');
+  if(old) old.remove();
+
+  var currentUrl = (currentKiosk && currentKiosk.google_review_url) || '';
+  var currentLogo = (currentKiosk && currentKiosk.logo_url) || '';
+
+  var div = document.createElement('div');
+  div.id = 'kiosk-settings-modal';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+  div.onclick = function(e){ if(e.target===div) closeKioskSettingsModal(); };
+  div.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:440px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9;position:sticky;top:0;background:#fff">'
+    +'<div style="font-size:15px;font-weight:600">⭐ Avaliações dos clientes</div>'
+    +'<button onclick="closeKioskSettingsModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
+    +'</div>'
+    +'<div style="padding:20px;display:flex;flex-direction:column;gap:12px">'
+    +'<div>'
+    +'<label style="font-size:12.5px;font-weight:600;color:#334155;display:block;margin-bottom:4px">⭐ Link de avaliação no Google</label>'
+    +'<div style="font-size:11.5px;color:#94a3b8;margin-bottom:8px">Se preenchido, quando o cliente encerrar a conta, em vez de voltar direto pra tela inicial, ele vê um convite pra avaliar seu negócio no Google.</div>'
+    +'<input id="kiosk-google-review-url" class="input" type="url" style="width:100%" placeholder="https://g.page/r/..." value="'+esc(currentUrl)+'"/>'
+    +'<div style="font-size:11px;color:#94a3b8;margin-top:6px">Dica: no Google Maps, busca seu negócio → "Compartilhar" → "Pedir avaliações" pra pegar esse link.</div>'
+    +'</div>'
+    +'<div style="border-top:1px solid #f1f5f9;padding-top:14px">'
+    +'<label style="font-size:12.5px;font-weight:600;color:#334155;display:block;margin-bottom:4px">🖼️ Logo do negócio</label>'
+    +'<div style="font-size:11.5px;color:#94a3b8;margin-bottom:8px">Aparece no menu do seu painel. Formatos aceitos: JPG ou PNG, até 2MB.</div>'
+    +(currentLogo ? '<div style="margin-bottom:8px"><img src="'+esc(currentLogo)+'" style="max-width:120px;max-height:80px;border-radius:8px;border:1px solid var(--sand-100)"/><div style="font-size:11px;color:#94a3b8;margin-top:4px">Logo atual</div></div>' : '<div style="font-size:11.5px;color:#b45309;background:#fffbeb;padding:6px 10px;border-radius:6px;margin-bottom:8px">Nenhum logo próprio cadastrado ainda.</div>')
+    +'<input type="file" id="kiosk-logo-file" accept="image/png,image/jpeg" onchange="previewKioskLogo(this)"/>'
+    +'<img id="kiosk-logo-preview" class="hidden" style="max-width:120px;max-height:80px;margin-top:8px;border-radius:8px;border:1px solid var(--sand-100)"/>'
+    +(currentLogo ? '<div style="margin-top:8px"><a href="#" onclick="removeKioskLogo();return false" style="color:#ef4444;font-size:11.5px;text-decoration:underline">Remover logo atual</a></div>' : '')
+    +'</div>'
+    +'<div style="display:flex;gap:8px;margin-top:6px">'
+    +'<button class="btn btn-ghost" style="flex:1" onclick="closeKioskSettingsModal()">Cancelar</button>'
+    +'<button class="btn btn-ocean" id="kiosk-settings-save-btn" style="flex:1" onclick="saveKioskSettings()">Salvar</button>'
+    +'</div></div></div>';
+  document.body.appendChild(div);
+}
+
+// Valida tamanho (máx 2MB) e mostra a prévia do novo logo, nas Configurações
+function previewKioskLogo(input){
+  var preview = $('kiosk-logo-preview');
+  var file = input.files && input.files[0];
+  if(!file){
+    window._kioskLogoFile = null;
+    if(preview){ preview.src=''; preview.classList.add('hidden'); }
+    return;
+  }
+  var maxBytes = 2 * 1024 * 1024; // 2MB
+  if(file.size > maxBytes){
+    toast('⚠️ Imagem muito grande. O limite é 2MB — escolha um arquivo menor.');
+    input.value = '';
+    window._kioskLogoFile = null;
+    if(preview){ preview.src=''; preview.classList.add('hidden'); }
+    return;
+  }
+  if(!/^image\/(png|jpeg)$/.test(file.type)){
+    toast('⚠️ Formato inválido. Envie apenas JPG ou PNG.');
+    input.value = '';
+    window._kioskLogoFile = null;
+    if(preview){ preview.src=''; preview.classList.add('hidden'); }
+    return;
+  }
+  window._kioskLogoFile = file;
+  if(preview){
+    var reader = new FileReader();
+    reader.onload = function(e){ preview.src = e.target.result; preview.classList.remove('hidden'); };
+    reader.readAsDataURL(file);
+  }
+}
+
+window._kioskLogoRemove = false;
+function removeKioskLogo(){
+  if(!confirm('Remover o logo atual do negócio? Ao salvar, o espaço volta a ficar vazio.')) return;
+  window._kioskLogoRemove = true;
+  window._kioskLogoFile = null;
+  var fileInput = $('kiosk-logo-file'); if(fileInput) fileInput.value = '';
+  var preview = $('kiosk-logo-preview'); if(preview){ preview.src=''; preview.classList.add('hidden'); }
+  toast('Logo será removido ao salvar');
+}
+
+function closeKioskSettingsModal(){
+  var d = document.getElementById('kiosk-settings-modal');
+  if(d) d.remove();
+  window._kioskLogoFile = null;
+  window._kioskLogoRemove = false;
+}
+
+async function saveKioskSettings(){
+  var urlInput = ($('kiosk-google-review-url')||{}).value || '';
+  urlInput = urlInput.trim();
+
+  if(urlInput && !/^https?:\/\//i.test(urlInput)){
+    toast('⚠️ O link precisa começar com http:// ou https://');
+    return;
+  }
+
+  setLoading('kiosk-settings-save-btn', true, 'Salvar');
+
+  var updates = { google_review_url: urlInput || null };
+
+  if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
+    if(window._kioskLogoFile){
+      var ext = window._kioskLogoFile.name.split('.').pop();
+      var path = currentKiosk.id+'/logo.'+ext;
+      var {data: ud, error: ue} = await sb.storage.from('product-images').upload(path, window._kioskLogoFile, {upsert:true});
+      if(ue){
+        toast('❌ Erro ao enviar o logo: ' + ue.message);
+        setLoading('kiosk-settings-save-btn', false, 'Salvar');
+        return;
+      }
+      var {data: urlData} = sb.storage.from('product-images').getPublicUrl(path);
+      updates.logo_url = urlData.publicUrl + '?t=' + Date.now();
+    } else if(window._kioskLogoRemove){
+      updates.logo_url = null;
+    }
+
+    var resp = await sb.from('kiosks').update(updates).eq('id', currentKiosk.id);
+    if(resp.error){
+      toast('❌ Erro ao salvar: ' + resp.error.message);
+      setLoading('kiosk-settings-save-btn', false, 'Salvar');
+      return;
+    }
+  } else if(window._kioskLogoFile){
+    updates.logo_url = $('kiosk-logo-preview') ? $('kiosk-logo-preview').src : null;
+  } else if(window._kioskLogoRemove){
+    updates.logo_url = null;
+  }
+
+  currentKiosk.google_review_url = updates.google_review_url;
+  if('logo_url' in updates) currentKiosk.logo_url = updates.logo_url;
+
+  var dashLogo = $('dash-logo');
+  var dashLogoImg = $('dash-logo-img');
+  if(dashLogo && dashLogoImg){
+    if(currentKiosk.logo_url){
+      dashLogoImg.src = currentKiosk.logo_url;
+      dashLogo.classList.remove('hidden');
+    } else {
+      dashLogo.classList.add('hidden');
+    }
+  }
+
+  window._kioskLogoFile = null;
+  window._kioskLogoRemove = false;
+  setLoading('kiosk-settings-save-btn', false, 'Salvar');
+  closeKioskSettingsModal();
+  toast('✅ Configurações salvas!');
+}
+
 async function toggleWaiterActive(waiterId, newState){
   var resp = await sb.rpc('set_waiter_active', { p_waiter_id: waiterId, p_active: newState });
   if(resp.error){ toast('❌ Erro: '+resp.error.message); return; }
@@ -5742,7 +5960,7 @@ async function doLogin(){
         return;
       }
       // Buscar dados básicos do quiosque a que esse garçom pertence
-      var kResp = await sb.from('kiosks').select('id,name,owner_name,blocked,approved,is_active,business_type').eq('id', w.kiosk_id).single();
+      var kResp = await sb.from('kiosks').select('id,name,owner_name,blocked,approved,is_active,business_type,logo_url').eq('id', w.kiosk_id).single();
       if(kResp.error || !kResp.data){
         toast('❌ Não foi possível localizar o negócio vinculado.');
         setLoading('login-btn',false,'Entrar');
@@ -5790,10 +6008,13 @@ async function doLogin(){
     if(!k.is_active){ toast('⏸️ Negócio inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
     currentKiosk=k;
-    // login_kiosk (RPC) pode não retornar business_type; busca à parte, sem quebrar se a coluna não existir.
+    // login_kiosk (RPC) pode não retornar business_type/logo_url; busca à parte, sem quebrar se a coluna não existir.
     try{
-      var btResp = await sb.from('kiosks').select('business_type').eq('id',k.id).single();
-      if(btResp && btResp.data) currentKiosk.business_type = btResp.data.business_type;
+      var btResp = await sb.from('kiosks').select('business_type,logo_url').eq('id',k.id).single();
+      if(btResp && btResp.data){
+        currentKiosk.business_type = btResp.data.business_type;
+        currentKiosk.logo_url = btResp.data.logo_url;
+      }
     }catch(e){}
   } else {
     currentKiosk={id:'demo',name:'Negócio Pôr do Sol (Demo)',owner_email:email,owner_name:'Demo',business_type:'quiosque'};
@@ -5865,6 +6086,41 @@ function sendAprovacaoEmail(params){
   }catch(e){ console.warn('Erro emailjs (aprovação):', e); }
 }
 
+// Valida tamanho (máx 2MB) e mostra a prévia do logo enviado no cadastro
+function previewRegLogo(input){
+  var preview = $('reg-logo-preview');
+  var file = input.files && input.files[0];
+  if(!file){
+    window._regLogoFile = null;
+    if(preview){ preview.src=''; preview.classList.add('hidden'); }
+    return;
+  }
+  var maxBytes = 2 * 1024 * 1024; // 2MB
+  if(file.size > maxBytes){
+    toast('⚠️ Imagem muito grande. O limite é 2MB — escolha um arquivo menor.');
+    input.value = '';
+    window._regLogoFile = null;
+    if(preview){ preview.src=''; preview.classList.add('hidden'); }
+    return;
+  }
+  if(!/^image\/(png|jpeg)$/.test(file.type)){
+    toast('⚠️ Formato inválido. Envie apenas JPG ou PNG.');
+    input.value = '';
+    window._regLogoFile = null;
+    if(preview){ preview.src=''; preview.classList.add('hidden'); }
+    return;
+  }
+  window._regLogoFile = file;
+  if(preview){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      preview.src = e.target.result;
+      preview.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
 async function doRegister(){
   // Proteção contra execução duplicada (duplo-clique, ou elementos duplicados na página)
   if(window._registeringInProgress) return;
@@ -5926,6 +6182,18 @@ async function doRegister(){
     try{ await sb.from('kiosks').update({business_type:_regBusinessType}).eq('id',data.id); }catch(e){}
     // Criar categorias padrão (mesmo aguardando aprovação, pra já estar pronto quando aprovar)
     await sb.from('categories').insert(MOCK_CATS.map((c,i)=>({kiosk_id:data.id,name:c.name,emoji:c.emoji,sort_order:i+1})));
+
+    // Se o negócio enviou um logo próprio, sobe pro Storage e salva a URL
+    if(window._regLogoFile){
+      var ext = window._regLogoFile.name.split('.').pop();
+      var path = data.id+'/logo.'+ext;
+      var {data: ud, error: ue} = await sb.storage.from('product-images').upload(path, window._regLogoFile, {upsert:true});
+      if(!ue && ud){
+        var {data: urlData} = sb.storage.from('product-images').getPublicUrl(path);
+        await sb.from('kiosks').update({ logo_url: urlData.publicUrl }).eq('id', data.id);
+      }
+    }
+
     setLoading('register-btn',false,'Criar conta 🚀');
     // Enviar e-mails de notificação (não bloqueia o fluxo se falhar)
     sendCadastroEmails({
@@ -5940,6 +6208,9 @@ async function doRegister(){
     // Limpar formulário e voltar pra tela de login com aviso
     ['reg-owner','reg-email','reg-pass','reg-pass-confirm','reg-phone','reg-kname','reg-doc','reg-city','reg-beach','reg-biztype'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
     _regBusinessType = '';
+    window._regLogoFile = null;
+    var regLogoInput = $('reg-logo-file'); if(regLogoInput) regLogoInput.value = '';
+    var regLogoPrev = $('reg-logo-preview'); if(regLogoPrev){ regLogoPrev.src=''; regLogoPrev.classList.add('hidden'); }
     showCard('login');
     toast('✅ Cadastro enviado! Seu negócio está aguardando aprovação do administrador. Você receberá um aviso quando for liberado.');
     window._registeringInProgress = false;
@@ -5980,6 +6251,17 @@ async function enterDash(){
   $('kiosk-auth').classList.add('hidden');
   $('kiosk-dash').classList.remove('hidden');
   $('dash-kname').textContent=currentKiosk.name;
+
+  // Logo próprio do quiosque (se cadastrado) no menu lateral — fica escondido
+  // por padrão; só aparece quando o quiosque optou por colocar sua própria marca
+  var dashLogo = $('dash-logo');
+  var dashLogoImg = $('dash-logo-img');
+  if(currentKiosk.logo_url && dashLogo && dashLogoImg){
+    dashLogoImg.src = currentKiosk.logo_url;
+    dashLogo.classList.remove('hidden');
+  } else if(dashLogo){
+    dashLogo.classList.add('hidden');
+  }
   // Destaca na barra superior o botão correspondente ao tipo de negócio logado.
   var isBar = currentKiosk.business_type === 'bar_restaurante';
   document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
