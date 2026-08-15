@@ -9194,16 +9194,6 @@ function openAddUmbModal(){
   toggleUmbForm(false);
 }
 
-function editUmbrella(id, number, area, label, active){
-  $('umb-edit-id').value = id;
-  $('umb-number').value = number;
-  $('umb-label').value = label || '';
-  $('umb-area').value = area || 'Frente mar';
-  $('umb-active').value = active ? 'true' : 'false';
-  $('modal-umb-title').textContent = 'Editar guarda-sol';
-  $('modal-umbrella').classList.add('open');
-}
-
 function closeUmbModal(){ toggleUmbForm(true); }
 
 function toggleUmbForm(forceClose){
