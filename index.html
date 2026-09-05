@@ -948,24 +948,6 @@ tr:hover td{background:var(--sand-50)}
         <input type="file" id="reg-logo-file" accept="image/png,image/jpeg" onchange="previewRegLogo(this)"/>
         <img id="reg-logo-preview" class="hidden" style="max-width:120px;max-height:80px;margin-top:8px;border-radius:8px;border:1px solid var(--sand-100)"/>
       </div>
-      <div class="field" style="margin-top:16px">
-        <label class="label">Escolha seu plano</label>
-        <div style="font-size:11.5px;color:var(--sl-400);margin-bottom:10px">Primeiro mês grátis com tudo liberado, em qualquer plano. Depois disso, seu negócio passa a usar o plano escolhido abaixo — dá pra mudar quando quiser depois.</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:2px solid var(--sand-100);border-radius:10px;cursor:pointer" class="reg-plan-option" data-plan="free">
-            <input type="radio" name="reg-plan" value="free" checked style="margin-top:3px;accent-color:var(--ocean-500)" onchange="updateRegPlanSelection(this)"/>
-            <span><b style="font-size:13.5px">Gratuito</b> <span style="color:var(--sl-400);font-size:12px">— R$ 0/mês</span><br><span style="font-size:12px;color:var(--sl-500)">Só cardápio digital, sem pedidos pelo app.</span></span>
-          </label>
-          <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:2px solid var(--sand-100);border-radius:10px;cursor:pointer" class="reg-plan-option" data-plan="silver">
-            <input type="radio" name="reg-plan" value="silver" style="margin-top:3px;accent-color:var(--ocean-500)" onchange="updateRegPlanSelection(this)"/>
-            <span><b style="font-size:13.5px">Silver</b> <span style="color:var(--sl-400);font-size:12px">— R$ 10/mês</span><br><span style="font-size:12px;color:var(--sl-500)">Cardápio digital + pedidos feitos pelo cliente direto no app.</span></span>
-          </label>
-          <label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:2px solid var(--sand-100);border-radius:10px;cursor:pointer" class="reg-plan-option" data-plan="gold">
-            <input type="radio" name="reg-plan" value="gold" style="margin-top:3px;accent-color:var(--ocean-500)" onchange="updateRegPlanSelection(this)"/>
-            <span><b style="font-size:13.5px">Gold</b> <span style="color:var(--sl-400);font-size:12px">— R$ 15/mês</span><br><span style="font-size:12px;color:var(--sl-500)">Tudo liberado: pedidos, balcão e área de garçons.</span></span>
-          </label>
-        </div>
-      </div>
       <div style="margin-top:16px;padding:12px 14px;background:#f1f5f9;border-radius:8px;display:flex;align-items:flex-start;gap:10px">
         <input type="checkbox" id="reg-terms" style="margin-top:3px;cursor:pointer"/>
         <label for="reg-terms" style="font-size:13px;color:var(--sl-600);line-height:1.5;cursor:pointer">
@@ -1004,7 +986,7 @@ tr:hover td{background:var(--sand-50)}
           <span class="s-icon">🔔</span>Sons ativos
         </button>
         <button class="s-item" onclick="openKioskSettingsModal()" style="margin-bottom:4px">
-          <span class="s-icon">⚙️</span>Configurações
+          <span class="s-icon">⭐</span>Avaliações dos clientes
         </button>
         <button class="s-item" onclick="doLogout()"><span class="s-icon">🚪</span>Sair</button>
       </div>
@@ -3707,18 +3689,6 @@ async function goToMenu(){
     }
     applyClientKioskLogo();
 
-    // Plano Free: avisa o cliente logo de cara que não dá pra pedir pelo app
-    var freeBanner = document.getElementById('free-plan-banner');
-    if(freeBanner) freeBanner.remove();
-    if(!planAllows('ordering')){
-      var banner = document.createElement('div');
-      banner.id = 'free-plan-banner';
-      banner.style.cssText = 'background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:10px 14px;border-radius:10px;font-size:12.5px;margin:0 16px 10px;text-align:center';
-      banner.textContent = '📖 Este cardápio é só pra consulta. Faça seu pedido diretamente com o atendente.';
-      var menuContent = $('menu-content');
-      if(menuContent && menuContent.parentNode) menuContent.parentNode.insertBefore(banner, menuContent);
-    }
-
     // Validar que o guarda-sol existe e está ativo neste quiosque
     const {data:umbCheck} = await sb.from('umbrellas')
       .select('id,is_active')
@@ -3769,8 +3739,7 @@ async function goToMenu(){
   startClientBizTerminologyWatcher();
   // Reflete se o negócio permite pedido direto pelo cliente (senão, o
   // cardápio fica só pra visualização e os botões de adicionar somem).
-  // Considera tanto o toggle manual do quiosque quanto a restrição do plano Free.
-  document.body.dataset.directOrdersOff = ((currentKiosk && currentKiosk.allow_direct_orders === false) || !planAllows('ordering')) ? '1' : '0';
+  document.body.dataset.directOrdersOff = (currentKiosk && currentKiosk.allow_direct_orders === false) ? '1' : '0';
   buildCatTabs();
   buildMenu();
   maybeShowPromoPopup();
@@ -4794,11 +4763,6 @@ async function submitWaiterOrder(){
 }
 
 async function placeOrder(){
-  // Plano Free: só cardápio digital, sem pedidos online
-  if(!planAllows('ordering')){
-    toast('⚠️ Este negócio ainda não habilitou pedidos pelo app. Faça seu pedido diretamente no local.');
-    return;
-  }
   // Proteção: sessão bloqueada por PEDIDO DE CONTA ativo
   if(window._billRequested){
     toast('⚠️ Conta já foi solicitada. Não é possível fazer novos pedidos.');
@@ -5652,53 +5616,6 @@ function togglePasswordVisibility(inputId, btn){
 
 // Retorna quem está executando a ação agora: nome do garçom logado, ou o
 // dono/gerente do quiosque. Usado para rastrear quem alterou cada pedido.
-// ══════════════════════════════════════════════════════
-// SISTEMA DE PLANOS (Free / Silver / Gold)
-// ══════════════════════════════════════════════════════
-// Durante os primeiros 30 dias (trial_ends_at no futuro), o quiosque tem
-// acesso total (nível Gold), independente do plano escolhido no cadastro.
-// Depois disso, "cai" automaticamente pro plano que ele selecionou.
-function getEffectivePlan(kiosk){
-  kiosk = kiosk || currentKiosk;
-  if(!kiosk) return 'free';
-  if(kiosk.id === 'demo') return 'gold';
-  var trialEnd = kiosk.trial_ends_at ? new Date(kiosk.trial_ends_at) : null;
-  if(trialEnd && trialEnd.getTime() > Date.now()) return 'gold';
-  return kiosk.selected_plan || 'free';
-}
-
-function isTrialActive(kiosk){
-  kiosk = kiosk || currentKiosk;
-  if(!kiosk || !kiosk.trial_ends_at) return false;
-  return new Date(kiosk.trial_ends_at).getTime() > Date.now();
-}
-
-function trialDaysLeft(kiosk){
-  kiosk = kiosk || currentKiosk;
-  if(!kiosk || !kiosk.trial_ends_at) return 0;
-  var ms = new Date(kiosk.trial_ends_at).getTime() - Date.now();
-  return Math.max(0, Math.ceil(ms / (24*60*60*1000)));
-}
-
-// Recursos liberados por plano:
-// free   → só cardápio digital (sem pedidos)
-// silver → cardápio + pedidos do cliente (sem balcão/garçom)
-// gold   → tudo liberado
-var PLAN_FEATURES = {
-  free:   { ordering:false, waiterOrder:false, waiters:false },
-  silver: { ordering:true,  waiterOrder:false, waiters:false },
-  gold:   { ordering:true,  waiterOrder:true,  waiters:true  }
-};
-
-function planAllows(feature, kiosk){
-  var plan = getEffectivePlan(kiosk);
-  return !!(PLAN_FEATURES[plan] && PLAN_FEATURES[plan][feature]);
-}
-
-function planLabel(plan){
-  return {free:'Gratuito', silver:'Silver', gold:'Gold'}[plan] || plan;
-}
-
 function getCurrentActorName(){
   if(window._isWaiterMode && window._currentWaiter && window._currentWaiter.name){
     return window._currentWaiter.name;
@@ -5763,18 +5680,6 @@ function openKioskSettingsModal(){
 
   var currentUrl = (currentKiosk && currentKiosk.google_review_url) || '';
   var currentLogo = (currentKiosk && currentKiosk.logo_url) || '';
-  var effPlan = getEffectivePlan(currentKiosk);
-  var selectedPlan = (currentKiosk && currentKiosk.selected_plan) || 'free';
-  var onTrial = isTrialActive(currentKiosk);
-  var daysLeft = trialDaysLeft(currentKiosk);
-
-  var planCard = function(planId, planName, price, desc){
-    var isSelected = selectedPlan === planId;
-    return '<label style="display:flex;align-items:flex-start;gap:10px;padding:12px;border:2px solid '+(isSelected?'var(--ocean-500)':'var(--sand-100)')+';border-radius:10px;cursor:pointer;background:'+(isSelected?'#f0f9ff':'')+'" class="settings-plan-option" data-plan="'+planId+'">'
-      +'<input type="radio" name="settings-plan" value="'+planId+'" '+(isSelected?'checked':'')+' style="margin-top:3px;accent-color:var(--ocean-500)" onchange="updateSettingsPlanSelection(this)"/>'
-      +'<span><b style="font-size:13.5px">'+planName+'</b> <span style="color:var(--sl-400);font-size:12px">— '+price+'</span>'+(isSelected?' <span style="color:var(--ocean-600);font-size:11px;font-weight:600">(plano atual)</span>':'')+'<br><span style="font-size:12px;color:var(--sl-500)">'+desc+'</span></span>'
-      +'</label>';
-  };
 
   var div = document.createElement('div');
   div.id = 'kiosk-settings-modal';
@@ -5782,23 +5687,11 @@ function openKioskSettingsModal(){
   div.onclick = function(e){ if(e.target===div) closeKioskSettingsModal(); };
   div.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:440px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9;position:sticky;top:0;background:#fff">'
-    +'<div style="font-size:15px;font-weight:600">⚙️ Configurações</div>'
+    +'<div style="font-size:15px;font-weight:600">⭐ Avaliações dos clientes</div>'
     +'<button onclick="closeKioskSettingsModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
     +'</div>'
     +'<div style="padding:20px;display:flex;flex-direction:column;gap:12px">'
-
     +'<div>'
-    +'<label style="font-size:12.5px;font-weight:600;color:#334155;display:block;margin-bottom:4px">💳 Meu plano</label>'
-    +(onTrial ? '<div style="font-size:11.5px;color:#059669;background:#ecfdf5;padding:6px 10px;border-radius:6px;margin-bottom:10px">🎁 Você está no período gratuito de 30 dias, com <b>tudo liberado</b> (nível Gold) — restam <b>'+daysLeft+' dia(s)</b>. Depois disso, seu negócio passa a usar o plano selecionado abaixo.</div>' : '<div style="font-size:11.5px;color:#94a3b8;margin-bottom:10px">Plano ativo agora: <b>'+planLabel(effPlan)+'</b></div>')
-    +'<div style="display:flex;flex-direction:column;gap:8px">'
-    +planCard('free','Gratuito','R$ 0/mês','Só cardápio digital, sem pedidos pelo app.')
-    +planCard('silver','Silver','R$ 10/mês','Cardápio digital + pedidos feitos pelo cliente direto no app.')
-    +planCard('gold','Gold','R$ 15/mês','Tudo liberado: pedidos, balcão e área de garçons.')
-    +'</div>'
-    +'<button class="btn btn-ocean" id="change-plan-btn" style="width:100%;margin-top:10px;font-size:13px" onclick="changeKioskPlan()">Confirmar plano</button>'
-    +'</div>'
-
-    +'<div style="border-top:1px solid #f1f5f9;padding-top:14px">'
     +'<label style="font-size:12.5px;font-weight:600;color:#334155;display:block;margin-bottom:4px">⭐ Link de avaliação no Google</label>'
     +'<div style="font-size:11.5px;color:#94a3b8;margin-bottom:8px">Se preenchido, quando o cliente encerrar a conta, em vez de voltar direto pra tela inicial, ele vê um convite pra avaliar seu negócio no Google.</div>'
     +'<input id="kiosk-google-review-url" class="input" type="url" style="width:100%" placeholder="https://g.page/r/..." value="'+esc(currentUrl)+'"/>'
@@ -5866,97 +5759,6 @@ function closeKioskSettingsModal(){
   if(d) d.remove();
   window._kioskLogoFile = null;
   window._kioskLogoRemove = false;
-}
-
-// Destaca visualmente o plano selecionado nas Configurações
-function updateSettingsPlanSelection(input){
-  document.querySelectorAll('.settings-plan-option').forEach(function(el){
-    el.style.borderColor = 'var(--sand-100)';
-    el.style.background = '';
-  });
-  var chosen = input.closest('.settings-plan-option');
-  if(chosen){
-    chosen.style.borderColor = 'var(--ocean-500)';
-    chosen.style.background = '#f0f9ff';
-  }
-}
-
-// Confirma a troca de plano. Planos pagos (Silver/Gold) exigem pagamento — se o
-// Mercado Pago ainda não estiver configurado, avisa e não altera nada.
-async function changeKioskPlan(){
-  var chosenEl = document.querySelector('input[name="settings-plan"]:checked');
-  var chosenPlan = chosenEl ? chosenEl.value : null;
-  if(!chosenPlan){ toast('Selecione um plano'); return; }
-
-  var currentPlan = (currentKiosk && currentKiosk.selected_plan) || 'free';
-  if(chosenPlan === currentPlan){ toast('Você já está nesse plano'); return; }
-
-  var btn = $('change-plan-btn');
-
-  // Downgrade pra Free (ou qualquer troca durante o trial) não exige pagamento —
-  // só atualiza o plano selecionado, que passa a valer quando o trial acabar.
-  var needsPayment = chosenPlan !== 'free' && !isTrialActive(currentKiosk);
-
-  if(needsPayment){
-    var prices = { silver: 10, gold: 15 };
-    initiatePlanPayment(chosenPlan, prices[chosenPlan]);
-    return;
-  }
-
-  if(setLoading) setLoading('change-plan-btn', true, 'Confirmar plano');
-  if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
-    var resp = await sb.from('kiosks').update({ selected_plan: chosenPlan }).eq('id', currentKiosk.id);
-    if(resp.error){
-      toast('❌ Erro ao trocar de plano: ' + resp.error.message);
-      if(setLoading) setLoading('change-plan-btn', false, 'Confirmar plano');
-      return;
-    }
-  }
-  currentKiosk.selected_plan = chosenPlan;
-  if(setLoading) setLoading('change-plan-btn', false, 'Confirmar plano');
-  toast('✅ Plano atualizado para ' + planLabel(chosenPlan) + (isTrialActive(currentKiosk) ? ' (passa a valer quando o período gratuito acabar)' : ''));
-  closeKioskSettingsModal();
-  // Reaplica as restrições de menu imediatamente, caso o trial já tenha acabado
-  if(!isTrialActive(currentKiosk)) enterDash();
-}
-
-// Inicia o checkout de pagamento pro upgrade de plano, via Edge Function do
-// Supabase (que cria a "preference" no Mercado Pago com segurança, sem expor
-// o Access Token no navegador). Enquanto o Mercado Pago não estiver
-// configurado (Edge Function ainda não existe/sem credenciais), avisa com
-// clareza em vez de travar ou fingir que funcionou.
-async function initiatePlanPayment(plan, price){
-  var btn = $('change-plan-btn');
-  if(setLoading) setLoading('change-plan-btn', true, 'Confirmar plano');
-
-  if(!isConfigured || !currentKiosk || currentKiosk.id === 'demo'){
-    toast('Pagamento não disponível no modo demo.');
-    if(setLoading) setLoading('change-plan-btn', false, 'Confirmar plano');
-    return;
-  }
-
-  try{
-    var resp = await sb.functions.invoke('create-payment-preference', {
-      body: {
-        kiosk_id: currentKiosk.id,
-        plan: plan,
-        price: price,
-        return_url: window.location.origin + window.location.pathname
-      }
-    });
-
-    if(resp.error || !resp.data || !resp.data.checkout_url){
-      throw new Error((resp.error && resp.error.message) || 'Checkout indisponível');
-    }
-
-    // Redireciona pro checkout do Mercado Pago. A confirmação do pagamento
-    // (e a troca de fato do plano) acontece via webhook, não aqui.
-    window.location.href = resp.data.checkout_url;
-  }catch(e){
-    if(setLoading) setLoading('change-plan-btn', false, 'Confirmar plano');
-    toast('⚠️ Pagamento online ainda não está configurado pra esse negócio. Fale com o suporte do Recebaa pra ativar o plano ' + planLabel(plan) + ' manualmente.');
-    console.log('Erro ao iniciar pagamento (Mercado Pago provavelmente não configurado ainda):', e.message);
-  }
 }
 
 async function saveKioskSettings(){
@@ -6158,7 +5960,7 @@ async function doLogin(){
         return;
       }
       // Buscar dados básicos do quiosque a que esse garçom pertence
-      var kResp = await sb.from('kiosks').select('id,name,owner_name,blocked,approved,is_active,business_type,logo_url,selected_plan,trial_ends_at').eq('id', w.kiosk_id).single();
+      var kResp = await sb.from('kiosks').select('id,name,owner_name,blocked,approved,is_active,business_type,logo_url').eq('id', w.kiosk_id).single();
       if(kResp.error || !kResp.data){
         toast('❌ Não foi possível localizar o negócio vinculado.');
         setLoading('login-btn',false,'Entrar');
@@ -6206,14 +6008,12 @@ async function doLogin(){
     if(!k.is_active){ toast('⏸️ Negócio inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
     currentKiosk=k;
-    // login_kiosk (RPC) pode não retornar business_type/logo_url/plano; busca à parte, sem quebrar se a coluna não existir.
+    // login_kiosk (RPC) pode não retornar business_type/logo_url; busca à parte, sem quebrar se a coluna não existir.
     try{
-      var btResp = await sb.from('kiosks').select('business_type,logo_url,selected_plan,trial_ends_at').eq('id',k.id).single();
+      var btResp = await sb.from('kiosks').select('business_type,logo_url').eq('id',k.id).single();
       if(btResp && btResp.data){
         currentKiosk.business_type = btResp.data.business_type;
         currentKiosk.logo_url = btResp.data.logo_url;
-        currentKiosk.selected_plan = btResp.data.selected_plan;
-        currentKiosk.trial_ends_at = btResp.data.trial_ends_at;
       }
     }catch(e){}
   } else {
@@ -6287,19 +6087,6 @@ function sendAprovacaoEmail(params){
 }
 
 // Valida tamanho (máx 2MB) e mostra a prévia do logo enviado no cadastro
-// Destaca visualmente o card do plano selecionado no cadastro
-function updateRegPlanSelection(input){
-  document.querySelectorAll('.reg-plan-option').forEach(function(el){
-    el.style.borderColor = 'var(--sand-100)';
-    el.style.background = '';
-  });
-  var chosen = input.closest('.reg-plan-option');
-  if(chosen){
-    chosen.style.borderColor = 'var(--ocean-500)';
-    chosen.style.background = '#f0f9ff';
-  }
-}
-
 function previewRegLogo(input){
   var preview = $('reg-logo-preview');
   var file = input.files && input.files[0];
@@ -6393,12 +6180,6 @@ async function doRegister(){
     // Feito à parte pois register_kiosk (RPC) não recebe esse parâmetro.
     // Se a coluna business_type ainda não existir no banco, falha em silêncio.
     try{ await sb.from('kiosks').update({business_type:_regBusinessType}).eq('id',data.id); }catch(e){}
-    // Grava o plano escolhido e inicia o trial gratuito de 30 dias (acesso Gold
-    // liberado durante esse período, independente do plano escolhido).
-    var chosenPlanEl = document.querySelector('input[name="reg-plan"]:checked');
-    var chosenPlan = chosenPlanEl ? chosenPlanEl.value : 'free';
-    var trialEndsAt = new Date(Date.now() + 30*24*60*60*1000).toISOString();
-    try{ await sb.from('kiosks').update({selected_plan:chosenPlan, trial_ends_at:trialEndsAt, plan_payment_status:'trial'}).eq('id',data.id); }catch(e){}
     // Criar categorias padrão (mesmo aguardando aprovação, pra já estar pronto quando aprovar)
     await sb.from('categories').insert(MOCK_CATS.map((c,i)=>({kiosk_id:data.id,name:c.name,emoji:c.emoji,sort_order:i+1})));
 
@@ -6430,8 +6211,6 @@ async function doRegister(){
     window._regLogoFile = null;
     var regLogoInput = $('reg-logo-file'); if(regLogoInput) regLogoInput.value = '';
     var regLogoPrev = $('reg-logo-preview'); if(regLogoPrev){ regLogoPrev.src=''; regLogoPrev.classList.add('hidden'); }
-    var freeRadio = document.querySelector('input[name="reg-plan"][value="free"]');
-    if(freeRadio){ freeRadio.checked = true; updateRegPlanSelection(freeRadio); }
     showCard('login');
     toast('✅ Cadastro enviado! Seu negócio está aguardando aprovação do administrador. Você receberá um aviso quando for liberado.');
     window._registeringInProgress = false;
@@ -6497,24 +6276,11 @@ async function enterDash(){
   var waiterHideNames = ['overview','history','reports','waiters'];
   var waiterCanEditMenu = !!(window._currentWaiter && window._currentWaiter.canEditMenu);
   if(window._isWaiterMode && !waiterCanEditMenu) waiterHideNames.push('menu');
-
-  // Restrição por plano de assinatura: Free só mostra Cardápio; Silver esconde
-  // Novo Pedido (balcão) e Garçons. Gold não restringe nada.
-  var effPlan = getEffectivePlan(currentKiosk);
-  var planHideNames = [];
-  if(effPlan === 'free'){
-    planHideNames = ['overview','orders','waiterorder','history','umbrellas','contas','waiters','reports'];
-  } else if(effPlan === 'silver'){
-    planHideNames = ['waiterorder','waiters'];
-  }
-
   $('kiosk-dash').querySelectorAll('.s-item[onclick]').forEach(function(b){
     var m = b.getAttribute('onclick').match(/kPage\('([a-z]+)'/);
     var pageName = m ? m[1] : null;
     if(!pageName) return;
-    var hiddenByWaiter = window._isWaiterMode && waiterHideNames.indexOf(pageName) !== -1;
-    var hiddenByPlan = planHideNames.indexOf(pageName) !== -1;
-    if(hiddenByWaiter || hiddenByPlan){
+    if(window._isWaiterMode && waiterHideNames.indexOf(pageName) !== -1){
       b.style.display = 'none';
     } else {
       b.style.display = '';
@@ -6522,7 +6288,6 @@ async function enterDash(){
   });
 
   var startPage = window._isWaiterMode ? 'orders' : 'overview';
-  if(effPlan === 'free') startPage = 'menu';
   $('kpage-'+startPage).classList.add('active');
   $('kiosk-dash').querySelectorAll('.s-item').forEach(b=>b.classList.remove('active'));
   var startBtn = Array.prototype.find.call($('kiosk-dash').querySelectorAll('.s-item[onclick]'), function(b){
@@ -7401,15 +7166,6 @@ function kPage(name,btn){
   }
   if(window._isWaiterMode && waiterBlocked.indexOf(name) !== -1){
     toast('⛔ Acesso restrito no modo garçom.');
-    return;
-  }
-  // Bloqueio defensivo por plano de assinatura (além de esconder o botão)
-  var effPlanNav = getEffectivePlan(currentKiosk);
-  var planBlocked = effPlanNav === 'free'
-    ? ['overview','orders','waiterorder','history','umbrellas','contas','waiters','reports']
-    : effPlanNav === 'silver' ? ['waiterorder','waiters'] : [];
-  if(planBlocked.indexOf(name) !== -1){
-    toast('🔒 Esse recurso não está disponível no seu plano atual (' + planLabel(effPlanNav) + '). Faça upgrade em Configurações.');
     return;
   }
   document.querySelectorAll('.kpage').forEach(p=>p.classList.remove('active'));
