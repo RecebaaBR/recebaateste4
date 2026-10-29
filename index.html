@@ -3742,6 +3742,7 @@ async function goToMenu(){
   document.body.dataset.directOrdersOff = (currentKiosk && currentKiosk.allow_direct_orders === false) ? '1' : '0';
   buildCatTabs();
   buildMenu();
+  if(typeof ensureVoiceButton==='function') ensureVoiceButton();
   maybeShowPromoPopup();
   // Carregar pedidos existentes do guarda-sol do banco (sessão atual)
   refreshClientOrders();
@@ -4383,7 +4384,7 @@ function openTermsModal(){
     +'<p style="margin-bottom:12px"><b>1. Sobre o Recebaa</b><br>O Recebaa é uma plataforma de tecnologia que conecta clientes a negócios de praia via QR Code. Atuamos exclusivamente como intermediário tecnológico — não somos parte das transações comerciais entre cliente e negócio.</p>'
     +'<p style="margin-bottom:12px"><b>2. Cadastro do negócio</b><br>O negócio deve fornecer dados verdadeiros e atualizados, e o cadastro passa por aprovação do administrador. O negócio é responsável pelo preparo, qualidade, entrega e conformidade legal (fiscal, sanitária) dos itens pedidos.</p>'
     +'<p style="margin-bottom:12px"><b>3. Pedidos e pagamento</b><br>O pedido feito pelo app é enviado diretamente ao negócio. O pagamento é combinado e realizado diretamente com o negócio — o Recebaa não processa pagamentos.</p>'
-    +'<p style="margin-bottom:12px"><b>4. Dados que coletamos</b><br>Do cliente final, apenas o nome informado no pedido. Do negócio, dados de cadastro (nome, e-mail, telefone, CPF/CNPJ). Não pedimos dados de pagamento pelo app.</p>'
+    +'<p style="margin-bottom:12px"><b>4. Dados que coletamos</b><br>Do cliente final, apenas o nome informado no pedido. Se usar o pedido por voz, o áudio é processado pelo seu navegador (não guardamos áudio) e só o texto é enviado a um provedor de IA para identificar os itens do cardápio. Do negócio, dados de cadastro (nome, e-mail, telefone, CPF/CNPJ). Não pedimos dados de pagamento pelo app.</p>'
     +'<p style="margin-bottom:12px"><b>5. Uso e compartilhamento dos dados</b><br>Usamos esses dados só para viabilizar o pedido e operar a plataforma. Não vendemos dados a terceiros; compartilhamos apenas com prestadores essenciais de infraestrutura (banco de dados e hospedagem), sob confidencialidade.</p>'
     +'<p style="margin-bottom:12px"><b>6. Responsabilidade e limitações</b><br>Questões sobre qualidade dos produtos, atrasos ou disputas comerciais (cobrança, troco, reembolso) devem ser resolvidas diretamente com o negócio responsável, não com o Recebaa.</p>'
     +'<p style="margin-bottom:12px"><b>7. Seus direitos (LGPD)</b><br>Você pode solicitar a qualquer momento acesso, correção ou exclusão dos seus dados, pelo e-mail <a href="mailto:pediu.recebaa@gmail.com" style="color:var(--ocean-600)">pediu.recebaa@gmail.com</a>.</p>'
@@ -10422,6 +10423,273 @@ function aPage(name,btn){
   }
   // Re-aplicar periodicamente para cobrir elementos criados dinamicamente
   setInterval(applyLogo, 2000);
+})();
+</script>
+<style id="voice-order-css">
+#voice-bar{display:flex;align-items:center;gap:10px;padding:10px 16px 0}
+body[data-direct-orders-off="1"] #voice-bar{display:none}
+#voice-open-btn{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;border:none;border-radius:999px;padding:11px 18px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:0 4px 14px rgba(14,165,233,.35)}
+#voice-bar .voice-hint{font-size:12px;color:var(--sl-400);line-height:1.3}
+#voice-modal{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:99998;display:flex;align-items:flex-end;justify-content:center}
+#voice-modal .vm-card{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(0,0,0,.2);padding-bottom:env(safe-area-inset-bottom,12px)}
+#voice-modal .vm-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9;font-size:15px;font-weight:600}
+#voice-modal .vm-close{background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8}
+#voice-modal .vm-body{padding:18px 20px}
+#voice-modal .vm-mic{width:84px;height:84px;border-radius:50%;border:none;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-size:34px;cursor:pointer;display:block;margin:4px auto 10px;box-shadow:0 6px 20px rgba(14,165,233,.4)}
+#voice-modal .vm-mic.on{background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,.5);animation:vmPulse 1.2s infinite}
+@keyframes vmPulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}70%{box-shadow:0 0 0 18px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
+#voice-modal .vm-status{text-align:center;font-size:13px;color:#64748b;min-height:18px;margin-bottom:10px}
+#voice-modal textarea{width:100%;box-sizing:border-box;min-height:84px;border:1px solid #e2e8f0;border-radius:12px;padding:12px;font-size:15px;font-family:inherit;resize:vertical}
+#voice-modal .vm-btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff}
+#voice-modal .vm-btn:disabled{opacity:.5;cursor:default}
+#voice-modal .vm-btn.sec{background:#f1f5f9;color:#334155}
+#voice-modal .vm-note{font-size:12px;color:#94a3b8;text-align:center;margin-top:10px;line-height:1.4}
+#voice-modal .vm-line{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+#voice-modal .vm-line-info{flex:1;min-width:0}
+#voice-modal .vm-line-name{font-size:14px;font-weight:600;color:#0f172a}
+#voice-modal .vm-line-opt{font-size:11.5px;color:#94a3b8;margin-top:2px}
+#voice-modal .vm-line-price{font-size:13px;font-weight:600;color:#0f172a;white-space:nowrap}
+#voice-modal .vm-qty{display:flex;align-items:center;gap:6px}
+#voice-modal .vm-qty button{width:28px;height:28px;border-radius:50%;border:1px solid #e2e8f0;background:#fff;font-size:16px;cursor:pointer;line-height:1}
+#voice-modal .vm-total{display:flex;justify-content:space-between;font-size:15px;font-weight:700;padding:14px 0 0}
+#voice-modal .vm-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px;line-height:1.4}
+</style>
+<script id="voice-order-js">
+(function(){
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  // No iPhone/iPad o reconhecimento de voz do Safari é instável: lá usamos o ditado do teclado.
+  var IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  var BUILTIN_MIC = !!SR && !IS_IOS;
+  var rec = null, listening = false, lines = [], unclear = [];
+
+  var TXT = {
+    pt:{btn:'Pedir falando',hint:'ou toque nos itens abaixo',title:'Pedir falando',tap:'Toque no microfone e fale seu pedido',
+        listen:'Ouvindo… fale seu pedido',stop:'Toque de novo para parar',ph:'Ex: duas cervejas e uma porção de fritas',
+        go:'Entender meu pedido',busy:'Entendendo seu pedido…',noSR:'Seu navegador não tem microfone integrado. Digite o pedido ou use o microfone do teclado do celular.',iosHint:'Toque na caixa abaixo e use o 🎤 do teclado do iPhone para falar o pedido.',
+        denied:'Permita o uso do microfone no navegador, ou digite o pedido.',nospeech:'Não ouvi nada. Toque no microfone e tente de novo.',
+        note:'O reconhecimento de voz é feito pelo seu navegador. Não guardamos áudio.',
+        confirmTitle:'Entendi isto. Está certo?',add:'Adicionar ao carrinho',back:'← Corrigir',total:'Total',
+        unclearTitle:'Não consegui entender:',none:'Não encontrei esses itens no cardápio. Tente de novo ou toque nos itens abaixo.',
+        err:'Não consegui entender agora. Toque nos itens do cardápio ou chame o garçom.',limit:'Muitos pedidos por voz hoje neste local. Toque nos itens do cardápio.',added:'✅ Itens adicionados. Confira o carrinho.'},
+    en:{btn:'Order by voice',hint:'or tap the items below',title:'Order by voice',tap:'Tap the mic and say your order',
+        listen:'Listening… say your order',stop:'Tap again to stop',ph:'E.g. two beers and a portion of fries',
+        go:'Understand my order',busy:'Understanding your order…',noSR:'Your browser has no built-in microphone. Type your order or use your keyboard microphone.',iosHint:'Tap the box below and use the 🎤 on your iPhone keyboard to say your order.',
+        denied:'Allow microphone access in your browser, or type your order.',nospeech:'I heard nothing. Tap the mic and try again.',
+        note:'Speech recognition is done by your browser. We do not store audio.',
+        confirmTitle:'I understood this. Is it right?',add:'Add to cart',back:'← Fix',total:'Total',
+        unclearTitle:'I could not understand:',none:'I could not find those items on the menu. Try again or tap the items below.',
+        err:'I could not understand right now. Tap the menu items or call the waiter.',limit:'Too many voice orders today at this place. Tap the menu items.',added:'✅ Items added. Check your cart.'},
+    es:{btn:'Pedir hablando',hint:'o toca los ítems de abajo',title:'Pedir hablando',tap:'Toca el micrófono y di tu pedido',
+        listen:'Escuchando… di tu pedido',stop:'Toca de nuevo para parar',ph:'Ej: dos cervezas y una porción de papas fritas',
+        go:'Entender mi pedido',busy:'Entendiendo tu pedido…',noSR:'Tu navegador no tiene micrófono integrado. Escribe el pedido o usa el micrófono del teclado.',iosHint:'Toca el cuadro de abajo y usa el 🎤 del teclado del iPhone para decir tu pedido.',
+        denied:'Permite el micrófono en el navegador, o escribe el pedido.',nospeech:'No oí nada. Toca el micrófono e inténtalo de nuevo.',
+        note:'El reconocimiento de voz lo hace tu navegador. No guardamos audio.',
+        confirmTitle:'Entendí esto. ¿Está bien?',add:'Añadir al carrito',back:'← Corregir',total:'Total',
+        unclearTitle:'No pude entender:',none:'No encontré esos ítems en el menú. Inténtalo de nuevo o toca los ítems de abajo.',
+        err:'No pude entender ahora. Toca los ítems del menú o llama al camarero.',limit:'Demasiados pedidos por voz hoy en este lugar. Toca los ítems del menú.',added:'✅ Ítems añadidos. Revisa el carrito.'}
+  };
+  function L(){ return (typeof LANG_CURRENT!=='undefined' && TXT[LANG_CURRENT]) ? TXT[LANG_CURRENT] : TXT.pt; }
+  function speechLang(){ var l=(typeof LANG_CURRENT!=='undefined')?LANG_CURRENT:'pt'; return l==='en'?'en-US':(l==='es'?'es-ES':'pt-BR'); }
+  function $v(id){ return document.getElementById(id); }
+  function E(s){ return (typeof esc==='function') ? esc(s) : String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function bodyText(){ var b=$v('vm-body'); return (b && b.dataset.text) || ''; }
+
+  // ── Botão no topo do cardápio ───────────────────────────────
+  window.ensureVoiceButton = function(){
+    var old = $v('voice-bar'); if(old) old.remove();
+    if(typeof currentKiosk==='undefined' || !currentKiosk || currentKiosk.id==='demo' || currentKiosk.allow_direct_orders===false) return;
+    var vm = $v('view-menu'); if(!vm) return;
+    var t = L();
+    var bar = document.createElement('div');
+    bar.id = 'voice-bar';
+    bar.innerHTML = '<button id="voice-open-btn" type="button" onclick="openVoiceOrder()">🎤 '+E(t.btn)+'</button><span class="voice-hint">'+E(t.hint)+'</span>';
+    vm.insertBefore(bar, vm.firstChild);
+  };
+
+  // ── Janela ──────────────────────────────────────────────────
+  window.openVoiceOrder = function(){
+    closeVoiceOrder();
+    var t = L();
+    var m = document.createElement('div');
+    m.id = 'voice-modal';
+    m.onclick = function(e){ if(e.target===m) closeVoiceOrder(); };
+    m.innerHTML = '<div class="vm-card"><div class="vm-head"><span>🎤 '+E(t.title)+'</span><button class="vm-close" type="button" onclick="closeVoiceOrder()">✕</button></div><div class="vm-body" id="vm-body"></div></div>';
+    document.body.appendChild(m);
+    renderInput('');
+  };
+  window.closeVoiceOrder = function(){
+    stopListening();
+    var m = $v('voice-modal'); if(m) m.remove();
+  };
+
+  function renderInput(prefill, statusMsg){
+    var t = L(), b = $v('vm-body'); if(!b) return;
+    b.innerHTML =
+      (BUILTIN_MIC ? '<button class="vm-mic" id="vm-mic" type="button" onclick="voiceToggleMic()">🎤</button>' : '')
+      +'<div class="vm-status" id="vm-status">'+E(statusMsg || (BUILTIN_MIC ? t.tap : (IS_IOS ? t.iosHint : t.noSR)))+'</div>'
+      +'<textarea id="vm-text" maxlength="400" placeholder="'+E(t.ph)+'"></textarea>'
+      +'<button class="vm-btn" id="vm-go" type="button" onclick="voiceInterpret()">'+E(t.go)+'</button>'
+      +'<div class="vm-note">'+E(t.note)+'</div>';
+    var ta = $v('vm-text');
+    ta.value = prefill || '';
+    if(!BUILTIN_MIC && !prefill){ try{ ta.focus(); }catch(e){} }
+  }
+  function setStatus(msg){ var s=$v('vm-status'); if(s) s.textContent = msg; }
+
+  // ── Reconhecimento de voz ───────────────────────────────────
+  window.voiceToggleMic = function(){ listening ? stopListening() : startListening(); };
+  function startListening(){
+    if(!SR) return;
+    var t = L(), ta = $v('vm-text'), mic = $v('vm-mic');
+    var base = ta && ta.value.trim() ? ta.value.trim()+' ' : '';
+    try{
+      rec = new SR();
+      rec.lang = speechLang();
+      rec.interimResults = true;
+      rec.continuous = false;
+      rec.maxAlternatives = 1;
+      var finalText = base;
+      rec.onresult = function(e){
+        var interim = '';
+        for(var i=e.resultIndex;i<e.results.length;i++){
+          var r = e.results[i];
+          if(r.isFinal) finalText += r[0].transcript+' '; else interim += r[0].transcript;
+        }
+        var x = $v('vm-text'); if(x) x.value = (finalText+interim).trim();
+      };
+      rec.onerror = function(e){
+        var code = e && e.error;
+        if(code==='not-allowed' || code==='service-not-allowed' || code==='audio-capture') setStatus(t.denied);
+        else if(code==='no-speech') setStatus(t.nospeech);
+      };
+      rec.onend = function(){
+        listening = false;
+        var mc = $v('vm-mic'); if(mc) mc.classList.remove('on');
+        var x = $v('vm-text'), s = $v('vm-status');
+        if(s && x && x.value.trim() && s.textContent.indexOf(t.listen)===0) s.textContent = t.tap;
+      };
+      rec.start();
+      listening = true;
+      if(mic) mic.classList.add('on');
+      setStatus(t.listen+' · '+t.stop);
+    }catch(err){
+      listening = false;
+      setStatus(t.noSR);
+    }
+  }
+  function stopListening(){
+    if(rec){ try{ rec.stop(); }catch(e){} }
+    listening = false;
+    var mc = $v('vm-mic'); if(mc) mc.classList.remove('on');
+  }
+
+  // ── Interpretação (função do Supabase) ──────────────────────
+  window.voiceInterpret = async function(){
+    var t = L(), ta = $v('vm-text'); if(!ta) return;
+    var text = ta.value.trim(); if(text.length<2) return;
+    stopListening();
+    var go = $v('vm-go'); if(go){ go.disabled = true; go.textContent = t.busy; }
+    try{
+      var r = await sb.functions.invoke('voice-order', { body:{ kiosk_id: currentKiosk.id, text: text } });
+      if(r.error){
+        var status = r.error.context && r.error.context.status;
+        setStatus(status===429 ? t.limit : t.err);
+        if(go){ go.disabled=false; go.textContent=t.go; }
+        return;
+      }
+      resolveItems(r.data || {});
+      if(!lines.length){
+        renderInput(text, unclear.length ? unclear.join(' ') : t.none);
+        return;
+      }
+      renderConfirm(text);
+    }catch(err){
+      setStatus(t.err);
+      if(go){ go.disabled=false; go.textContent=t.go; }
+    }
+  };
+
+  // Converte a resposta da função em linhas do carrinho, SEMPRE com preço do cardápio do app
+  function resolveItems(d){
+    lines = [];
+    unclear = Array.isArray(d.nao_entendi) ? d.nao_entendi.filter(Boolean) : [];
+    (Array.isArray(d.itens) ? d.itens : []).forEach(function(it){
+      var p = (catalog||[]).find(function(x){ return String(x.id)===String(it.product_id); });
+      if(!p || p.is_available===false) return;
+      var qty = Math.max(1, Math.min(20, parseInt(it.quantidade,10)||1));
+      var hasOpts = p.options && p.options.length;
+      var selections = [];
+      if(hasOpts){
+        p.options.forEach(function(g){
+          var picked = (it.escolhas||[]).filter(function(e){ return e.grupo===g.name; })
+            .map(function(e){ return (g.choices||[]).find(function(c){ return c.name===e.escolha; }); }).filter(Boolean);
+          if(!g.multi){
+            if(!picked.length && g.choices && g.choices[0]) picked = [g.choices[0]]; // mesmo padrão da janela de opções
+            else if(picked.length>1) picked = [picked[0]];
+          }
+          picked.forEach(function(c){ selections.push({ group:g.name, choice:c.name, delta:Number(c.price_delta)||0, costDelta:Number(c.cost_delta)||0 }); });
+        });
+      }
+      var delta = selections.reduce(function(s,x){ return s+x.delta; },0);
+      var costDelta = selections.reduce(function(s,x){ return s+x.costDelta; },0);
+      var byGroup = {}, order = [];
+      selections.forEach(function(s){ if(!byGroup[s.group]){ byGroup[s.group]=[]; order.push(s.group); } byGroup[s.group].push(s.choice); });
+      var label = order.map(function(g){ return g+': '+byGroup[g].join(', '); }).join(' · ');
+      var key = hasOpts ? (p.id+'::'+selections.map(function(s){ return s.choice; }).join('|')) : p.id;
+      var existing = lines.find(function(l){ return l.key===key; });
+      if(existing){ existing.qty = Math.min(20, existing.qty+qty); return; }
+      lines.push({ key:key, p:p, qty:qty, hasOpts:!!hasOpts, unit: effectivePrice(p)+delta, label:label, costDelta:costDelta });
+    });
+  }
+
+  // ── Tela de confirmação ─────────────────────────────────────
+  function renderConfirm(originalText){
+    var t = L(), b = $v('vm-body'); if(!b) return;
+    var total = lines.reduce(function(s,l){ return s+l.unit*l.qty; },0);
+    var html = '<div style="font-size:14px;font-weight:600;margin-bottom:4px">'+E(t.confirmTitle)+'</div>';
+    html += lines.map(function(l,i){
+      return '<div class="vm-line"><div class="vm-line-info"><div class="vm-line-name">'+E(l.p.emoji||'🍴')+' '+E(l.p.name)+'</div>'
+        +(l.label?'<div class="vm-line-opt">'+E(l.label)+'</div>':'')+'</div>'
+        +'<div class="vm-qty"><button type="button" onclick="voiceQty('+i+',-1)">−</button><span>'+l.qty+'</span><button type="button" onclick="voiceQty('+i+',1)">+</button></div>'
+        +'<div class="vm-line-price">'+fmt(l.unit*l.qty)+'</div></div>';
+    }).join('');
+    html += '<div class="vm-total"><span>'+E(t.total)+'</span><span>'+fmt(total)+'</span></div>';
+    if(unclear.length){
+      html += '<div class="vm-warn"><b>'+E(t.unclearTitle)+'</b><br>'+unclear.map(E).join('<br>')+'</div>';
+    }
+    html += '<button class="vm-btn" type="button" onclick="voiceAddToCart()">'+E(t.add)+'</button>'
+      +'<button class="vm-btn sec" type="button" onclick="voiceBack()">'+E(t.back)+'</button>';
+    b.innerHTML = html;
+    b.dataset.text = originalText || '';
+  }
+  window.voiceQty = function(i, d){
+    var l = lines[i]; if(!l) return;
+    l.qty = Math.min(20, l.qty+d);
+    if(l.qty<=0) lines.splice(i,1);
+    if(!lines.length){ renderInput(bodyText()); return; }
+    renderConfirm(bodyText());
+  };
+  window.voiceBack = function(){ renderInput(bodyText()); };
+
+  // ── Coloca no carrinho (mesma estrutura do cardápio manual) ─
+  window.voiceAddToCart = function(){
+    lines.forEach(function(l){
+      var p = l.p;
+      if(l.hasOpts){
+        if(cart[l.key]) cart[l.key].qty += l.qty;
+        else cart[l.key] = { id:p.id, name:p.name+(l.label?' — '+l.label:''), price:l.unit, qty:l.qty, emoji:p.emoji, image_url:p.image_url,
+                             optionsLabel:l.label, optionsCostDelta:l.costDelta, onPromo:isPromoActive(p) };
+      } else {
+        if(cart[p.id]) cart[p.id].qty += l.qty;
+        else cart[p.id] = Object.assign({}, p, { qty:l.qty, price:effectivePrice(p), onPromo:isPromoActive(p) });
+      }
+    });
+    refreshCart();
+    lines.forEach(function(l){ refreshCard(l.p.id); });
+    closeVoiceOrder();
+    toast(L().added);
+    openCart();
+  };
 })();
 </script>
 </body>
