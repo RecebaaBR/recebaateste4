@@ -6212,7 +6212,7 @@ async function doRegister(){
     var regLogoInput = $('reg-logo-file'); if(regLogoInput) regLogoInput.value = '';
     var regLogoPrev = $('reg-logo-preview'); if(regLogoPrev){ regLogoPrev.src=''; regLogoPrev.classList.add('hidden'); }
     showCard('login');
-    toast('✅ Cadastro enviado! Seu negócio está aguardando aprovação do administrador. Você receberá um aviso quando for liberado.');
+    toast('✅ Cadastro criado! Seu acesso já está liberado. Entre com seu e-mail e senha.');
     window._registeringInProgress = false;
     return;
   } else {
