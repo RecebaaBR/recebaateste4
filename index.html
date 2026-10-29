@@ -6505,6 +6505,7 @@ async function doRegister(){
     phone=$('reg-phone').value.trim(),
     kname=$('reg-kname').value.trim(), doc=($('reg-doc')&&$('reg-doc').value.trim())||'';
   if(!owner||!email||!pass||!phone||!kname){ toast('Preencha todos os campos obrigatórios *'); window._registeringInProgress=false; return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){ toast('⚠️ Informe um e-mail válido (ex: nome@email.com)'); window._registeringInProgress=false; return; }
   if(!_regBusinessType){ toast('⚠️ Selecione o tipo de negócio (Quiosque ou Bar/Restaurante)'); window._registeringInProgress=false; return; }
   if(!doc){ toast('Informe o CPF ou CNPJ *'); window._registeringInProgress=false; return; }
   if(pass.length<6){ toast('Senha deve ter mínimo 6 caracteres'); window._registeringInProgress=false; return; }
