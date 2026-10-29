@@ -56,7 +56,7 @@ a{color:var(--ocean-600)}
 </tr>
 <tr class="even">
 <td><strong>Versão</strong></td>
-<td>1.0</td>
+<td>1.1</td>
 </tr>
 <tr class="odd">
 <td><strong>Vigência a partir de</strong></td>
@@ -64,7 +64,7 @@ a{color:var(--ocean-600)}
 </tr>
 <tr class="even">
 <td><strong>Última atualização</strong></td>
-<td>26/05/2026</td>
+<td>29/10/2026</td>
 </tr>
 <tr class="odd">
 <td><strong>Controlador dos dados</strong></td>
@@ -106,6 +106,14 @@ a{color:var(--ocean-600)}
 <li><p>Não coletamos CPF, e-mail, telefone ou qualquer outro dado de identificação do cliente final.</p></li>
 <li><p>Não há cadastro persistente do cliente — cada pedido é tratado como uma sessão pontual.</p></li>
 </ul>
+<p>3.2.1. Pedido por voz ou texto livre (opcional)</p>
+<ul>
+<li><p>O cliente final pode, se quiser, ditar ou digitar o pedido em linguagem natural ("duas cervejas e uma porção de fritas") em vez de tocar nos itens do cardápio.</p></li>
+<li><p>Ao ditar, o reconhecimento de voz é feito pelo próprio navegador do cliente. O Recebaa não recebe, não grava e não armazena o áudio. Dependendo do navegador (por exemplo, o Google Chrome), o áudio pode ser processado pelo fornecedor do navegador, conforme a política de privacidade dele.</p></li>
+<li><p>O Recebaa recebe apenas o texto resultante e o identificador do negócio, e os envia a um provedor de inteligência artificial com a única finalidade de identificar quais itens do cardápio foram pedidos. O Recebaa não guarda esse texto em seus sistemas; o pedido só é registrado se o cliente conferir e confirmar os itens.</p></li>
+<li><p>Pedimos que o cliente não informe dados pessoais (como CPF, telefone ou endereço) no texto do pedido.</p></li>
+<li><p>Para controle de abuso e de custos, registramos apenas a data e a hora de cada uso e o negócio correspondente, sem o conteúdo do pedido e sem identificar o cliente.</p></li>
+</ul>
 <p>3.3. Dados técnicos coletados automaticamente</p>
 <ul>
 <li><p>Endereço IP de acesso</p></li>
@@ -128,6 +136,7 @@ a{color:var(--ocean-600)}
 <li><p>Identificar o pedido vinculado ao mesa correspondente</p></li>
 <li><p>Mostrar o status do pedido em tempo real</p></li>
 <li><p>Permitir o fechamento da conta junto ao negócio</p></li>
+<li><p>Quando o cliente opta pelo pedido por voz ou texto livre, interpretar o texto para sugerir os itens do cardápio correspondentes, que o cliente confere antes de confirmar</p></li>
 </ul>
 <p>4.3. Base legal para o tratamento</p>
 <p>Tratamos seus dados com base nas seguintes hipóteses previstas pela LGPD:</p>
@@ -143,6 +152,7 @@ a{color:var(--ocean-600)}
 <li><p>Supabase (Estados Unidos) — armazenamento de banco de dados e infraestrutura de back-end.</p></li>
 <li><p>Netlify (Estados Unidos) — hospedagem do site e entrega de conteúdo.</p></li>
 <li><p>GitHub (Estados Unidos) — armazenamento do código-fonte da aplicação.</p></li>
+<li><p>Anthropic (Estados Unidos) — provedor de inteligência artificial que interpreta o texto do pedido por voz ou texto livre, usado apenas para essa finalidade e somente quando o cliente escolhe esse recurso.</p></li>
 <li><p>Autoridades competentes — apenas quando exigido por ordem judicial ou obrigação legal.</p></li>
 </ul>
 <p>5.1. Transferência internacional de dados</p>
