@@ -4386,7 +4386,7 @@ function openTermsModal(){
     +'<p style="margin-bottom:12px"><b>4. Dados que coletamos</b><br>Do cliente final, apenas o nome informado no pedido. Do negócio, dados de cadastro (nome, e-mail, telefone, CPF/CNPJ). Não pedimos dados de pagamento pelo app.</p>'
     +'<p style="margin-bottom:12px"><b>5. Uso e compartilhamento dos dados</b><br>Usamos esses dados só para viabilizar o pedido e operar a plataforma. Não vendemos dados a terceiros; compartilhamos apenas com prestadores essenciais de infraestrutura (banco de dados e hospedagem), sob confidencialidade.</p>'
     +'<p style="margin-bottom:12px"><b>6. Responsabilidade e limitações</b><br>Questões sobre qualidade dos produtos, atrasos ou disputas comerciais (cobrança, troco, reembolso) devem ser resolvidas diretamente com o negócio responsável, não com o Recebaa.</p>'
-    +'<p style="margin-bottom:12px"><b>7. Seus direitos (LGPD)</b><br>Você pode solicitar a qualquer momento acesso, correção ou exclusão dos seus dados, pelo e-mail <a href="mailto:pediu.recebaa@gmail.com" style="color:var(--ocean-600)">pediu.recebaa@gmail.com</a>.</p>'
+    +'<p style="margin-bottom:12px"><b>7. Seus direitos (LGPD)</b><br>Você pode solicitar a qualquer momento acesso, correção ou exclusão dos seus dados, pelo e-mail <a href="mailto:pediu.recebaa@gmail.com" style="color:var(--ocean-600)">pediu.recebaa@gmail.com</a> ou pelo WhatsApp <a href="https://wa.me/5511971674448" style="color:var(--ocean-600)">(11) 97167-4448</a>.</p>'
     +'<p style="margin-bottom:12px;font-size:12px">Este é um resumo. Leia os documentos completos: <a href="/terms.html" target="_blank" style="color:var(--ocean-600)">Termos de Uso</a> e <a href="/privacy.html" target="_blank" style="color:var(--ocean-600)">Política de Privacidade</a>.</p>'
     +'<p style="margin-bottom:0;color:#94a3b8;font-size:11.5px">Ao aceitar, você confirma que leu e concorda com estes termos. Última atualização: 26/05/2026.</p>'
     +'</div>'
@@ -10708,7 +10708,7 @@ function aPage(name,btn){
 // Inserir rodapé de contato em cada screen do app + landing
 (function(){
   function injectFooter(){
-    var html = '<div class="recebaa-footer">📧 Contato: <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a> · © 2026 Recebaa<br/><span style="font-size:12px;opacity:.75"><a href="/privacy.html">Política de Privacidade</a> · <a href="/terms.html">Termos de Uso</a></span></div>';
+    var html = '<div class="recebaa-footer">📧 Contato: <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a> · 💬 WhatsApp: <a href="https://wa.me/5511971674448">(11) 97167-4448</a> · © 2026 Recebaa<br/><span style="font-size:12px;opacity:.75"><a href="/privacy.html">Política de Privacidade</a> · <a href="/terms.html">Termos de Uso</a></span></div>';
     // Cada .screen recebe um footer no final
     document.querySelectorAll('.screen').forEach(function(s){
       if(!s.querySelector(':scope > .recebaa-footer')){
