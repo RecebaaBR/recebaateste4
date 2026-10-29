@@ -10457,12 +10457,15 @@ body[data-direct-orders-off="1"] #voice-bar{display:none}
 <script id="voice-order-js">
 (function(){
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  // No iPhone/iPad o reconhecimento de voz do Safari é instável: lá usamos o ditado do teclado.
+  var IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  var BUILTIN_MIC = !!SR && !IS_IOS;
   var rec = null, listening = false, lines = [], unclear = [];
 
   var TXT = {
     pt:{btn:'Pedir falando',hint:'ou toque nos itens abaixo',title:'Pedir falando',tap:'Toque no microfone e fale seu pedido',
         listen:'Ouvindo… fale seu pedido',stop:'Toque de novo para parar',ph:'Ex: duas cervejas e uma porção de fritas',
-        go:'Entender meu pedido',busy:'Entendendo seu pedido…',noSR:'Seu navegador não tem microfone integrado. Digite o pedido ou use o microfone do teclado do celular.',
+        go:'Entender meu pedido',busy:'Entendendo seu pedido…',noSR:'Seu navegador não tem microfone integrado. Digite o pedido ou use o microfone do teclado do celular.',iosHint:'Toque na caixa abaixo e use o 🎤 do teclado do iPhone para falar o pedido.',
         denied:'Permita o uso do microfone no navegador, ou digite o pedido.',nospeech:'Não ouvi nada. Toque no microfone e tente de novo.',
         note:'O reconhecimento de voz é feito pelo seu navegador. Não guardamos áudio.',
         confirmTitle:'Entendi isto. Está certo?',add:'Adicionar ao carrinho',back:'← Corrigir',total:'Total',
@@ -10470,7 +10473,7 @@ body[data-direct-orders-off="1"] #voice-bar{display:none}
         err:'Não consegui entender agora. Toque nos itens do cardápio ou chame o garçom.',limit:'Muitos pedidos por voz hoje neste local. Toque nos itens do cardápio.',added:'✅ Itens adicionados. Confira o carrinho.'},
     en:{btn:'Order by voice',hint:'or tap the items below',title:'Order by voice',tap:'Tap the mic and say your order',
         listen:'Listening… say your order',stop:'Tap again to stop',ph:'E.g. two beers and a portion of fries',
-        go:'Understand my order',busy:'Understanding your order…',noSR:'Your browser has no built-in microphone. Type your order or use your keyboard microphone.',
+        go:'Understand my order',busy:'Understanding your order…',noSR:'Your browser has no built-in microphone. Type your order or use your keyboard microphone.',iosHint:'Tap the box below and use the 🎤 on your iPhone keyboard to say your order.',
         denied:'Allow microphone access in your browser, or type your order.',nospeech:'I heard nothing. Tap the mic and try again.',
         note:'Speech recognition is done by your browser. We do not store audio.',
         confirmTitle:'I understood this. Is it right?',add:'Add to cart',back:'← Fix',total:'Total',
@@ -10478,7 +10481,7 @@ body[data-direct-orders-off="1"] #voice-bar{display:none}
         err:'I could not understand right now. Tap the menu items or call the waiter.',limit:'Too many voice orders today at this place. Tap the menu items.',added:'✅ Items added. Check your cart.'},
     es:{btn:'Pedir hablando',hint:'o toca los ítems de abajo',title:'Pedir hablando',tap:'Toca el micrófono y di tu pedido',
         listen:'Escuchando… di tu pedido',stop:'Toca de nuevo para parar',ph:'Ej: dos cervezas y una porción de papas fritas',
-        go:'Entender mi pedido',busy:'Entendiendo tu pedido…',noSR:'Tu navegador no tiene micrófono integrado. Escribe el pedido o usa el micrófono del teclado.',
+        go:'Entender mi pedido',busy:'Entendiendo tu pedido…',noSR:'Tu navegador no tiene micrófono integrado. Escribe el pedido o usa el micrófono del teclado.',iosHint:'Toca el cuadro de abajo y usa el 🎤 del teclado del iPhone para decir tu pedido.',
         denied:'Permite el micrófono en el navegador, o escribe el pedido.',nospeech:'No oí nada. Toca el micrófono e inténtalo de nuevo.',
         note:'El reconocimiento de voz lo hace tu navegador. No guardamos audio.',
         confirmTitle:'Entendí esto. ¿Está bien?',add:'Añadir al carrito',back:'← Corregir',total:'Total',
@@ -10522,12 +10525,14 @@ body[data-direct-orders-off="1"] #voice-bar{display:none}
   function renderInput(prefill, statusMsg){
     var t = L(), b = $v('vm-body'); if(!b) return;
     b.innerHTML =
-      (SR ? '<button class="vm-mic" id="vm-mic" type="button" onclick="voiceToggleMic()">🎤</button>' : '')
-      +'<div class="vm-status" id="vm-status">'+E(statusMsg || (SR ? t.tap : t.noSR))+'</div>'
+      (BUILTIN_MIC ? '<button class="vm-mic" id="vm-mic" type="button" onclick="voiceToggleMic()">🎤</button>' : '')
+      +'<div class="vm-status" id="vm-status">'+E(statusMsg || (BUILTIN_MIC ? t.tap : (IS_IOS ? t.iosHint : t.noSR)))+'</div>'
       +'<textarea id="vm-text" maxlength="400" placeholder="'+E(t.ph)+'"></textarea>'
       +'<button class="vm-btn" id="vm-go" type="button" onclick="voiceInterpret()">'+E(t.go)+'</button>'
       +'<div class="vm-note">'+E(t.note)+'</div>';
-    $v('vm-text').value = prefill || '';
+    var ta = $v('vm-text');
+    ta.value = prefill || '';
+    if(!BUILTIN_MIC && !prefill){ try{ ta.focus(); }catch(e){} }
   }
   function setStatus(msg){ var s=$v('vm-status'); if(s) s.textContent = msg; }
 
@@ -10554,7 +10559,7 @@ body[data-direct-orders-off="1"] #voice-bar{display:none}
       };
       rec.onerror = function(e){
         var code = e && e.error;
-        if(code==='not-allowed' || code==='service-not-allowed') setStatus(t.denied);
+        if(code==='not-allowed' || code==='service-not-allowed' || code==='audio-capture') setStatus(t.denied);
         else if(code==='no-speech') setStatus(t.nospeech);
       };
       rec.onend = function(){
