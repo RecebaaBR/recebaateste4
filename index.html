@@ -6205,6 +6205,8 @@ async function doRegister(){
       kiosk_phone: phone,
       kiosk_doc: doc
     });
+    // MVP: aprovação automática — mantém o e-mail de aprovação (registro/compliance)
+    sendAprovacaoEmail({ to_name: owner, to_email: email, kiosk_name: kname });
     // Limpar formulário e voltar pra tela de login com aviso
     ['reg-owner','reg-email','reg-pass','reg-pass-confirm','reg-phone','reg-kname','reg-doc','reg-city','reg-beach','reg-biztype'].forEach(function(id){ var el=$(id); if(el) el.value=''; });
     _regBusinessType = '';
