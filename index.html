@@ -7651,38 +7651,23 @@ function playAlertViaBuffer(){
     var source = ctx.createBufferSource();
     source.buffer = _kioskAlertBuffer;
 
+    // O arquivo do bipe já está normalizado no máximo (pico em -0,1 dB). Qualquer
+    // ganho acima de 1 estoura o áudio e causa distorção. Por isso tocamos em
+    // ganho unitário com pequena folga e um limitador de segurança, o mais alto
+    // possível sem distorcer.
     var gain = ctx.createGain();
-    gain.gain.value = 14; // amplificação bem acima do volume "normal" de 100%
+    gain.gain.value = 0.95;
 
-    var shaper = ctx.createWaveShaper();
-    shaper.curve = makeSoftClipCurve(2.2);
-    shaper.oversample = '4x';
-
-    var comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -32;
-    comp.knee.value = 2;
-    comp.ratio.value = 20;
-    comp.attack.value = 0.0003;
-    comp.release.value = 0.1;
-
-    // Depois do compressor (que achata os picos), um segundo estágio de ganho
-    // + saturação suave recupera o volume perdido: o som sai bem mais alto,
-    // quase no limite digital, sem estourar além de 100%.
-    var postGain = ctx.createGain();
-    postGain.gain.value = 3;
-    var shaper2 = ctx.createWaveShaper();
-    shaper2.curve = makeSoftClipCurve(1.5);
-    shaper2.oversample = '4x';
-    var limit = ctx.createGain();
-    limit.gain.value = 0.9; // folga para não passar de 100% no conversor de áudio
+    var limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -1;
+    limiter.knee.value = 0;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.001;
+    limiter.release.value = 0.05;
 
     source.connect(gain);
-    gain.connect(shaper);
-    shaper.connect(comp);
-    comp.connect(postGain);
-    postGain.connect(shaper2);
-    shaper2.connect(limit);
-    limit.connect(ctx.destination);
+    gain.connect(limiter);
+    limiter.connect(ctx.destination);
     source.start(0);
     return true;
   }catch(e){ return false; }
