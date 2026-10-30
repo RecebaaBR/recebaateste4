@@ -6,6 +6,18 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Recebaa — Pedidos por QR Code para bares, restaurantes e quiosques</title>
+<!-- Meta Pixel: só é carregado depois que o visitante aceita (LGPD) -->
+<script>
+function trackPx(type,name){ try{ if(window.fbq) fbq(type,name); }catch(e){} }
+function loadPixel(){
+  if(window.fbq) return;
+  !function(f,b,e,v,n,t,s){n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init','1204326885488994');
+  fbq('track','PageView');
+}
+(function(){ try{ if(localStorage.getItem('rcb_px')==='1') loadPixel(); }catch(e){} })();
+</script>
+
 <meta name="description" content="Seu cliente escaneia o QR Code, faz o pedido pelo celular e ele chega direto no seu painel. Menos erros e menos pedidos perdidos nos horários de pico. Teste grátis."/>
 <meta name="theme-color" content="#0ea5e9"/>
 <link rel="icon" type="image/jpeg" href="/logo-recebaa.jpg"/>
@@ -3750,6 +3762,7 @@ function toast(msg){
 // ══════════════════════════════════════════════════════
 // Landing: "Criar conta grátis" abre a área do negócio já no cadastro.
 function lpSignup(){
+  trackPx('trackCustom','IniciouCadastro');
   showScreen('kiosk', $('nav-kiosk'));
   var auth = $('kiosk-auth');
   if(!auth || !auth.classList.contains('hidden')) showCard('register');
@@ -6953,6 +6966,7 @@ async function doRegister(){
       return;
     }
     var data = rows[0];
+    trackPx('track','CompleteRegistration');
     // Grava o tipo de negócio (quiosque ou bar/restaurante) escolhido no cadastro.
     // Feito à parte pois register_kiosk (RPC) não recebe esse parâmetro.
     // Se a coluna business_type ainda não existir no banco, falha em silêncio.
@@ -11240,5 +11254,25 @@ function aPage(name,btn){
   .sidebar,.admin-sidebar{top:0;height:auto;padding-top:var(--nav-h)}
 }
 </style>
+<style id="px-consent-css">
+#px-consent{position:fixed;left:12px;right:12px;bottom:12px;z-index:100000;max-width:560px;margin:0 auto;background:#0b2e4a;color:#fff;border-radius:14px;padding:14px 16px;font:14px/1.45 'DM Sans',system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.3);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#px-consent p{margin:0;flex:1 1 260px}
+#px-consent a{color:#ffd7c4;text-decoration:underline}
+#px-consent button{border:0;border-radius:9px;padding:9px 14px;font:600 14px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+#px-consent .px-ok{background:#e8591f;color:#fff}
+#px-consent .px-no{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)}
+</style>
+<script>
+(function(){
+  var c; try{ c=localStorage.getItem('rcb_px'); }catch(e){ c='0'; }
+  if(c==='1'||c==='0') return;
+  var d=document.createElement('div'); d.id='px-consent'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','Aviso de cookies');
+  d.innerHTML='<p>Usamos cookies de medição da Meta para saber se nossos anúncios funcionam. <a href="/privacy.html">Saiba mais</a></p><button class="px-no" type="button">Recusar</button><button class="px-ok" type="button">Aceitar</button>';
+  function fim(v){ try{ localStorage.setItem('rcb_px',v); }catch(e){} d.remove(); if(v==='1') loadPixel(); }
+  d.querySelector('.px-ok').onclick=function(){ fim('1'); };
+  d.querySelector('.px-no').onclick=function(){ fim('0'); };
+  document.body.appendChild(d);
+})();
+</script>
 </body>
 </html>
