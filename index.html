@@ -533,7 +533,7 @@ tr:hover td{background:var(--sand-50)}
 <!-- LANDING PAGE -->
 <div id="screen-landing" class="screen active lpx" style="display:block">
 <style id="lpx-css">
-#screen-landing.lpx{--mar:#0b2e4a;--mar2:#12405f;--onda:#0f8fa8;--espuma:#f2f8f8;--sol:#e8591f;--sol-h:#cf4a13;--areia:#efe3c8;--tx:#1d3445;--tx2:#4f6676;--linha:#d6e3e6;font-family:'DM Sans',sans-serif;color:var(--tx);background:var(--espuma);padding-top:64px;-webkit-font-smoothing:antialiased}
+#screen-landing.lpx{--mar:#0b2e4a;--mar2:#12405f;--onda:#0f8fa8;--espuma:#f2f8f8;--sol:#e8591f;--sol-h:#cf4a13;--areia:#efe3c8;--tx:#1d3445;--tx2:#4f6676;--linha:#d6e3e6;font-family:'DM Sans',sans-serif;color:var(--tx);background:var(--espuma);padding-top:80px;-webkit-font-smoothing:antialiased}
 .lpx *{box-sizing:border-box}
 .lpx h1,.lpx h2,.lpx h3{font-family:'Fraunces','Playfair Display',serif;color:var(--mar);margin:0;font-weight:700;letter-spacing:-.02em}
 .lpx p{margin:0}
@@ -709,8 +709,9 @@ tr:hover td{background:var(--sand-50)}
 @media (max-width:560px){.lpx .foot-cols{grid-template-columns:1fr}.lpx .fc-brand{grid-column:auto}}
 
 /* nav */
-.lp-nav.lpx-nav{height:64px;padding:0 24px;background:#fff!important;border-bottom:1px solid #d6e3e6!important;box-shadow:none!important}
-.lpx-nav .lp-logo-icon{height:38px}
+.lp-nav.lpx-nav{height:80px;padding:0 24px;background:#fff!important;border-bottom:1px solid #d6e3e6!important;box-shadow:none!important}
+.lpx-nav .lp-logo-icon{height:60px}
+@media (max-width:560px){.lp-nav.lpx-nav{height:72px}.lpx-nav .lp-logo-icon{height:50px}#screen-landing.lpx{padding-top:72px}}
 .lpx-nav .nav-r{display:flex;align-items:center;gap:6px}
 .lpx-nav .nl{background:none;border:0;font:600 15px 'DM Sans',sans-serif;color:#0b2e4a;padding:10px 12px;cursor:pointer;border-radius:8px}
 .lpx-nav .nl:hover{background:#f2f8f8}
@@ -850,7 +851,7 @@ tr:hover td{background:var(--sand-50)}
     <div class="wrap">
       <div class="foot-cols">
         <div class="fc fc-brand">
-          <img src="" class="recebaa-logo-img" alt="Recebaa" style="height:44px;width:auto;background:#fff;border-radius:10px;padding:5px 10px"/>
+          <img src="" class="recebaa-logo-img" alt="Recebaa" style="height:72px;width:auto;background:#fff;border-radius:12px;padding:6px 14px"/>
           <p>Pedidos por QR Code para bares, restaurantes, cafés e quiosques.</p>
         </div>
         <div class="fc">
