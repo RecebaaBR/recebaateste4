@@ -1,4 +1,3 @@
-import { appendFileSync } from 'node:fs'; const require_fs = m => appendFileSync('/tmp/claude-0/-home-claude/b560f117-9361-5ab3-b80f-d61c90a09e0b/scratchpad/trace.txt', m + ' ' + Date.now() + '\n');
 // E2E no navegador (Chromium/Playwright) contra o index.html REAL, com um "Supabase de mentira" que roda em PGlite
 // (migrações reais + RLS/grants reais + Edge Functions reais com o provedor MOCK). Nenhum dinheiro, nenhuma credencial.
 import { test, describe, before, after } from 'node:test';
@@ -136,11 +135,11 @@ async function newPage({ ua = null, avail = null, decline = false } = {}) {
 }
 const FN_CALLS = () => seen.filter(s => s.includes('/functions/v1/'));
 
-before(async () => { require_fs('before0');
+before(async () => { 
   ctx = await setup();
-  require_fs('setupdone'); server = await startStatic();
+  server = await startStatic();
   base = 'http://127.0.0.1:' + server.address().port;
-  require_fs('server'); browser = await chromium.launch({ args: ['--no-sandbox'] });
+  browser = await chromium.launch({ args: ['--no-sandbox'] });
 });
 after(async () => { await browser?.close(); server?.close(); });
 
@@ -407,13 +406,13 @@ describe('carteiras (Apple Pay / Google Pay via Stripe): E2E com stripe.js falso
   test('flag das carteiras DESLIGADA (Pix/cartão ligados): sem wallet.js, sem stripe.js, sem wallet-config e sem UI nova', async () => {
     const { kid } = await ctx.kiosk({ name: 'Quiosque Sem Carteira' });
     await seedOrder(ctx.pg, kid, 1, [{ q: 1, p: 20 }]);
-    require_fs('A'); seen.length = 0;
+    seen.length = 0;
     const page = await newPage({ ua: CHROME, avail: { googlePay: true } });
-    require_fs('B'); await openTable(page, kid, 1); require_fs('C'); await openOrdersTab(page); require_fs('D');
-    await page.click('#rpay-bar [data-a=open]'); await page.waitForSelector('#rpay-modal [data-a=pix]');
+    await openTable(page, kid, 1); await openOrdersTab(page); 
+    await page.click('#rpay-bar [data-a=open]'); await page.waitForSelector('#rpay-modal [data-a=pix]'); 
     await page.waitForTimeout(1200);
     assert.deepEqual(stripeSeen(), [], 'nada de Stripe: ' + stripeSeen());
-    assert.equal(await page.$('#rpay-wallet'), null);
+    assert.equal(await page.$('#rpay-wallet') === null, true);
     assert.ok(await page.$('#rpay-modal [data-a=pix]') && await page.$('#rpay-modal [data-a=card]'), 'Pix e cartão intactos');
     assert.deepEqual(page.errors, []);
   });
@@ -421,10 +420,10 @@ describe('carteiras (Apple Pay / Google Pay via Stripe): E2E com stripe.js falso
   test('navegador SEM carteira provável (Firefox): stripe.js nem é baixado e não há botão', async () => {
     const { kid } = await ctx.kiosk({ name: 'Quiosque FF', wallets: true });
     await seedOrder(ctx.pg, kid, 1, [{ q: 1, p: 20 }]);
-    require_fs('A'); seen.length = 0;
+    seen.length = 0;
     const page = await newPage({ ua: FIREFOX, avail: { googlePay: true } });
-    require_fs('B'); await openTable(page, kid, 1); require_fs('C'); await openOrdersTab(page); require_fs('D');
-    await page.click('#rpay-bar [data-a=open]'); await page.waitForSelector('#rpay-modal [data-a=pix]');
+    await openTable(page, kid, 1); await openOrdersTab(page); 
+    await page.click('#rpay-bar [data-a=open]'); await page.waitForSelector('#rpay-modal [data-a=pix]'); 
     await page.waitForTimeout(1200);
     assert.ok(!seen.includes('STRIPEJS'), 'stripe.js não deve ser requisitado');
     assert.ok(!seen.some(x => /wallet-config/.test(x)));

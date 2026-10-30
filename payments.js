@@ -138,7 +138,7 @@
       '<div class="row tot"><span>Total</span><span>' + esc(brl(q.amount_cents)) + '</span></div>' +
       (q.pending_orders ? '<div class="note">' + esc(q.pending_orders) + ' pedido(s) ainda não aceito(s) pelo atendente ficam de fora e podem ser pagos depois.</div>' : '') +
       (errMsg ? '<div class="err">' + esc(errMsg) + '</div>' : '') +
-      '<div id="rpay-wallet" class="rpay-wallet" hidden></div>' +
+      (q.wallets_available === true ? '<div id="rpay-wallet" class="rpay-wallet" hidden></div>' : '') +
       '<div class="opts"><button type="button" class="rpay-btn pri" data-a="pix">Pagar com Pix</button>' +
       '<button type="button" class="rpay-btn dark" data-a="card">Pagar com cartão</button>' +
       '<button type="button" class="rpay-btn sec" data-a="close">Voltar</button></div>' +
