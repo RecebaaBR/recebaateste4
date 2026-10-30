@@ -14,7 +14,7 @@ export async function makeDb({ withPayments = true } = {}) {
   await pg.waitReady;
   await pg.exec(fs.readFileSync(path.join(here, 'fixtures/baseline.sql'), 'utf8'));
   const migs = ['20261029_security_hardening_v1.sql', '20261030_orders_private.sql'];
-  if (withPayments) migs.push('20261031_payments_v1.sql', '20261101_payments_wallets_v1.sql');
+  if (withPayments) migs.push('20261031_payments_v1.sql', '20261101_payments_wallets_v1.sql', '20261102_payments_panel_v1.sql');
   for (const m of migs) {
     try { await pg.exec(fs.readFileSync(path.join(repo, 'supabase/migrations', m), 'utf8')); }
     catch (e) { throw new Error('Falha na migração ' + m + ': ' + e.message); }

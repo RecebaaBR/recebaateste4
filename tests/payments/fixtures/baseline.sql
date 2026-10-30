@@ -43,3 +43,13 @@ create table storage.buckets (id text primary key, file_size_limit bigint, allow
 insert into storage.buckets(id) values ('product-images');
 create table storage.objects (id uuid default gen_random_uuid(), bucket_id text, name text);
 create publication supabase_realtime;
+
+-- (produção atribui o número do pedido por gatilho quando o cliente manda order_number nulo/omitido)
+create or replace function public.trg_order_number() returns trigger language plpgsql as $$
+begin
+  if new.order_number is null then
+    new.order_number := coalesce((select max(o.order_number) from public.orders o where o.kiosk_id = new.kiosk_id), 0) + 1;
+  end if;
+  return new;
+end $$;
+create trigger trg_order_number before insert on public.orders for each row execute function public.trg_order_number();
