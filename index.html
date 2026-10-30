@@ -10356,6 +10356,7 @@ function renderAdminKiosksTable(list){
         if(status!=='inactive') actions += '<button class="btn btn-sm btn-ghost" data-kid="'+k.id+'" data-st="inactive" onclick="setKioskStatusBtn(this)">⏸️ Desativar</button>';
         if(status!=='blocked')  actions += '<button class="btn btn-sm btn-danger" data-kid="'+k.id+'" data-st="blocked" onclick="setKioskStatusBtn(this)">🚫 Bloquear</button>';
       }
+      actions += '<button class="btn btn-sm btn-ghost" data-kid="'+esc(k.id)+'" onclick="adminResetPassword(this)">🔑 Senha</button>';
       var bizType = k.business_type === 'bar_restaurante' ? '🍽️ Bar/Restaurante' : '🏪 Quiosque';
       return '<tr>'
         +'<td><b>'+esc(k.name)+'</b></td>'
@@ -10368,6 +10369,15 @@ function renderAdminKiosksTable(list){
         +'</tr>';
     }).join('')
     +'</tbody></table>';
+}
+
+async function adminResetPassword(btn){
+  var id = btn.dataset.kid;
+  var pw = prompt('Nova senha para este negócio (mínimo 6 caracteres). Passe a senha ao dono por um canal seguro:');
+  if(!pw) return;
+  var r = await sb.rpc('admin_reset_kiosk_password', { p_token: window._adminToken, p_kiosk_id: id, p_new_password: pw });
+  if(r.error){ toast('❌ ' + r.error.message); return; }
+  toast('✅ Senha redefinida. O dono já pode entrar com a nova senha.');
 }
 
 function setKioskStatusBtn(btn){
