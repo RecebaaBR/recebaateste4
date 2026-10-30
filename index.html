@@ -522,7 +522,7 @@ tr:hover td{background:var(--sand-50)}
   <button class="hamburger" id="hamburger-btn" onclick="toggleSidebar()" style="display:none" aria-label="Menu">
     <span></span><span></span><span></span>
   </button>
-  <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:32px;width:auto"/></div>
+  <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:60px;width:auto"/></div>
   <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
   <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Negócio</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
@@ -2030,7 +2030,7 @@ tr:hover td{background:var(--sand-50)}
   <button class="hamburger" id="hamburger-btn" onclick="toggleSidebar()" style="display:none" aria-label="Menu">
     <span></span><span></span><span></span>
   </button>
-  <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:32px;width:auto"/></div>
+  <div class="nav-logo" style="cursor:pointer;display:flex;align-items:center" onclick="goToLanding()"><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:60px;width:auto"/></div>
   <button class="nav-btn active" id="nav-client" onclick="goToClient(this)">📱 Cliente</button>
   <button class="nav-btn" id="nav-kiosk" onclick="showScreen('kiosk',this)">🏪 Negócio</button>
   <button class="nav-btn" id="nav-admin" onclick="showScreen('admin',this)">⚙️ Admin</button>
@@ -4348,7 +4348,7 @@ function adjustCatTabsSticky(){
   if(!mh || !ct) return;
   // requestAnimationFrame garante que o layout já foi recalculado antes de medir
   requestAnimationFrame(function(){
-    ct.style.top = (52 + mh.offsetHeight) + 'px'; // 52px = topo fixo do site (nav Cliente/Quiosque/Admin)
+    ct.style.top = ((($('app-nav')&&$('app-nav').offsetHeight)||52) + mh.offsetHeight) + 'px'; // topo fixo do site (nav Cliente/Negócio/Admin)
   });
 }
 window.addEventListener('resize', function(){
@@ -11148,5 +11148,27 @@ function aPage(name,btn){
   setInterval(applyLogo, 2000);
 })();
 </script>
+<style id="nav-logo-size">
+/* Menu das subpáginas com o mesmo logo da landing (60px; 50px no celular) */
+:root{--nav-h:80px}
+.nav{height:var(--nav-h)}
+.nav-logo img{height:60px!important}
+.screen{padding-top:var(--nav-h)}
+.splash{min-height:calc(100vh - var(--nav-h))}
+.menu-header{top:var(--nav-h)}
+.cat-tabs{top:calc(var(--nav-h) + 44px)}
+.auth-wrap{min-height:calc(100vh - var(--nav-h))}
+.dash-layout,.admin-layout{min-height:calc(100vh - var(--nav-h))}
+.sidebar,.admin-sidebar{top:var(--nav-h);height:calc(100vh - var(--nav-h))}
+@media (max-width:560px){
+  :root{--nav-h:72px}
+  .nav-logo img{height:50px!important}
+  .nav{padding:0 8px;gap:4px}
+  .nav-btn{padding:4px 7px}
+}
+@media(max-width:700px),(max-height:500px) and (orientation:landscape){
+  .sidebar,.admin-sidebar{top:0;height:auto;padding-top:var(--nav-h)}
+}
+</style>
 </body>
 </html>
