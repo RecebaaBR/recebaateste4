@@ -671,11 +671,16 @@ tr:hover td{background:var(--sand-50)}
 .lpx .como{background:#fff;color:var(--tx);border-top:1px solid var(--linha)}
 .lpx .como h2{color:var(--mar)}
 .lpx .como .sec-head p{color:var(--tx2)}
-.lpx .steps3{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:20px}
-.lpx .steps3 li{display:flex;flex-direction:column;gap:10px;min-width:0}
+.lpx .steps3{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:36px 24px}
+.lpx .steps3 li{display:flex;flex-direction:column;gap:10px;min-width:0;flex:0 0 calc((100% - 72px)/4)}
 .lpx .steps3 .n{width:44px;height:44px;border-radius:50%;background:var(--sol);color:#fff;display:flex;align-items:center;justify-content:center;font:900 20px 'Fraunces',serif}
 .lpx .steps3 h3{font-size:19px;line-height:1.2}
 .lpx .steps3 p{font-size:15px;line-height:1.55;color:var(--tx2)}
+.lpx .viz-rank{background:var(--espuma);border-radius:16px;padding:16px;border:1px solid var(--linha);display:flex;flex-direction:column;gap:10px}
+.lpx .rk-head{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--mar)}
+.lpx .rk{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:13.5px;color:var(--tx2)}
+.lpx .rk i{grid-column:1 / -1;grid-row:2;height:7px;border-radius:4px;background:var(--sol);display:block}
+.lpx .rk b{color:var(--mar);grid-column:2;grid-row:1}
 .lpx .vm-btn.vm-add{background:var(--mar)}
 .lpx .viz{margin-top:auto;padding-top:10px}
 .lpx .viz-qr{background:var(--espuma);border-radius:16px;padding:22px;text-align:center;border:1px solid var(--linha)}
@@ -700,17 +705,15 @@ tr:hover td{background:var(--sand-50)}
 .lpx .vlist b{display:block;font-size:19px;color:var(--mar);margin-bottom:4px;font-family:'Fraunces',serif}
 .lpx .vlist span{font-size:16px;line-height:1.55;color:var(--tx2)}
 .lpx .hero{padding-bottom:88px}
-@media (max-width:1150px){
-  .lpx .steps3{grid-template-columns:1fr 1fr;gap:36px 28px}
-  .lpx .steps3 li:last-child{grid-column:1 / -1;width:calc(50% - 14px);justify-self:center}
+@media (max-width:1000px){
+  .lpx .steps3 li{flex-basis:calc((100% - 28px)/2)}
 }
 @media (max-width:900px){
-  .lpx .steps3{grid-template-columns:1fr 1fr;gap:36px 28px}
   .lpx .vlist{grid-template-columns:1fr;gap:26px}
 }
 @media (max-width:620px){
-  .lpx .steps3{grid-template-columns:1fr;gap:40px}
-  .lpx .steps3 li:last-child{width:auto}
+  .lpx .steps3{gap:40px}
+  .lpx .steps3 li{flex-basis:100%}
 }
 
 
@@ -807,6 +810,16 @@ tr:hover td{background:var(--sand-50)}
       <ol class="steps3">
         <li>
           <div class="n">1</div>
+          <h3>Você cria a conta</h3>
+          <p>Cadastre seu negócio em poucos minutos. É grátis e o acesso ao painel é liberado na hora.</p>
+          <div class="viz viz-menu" aria-hidden="true">
+            <div class="vm"><span>Negócio</span><b>Casa Aurora</b></div>
+            <div class="vm"><span>E-mail</span><b>voce@email.com</b></div>
+            <div class="vm-btn">Criar conta grátis</div>
+          </div>
+        </li>
+        <li>
+          <div class="n">2</div>
           <h3>Você monta o cardápio</h3>
           <p>No painel, cadastre produtos, preços e fotos e imprima os QR Codes das mesas. Faz uma vez e muda quando quiser.</p>
           <div class="viz viz-menu" aria-hidden="true">
@@ -816,13 +829,13 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </li>
         <li>
-          <div class="n">2</div>
+          <div class="n">3</div>
           <h3>O cliente abre o cardápio</h3>
           <p>Ele aponta a câmera do celular para o QR Code da mesa e o cardápio abre, sem baixar app.</p>
           <div class="viz viz-qr" aria-hidden="true"><svg viewBox="0 0 25 25" shape-rendering="crispEdges" aria-hidden="true"><path stroke="#0b2e4a" d="M0 0.5h7m1 0h5m1 0h1m3 0h7m-25 1h1m5 0h1m2 0h1m2 0h3m1 0h1m1 0h1m5 0h1m-25 1h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m6 0h2m3 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h1m2 0h1m3 0h1m1 0h3m1 0h1m-25 1h1m5 0h1m1 0h3m1 0h1m1 0h1m3 0h1m5 0h1m-25 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-15 1h1m1 0h1m1 0h3m-17 1h1m1 0h1m3 0h2m1 0h2m3 0h1m1 0h1m2 0h1m2 0h1m1 0h1m-25 1h1m1 0h1m1 0h1m2 0h1m4 0h2m1 0h1m2 0h2m1 0h1m1 0h2m-24 1h1m2 0h3m1 0h4m3 0h1m2 0h2m1 0h2m1 0h1m-25 1h1m1 0h1m2 0h1m1 0h4m1 0h1m4 0h1m3 0h1m-22 1h1m1 0h6m1 0h1m2 0h1m2 0h2m1 0h1m5 0h1m-23 1h1m2 0h1m2 0h1m1 0h1m1 0h1m2 0h2m1 0h2m3 0h2m-25 1h4m1 0h3m4 0h1m1 0h2m1 0h2m2 0h2m1 0h1m-21 1h2m1 0h1m1 0h1m1 0h2m4 0h5m-22 1h3m1 0h1m1 0h1m1 0h2m5 0h6m2 0h1m-16 1h1m5 0h1m1 0h1m3 0h1m3 0h1m-25 1h7m1 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m3 0h1m-25 1h1m5 0h1m2 0h2m4 0h2m3 0h1m3 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h10m3 0h1m-25 1h1m1 0h3m1 0h1m2 0h2m1 0h1m3 0h2m2 0h1m1 0h2m-24 1h1m1 0h3m1 0h1m1 0h2m2 0h6m1 0h3m1 0h2m-25 1h1m5 0h1m4 0h2m3 0h2m1 0h2m-21 1h7m1 0h1m3 0h3m1 0h1m1 0h1m2 0h1m2 0h1"/></svg><b>Mesa 7</b></div>
         </li>
         <li>
-          <div class="n">3</div>
+          <div class="n">4</div>
           <h3>O pedido é feito</h3>
           <p>O cliente escolhe sozinho no celular, ou chama o garçom, que lança o pedido pelo painel. Os dois jeitos funcionam juntos.</p>
           <div class="viz viz-menu" aria-hidden="true">
@@ -832,7 +845,7 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </li>
         <li>
-          <div class="n">4</div>
+          <div class="n">5</div>
           <h3>O painel avisa você</h3>
           <p>O pedido chega com o número da mesa e um alerta sonoro. Você aceita, prepara e marca como entregue.</p>
           <div class="viz viz-pop" aria-hidden="true">
@@ -843,13 +856,24 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </li>
         <li>
-          <div class="n">5</div>
+          <div class="n">6</div>
           <h3>A conta fica pronta</h3>
           <p>No fim, o cliente pede a conta pelo celular, ou o garçom fecha na mesa. O Recebaa soma tudo e divide entre o grupo, se quiserem.</p>
           <div class="viz viz-bill" aria-hidden="true">
             <div class="bl-head">Conta · Mesa 7</div>
             <div class="bl-row"><span>Total</span><b>R$ 29,00</b></div>
             <div class="bl-row"><span>Dividido em 2</span><b>R$ 14,50</b></div>
+          </div>
+        </li>
+        <li>
+          <div class="n">7</div>
+          <h3>Você acompanha os números</h3>
+          <p>Veja os produtos mais vendidos e o ranking de garçons por valor vendido, por período. Decida o que manter, promover ou ajustar.</p>
+          <div class="viz viz-rank" aria-hidden="true">
+            <div class="rk-head">Mais vendidos</div>
+            <div class="rk"><span>Suco de abacaxi</span><i style="width:100%"></i><b>42</b></div>
+            <div class="rk"><span>Coca-Cola Zero</span><i style="width:74%"></i><b>31</b></div>
+            <div class="rk"><span>Porção de batata</span><i style="width:52%"></i><b>22</b></div>
           </div>
         </li>
       </ol>
