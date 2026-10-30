@@ -70,6 +70,7 @@ export function makeMercadoPago(cfg: MpConfig, fetchFn: typeof fetch = fetch): P
     name: 'mercadopago',
 
     async createCharge(seller: Seller, i: ChargeInput): Promise<ChargeResult> {
+      if (i.method === 'wallet') throw new ProviderError('carteiras não são processadas pelo Mercado Pago', false);
       const amount = i.amountCents / 100;
       if (i.method === 'pix') {
         const r = await call('POST', '/v1/payments', seller.accessToken, {

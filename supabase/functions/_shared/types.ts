@@ -11,7 +11,7 @@ export interface Seller { accountId: string; accessToken: string }
 
 export interface ChargeInput {
   paymentId: string;          // nosso id (vai como external_reference)
-  method: 'pix' | 'card';
+  method: 'pix' | 'card' | 'wallet';
   amountCents: number;        // calculado no servidor
   description: string;
   notificationUrl: string;
@@ -20,7 +20,7 @@ export interface ChargeInput {
   feeCents: number;           // taxa da plataforma (0 por padrão)
   payerEmail: string;
 }
-export interface ChargeResult { providerRef: string; pixCopyPaste?: string; checkoutUrl?: string }
+export interface ChargeResult { providerRef: string; pixCopyPaste?: string; checkoutUrl?: string; clientSecret?: string }
 
 export type NormalizedStatus = 'paid' | 'pending' | 'failed' | 'refunded';
 export interface ProviderPayment {
@@ -35,15 +35,15 @@ export interface OAuthTokens { accountId: string; accessToken: string; refreshTo
 
 /** Interface do provedor: trocar de provedor = implementar isto. */
 export interface PaymentProvider {
-  name: 'mercadopago' | 'mock';
+  name: 'mercadopago' | 'mock' | 'stripe';
   createCharge(seller: Seller, input: ChargeInput): Promise<ChargeResult>;
   /** Consulta o pagamento NO PROVEDOR (fonte da verdade). null = não existe/não é deste vendedor. */
   fetchPayment(seller: Seller, providerPaymentId: string): Promise<ProviderPayment | null>;
   /** Procura pagamentos pela nossa referência (para atualizar sem webhook e para o cartão, cujo id só nasce no checkout). */
   searchByReference(seller: Seller, externalReference: string): Promise<ProviderPayment | null>;
-  cancelCharge(seller: Seller, providerRef: string, method: 'pix' | 'card'): Promise<boolean>;
+  cancelCharge(seller: Seller, providerRef: string, method: 'pix' | 'card' | 'wallet'): Promise<boolean>;
   /** Valida a ASSINATURA do webhook. Não confia no conteúdo; só diz se veio do provedor e qual id consultar. */
-  verifyWebhook(input: { headers: Headers; url: URL; rawBody: string }): Promise<{ valid: boolean; topic?: string; providerPaymentId?: string }>;
+  verifyWebhook(input: { headers: Headers; url: URL; rawBody: string }): Promise<{ valid: boolean; topic?: string; providerPaymentId?: string; paymentId?: string }>;
   oauthAuthorizeUrl?(state: string): string;
   oauthExchange?(code: string): Promise<OAuthTokens>;
   oauthRefresh?(refreshToken: string): Promise<OAuthTokens>;

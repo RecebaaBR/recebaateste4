@@ -25,6 +25,7 @@ export function makeMockProvider(secret: string, ledger: MockLedger): PaymentPro
   return {
     name: 'mock',
     async createCharge(seller: Seller, i: ChargeInput): Promise<ChargeResult> {
+      if (i.method === 'wallet') throw new Error('mock: carteira é do provedor stripe');
       const ref = 'mock_' + i.paymentId;
       ledger.charges.set(ref, { ref, paymentId: i.paymentId, amountCents: i.amountCents, method: i.method, status: 'pending', sellerAccount: seller.accountId });
       return i.method === 'pix'

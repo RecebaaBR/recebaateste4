@@ -34,6 +34,10 @@ function globalOn(deps: Deps): boolean { return deps.env('PAYMENTS_GLOBAL_ENABLE
 
 /** Descriptografa as credenciais do negócio; renova o token OAuth se estiver perto de vencer. */
 async function sellerFor(deps: Deps, kioskId: string, conn: any, provider: PaymentProvider): Promise<Seller> {
+  if (provider.name === 'stripe') {                  // direct charges: chave da plataforma + id da conta conectada; nada a decifrar
+    if (!conn || !conn.account_id || !['connected', 'sandbox'].includes(conn.status)) throw new ProviderError('negócio sem conta Stripe', false);
+    return { accountId: String(conn.account_id), accessToken: '' };
+  }
   if (!conn || !conn.access_enc || !['connected', 'sandbox'].includes(conn.status)) throw new ProviderError('negócio sem conexão', false);
   let access = await deps.crypto.decrypt(conn.access_enc, kioskId);
   const exp = conn.expires_at ? Date.parse(conn.expires_at) : NaN;
@@ -61,7 +65,8 @@ async function reconcile(deps: Deps, paymentId: string, hintProviderPaymentId?: 
   const provider = deps.providers[row.provider];
   if (!provider) return null;
   const seller = await sellerFor(deps, row.kiosk_id, row.connection, provider);   // token do DONO da cobrança, nunca outro
-  let pp = hintProviderPaymentId ? await provider.fetchPayment(seller, hintProviderPaymentId) : null;
+  const hint = hintProviderPaymentId ?? row.provider_ref ?? undefined;
+  let pp = hint ? await provider.fetchPayment(seller, hint) : null;
   if (!pp || pp.externalReference !== paymentId) pp = await provider.searchByReference(seller, paymentId);
   if (!pp) return { result: 'not_found_at_provider', status: row.status };
   if (pp.currency !== 'BRL') { await deps.db.rpc('payment_event_log', { p_payment_id: paymentId, p_kind: 'bad_currency', p_detail: { currency: pp.currency } }); return { result: 'bad_currency', status: row.status }; }
@@ -84,8 +89,12 @@ export async function handleCreatePayment(req: Request, deps: Deps): Promise<Res
   const body = await readJson(req);
   if (!body) return json({ ok: false, error: 'bad_request' }, 400, cors);
   const kiosk = String(body.kiosk_id ?? ''), umb = String(body.umbrella ?? ''), method = String(body.method ?? ''), idem = String(body.idempotency_key ?? '');
-  if (!UUID_RE.test(kiosk) || !/^[0-9]{1,6}$/.test(umb) || !['pix', 'card'].includes(method) || !/^[A-Za-z0-9_-]{16,100}$/.test(idem)) {
+  if (!UUID_RE.test(kiosk) || !/^[0-9]{1,6}$/.test(umb) || !['pix', 'card', 'wallet'].includes(method) || !/^[A-Za-z0-9_-]{16,100}$/.test(idem)) {
     return json({ ok: false, error: 'bad_request', message: 'Requisição inválida.' }, 400, cors);
+  }
+
+  if (method === 'wallet' && (!deps.providers.stripe || !deps.env('STRIPE_PUBLISHABLE_KEY'))) {
+    return json({ ok: false, error: 'payments_unavailable', message: 'Apple Pay / Google Pay indisponível.' }, 503, cors);
   }
 
   // limite de taxa (por IP anonimizado e por negócio)
@@ -117,9 +126,12 @@ export async function handleCreatePayment(req: Request, deps: Deps): Promise<Res
     service_cents: x.service_cents, expires_at: x.expires_at, umbrella_num: x.umbrella_num, kiosk_name: x.kiosk_name,
     pix_copy_paste: x.pix_copy_paste ?? null, checkout_url: x.checkout_url ?? null, provider: x.provider,
   });
+  // carteira (Stripe): o navegador precisa do client_secret, da chave PUBLICÁVEL e do id da conta conectada (direct charges)
+  const walletExtra = (secret: string | null | undefined) => (method === 'wallet' && secret)
+    ? { client_secret: secret, publishable_key: deps.env('STRIPE_PUBLISHABLE_KEY'), stripe_account: p.connection?.account_id } : {};
 
   // repetição: devolve o que já existe (sem tokens — eles só são entregues na primeira resposta)
-  if (p.existing && p.provider_ref) return json({ ok: true, payment: view(p), existing: true }, 200, cors);
+  if (p.existing && p.provider_ref) return json({ ok: true, payment: view(p), existing: true, ...walletExtra(p.client_secret) }, 200, cors);
 
   try {
     const seller = await sellerFor(deps, kiosk, p.connection, provider);
@@ -138,12 +150,14 @@ export async function handleCreatePayment(req: Request, deps: Deps): Promise<Res
     const payload: Record<string, string> = {};
     if (ch.pixCopyPaste) payload.pix_copy_paste = ch.pixCopyPaste;
     if (ch.checkoutUrl) payload.checkout_url = ch.checkoutUrl;
+    if (ch.clientSecret) payload.client_secret = ch.clientSecret;
     const at = await deps.db.rpc('payment_attach_charge', { p_payment_id: p.payment_id, p_provider_ref: ch.providerRef, p_payload: payload });
     if (at.error) throw new Error('attach: ' + at.error.message);
     return json({
       ok: true, existing: false,
       payment: view({ ...p, status: 'pending', pix_copy_paste: ch.pixCopyPaste, checkout_url: ch.checkoutUrl }),
       ...(p.client_token ? { client_token: p.client_token, receipt_token: p.receipt_token } : {}),
+      ...walletExtra(ch.clientSecret),
     }, 200, cors);
   } catch (e) {
     deps.log?.('charge_error', { pid: p.payment_id, err: (e as Error).message.slice(0, 120) });
@@ -205,7 +219,9 @@ export async function handlePaymentWebhook(req: Request, deps: Deps): Promise<Re
   const raw = await req.text();
   if (raw.length > 20_000) return json({ ok: false }, 413);
   const url = new URL(req.url);
-  const provider = deps.providers[activeProviderName(deps)];
+  // cada provedor tem o seu endpoint: ...?provider=stripe (carteiras); sem parâmetro = provedor padrão (Pix/cartão)
+  const wanted = url.searchParams.get('provider') || activeProviderName(deps);
+  const provider = ['stripe', 'mercadopago', 'mock'].includes(wanted) ? deps.providers[wanted] : undefined;
   if (!provider) return json({ ok: false }, 503);
 
   // 1) assinatura ANTES de qualquer acesso ao banco
@@ -214,7 +230,7 @@ export async function handlePaymentWebhook(req: Request, deps: Deps): Promise<Re
 
   // 2) só nos interessa notificação de pagamento
   if (v.topic && v.topic !== 'payment') return json({ ok: true, ignored: 'topic' });
-  const pid = url.searchParams.get('pid') ?? '';
+  const pid = url.searchParams.get('pid') ?? v.paymentId ?? '';      // Stripe: metadata.pid (id opaco nosso; será revalidado na API)
   if (!UUID_RE.test(pid) || !v.providerPaymentId) return json({ ok: true, ignored: 'no_reference' });
 
   // 3) NÃO confia no corpo: consulta o provedor (com o token do dono da cobrança) e liquida de forma idempotente
@@ -239,21 +255,29 @@ export async function handleOAuth(req: Request, deps: Deps): Promise<Response> {
   const base = deps.env('PAYMENTS_APP_BASE_URL') || 'https://recebaa.com.br';
   const provider = deps.providers[activeProviderName(deps)];
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
-  if (!globalOn(deps) || !provider) return req.method === 'GET'
+  if (!globalOn(deps)) return req.method === 'GET'
     ? new Response(null, { status: 302, headers: { Location: `${base}/?pagamentos=erro` } })
     : json({ ok: false, error: 'payments_unavailable' }, 503, cors);
 
   // retorno do provedor (navegador do dono vem redirecionado): GET ?code&state
   if (req.method === 'GET') {
     const u = new URL(req.url);
-    const code = u.searchParams.get('code') ?? '', state = u.searchParams.get('state') ?? '';
+    const code = u.searchParams.get('code') ?? '', rawState = u.searchParams.get('state') ?? '';
     const bad = () => new Response(null, { status: 302, headers: { Location: `${base}/?pagamentos=erro` } });
-    if (!code || !state || code.length > 400 || state.length > 100 || !provider.oauthExchange) return bad();
+    const isStripe = rawState.startsWith('stripe.');                 // o state da Stripe leva o prefixo "stripe."
+    const state = isStripe ? rawState.slice(7) : rawState;
+    const prov = isStripe ? deps.providers.stripe : provider;
+    if (!prov || !code || !state || code.length > 400 || state.length > 100 || !prov.oauthExchange) return bad();
     const st = await deps.db.rpc('payments_oauth_consume', { p_state: state });
     if (st.error || !st.data?.found) return bad();                    // state inválido/expirado/reusado
     try {
       const kid = st.data.kiosk_id as string;
-      const t = await provider.oauthExchange(code);
+      const t = await prov.oauthExchange(code);
+      if (isStripe) {
+        // só o id da conta conectada (acct_...) é guardado; "test" no refreshToken = conta de teste
+        const sa = await deps.db.rpc('payments_store_stripe_account', { p_kiosk: kid, p_account_id: t.accountId, p_status: t.refreshToken === 'test' ? 'sandbox' : 'connected' });
+        return sa.error ? bad() : new Response(null, { status: 302, headers: { Location: `${base}/?pagamentos=conectado` } });
+      }
       const s = await deps.db.rpc('payments_store_connection', {
         p_kiosk: kid, p_provider: provider.name, p_account_id: t.accountId,
         p_access_enc: await deps.crypto.encrypt(t.accessToken, kid), p_refresh_enc: await deps.crypto.encrypt(t.refreshToken, kid),
@@ -272,6 +296,21 @@ export async function handleOAuth(req: Request, deps: Deps): Promise<Response> {
   const lim = await deps.db.rpc('payment_rate_hit', { p_bucket: 'poauth:' + (await sha256Hex(token)).slice(0, 16), p_max: 20, p_window_seconds: 600 });
   if (lim.data === false) return json({ ok: false, error: 'rate_limited' }, 429, cors);
 
+  if (action === 'start_wallet') {
+    const st = deps.providers.stripe;
+    if (!st?.oauthAuthorizeUrl) return json({ ok: false, error: 'unsupported' }, 400, cors);
+    const r = await deps.db.rpc('payments_oauth_begin', { p_token: token });
+    if (r.error) return json({ ok: false, error: 'forbidden', message: 'Apenas o responsável pelo negócio pode conectar.' }, 403, cors);
+    return json({ ok: true, url: st.oauthAuthorizeUrl('stripe.' + r.data.state) }, 200, cors);
+  }
+  if (action === 'connect_wallet_mock') {
+    if (deps.env('PAYMENTS_ALLOW_MOCK') !== '1') return json({ ok: false, error: 'forbidden' }, 403, cors);
+    const k = await deps.db.rpc('payments_owner_kiosk', { p_token: token });
+    if (k.error) return json({ ok: false, error: 'forbidden' }, 403, cors);
+    const sa = await deps.db.rpc('payments_store_stripe_account', { p_kiosk: k.data.kiosk_id, p_account_id: 'acct_mock' + String(k.data.kiosk_id).replace(/-/g, '').slice(0, 12), p_status: 'sandbox' });
+    return sa.error ? json({ ok: false }, 500, cors) : json({ ok: true }, 200, cors);
+  }
+  if (!provider) return json({ ok: false, error: 'payments_unavailable' }, 503, cors);
   if (action === 'start') {
     if (!provider.oauthAuthorizeUrl) return json({ ok: false, error: 'unsupported' }, 400, cors);
     const r = await deps.db.rpc('payments_oauth_begin', { p_token: token });
@@ -291,4 +330,23 @@ export async function handleOAuth(req: Request, deps: Deps): Promise<Response> {
     return s.error ? json({ ok: false }, 500, cors) : json({ ok: true }, 200, cors);
   }
   return json({ ok: false, error: 'bad_request' }, 400, cors);
+}
+
+// ---------------------------------------------------------------- wallet-config (chave PUBLICÁVEL da Stripe + conta conectada)
+// Só responde se as carteiras estiverem efetivamente ligadas para o negócio. Nunca devolve segredo.
+export async function handleWalletConfig(req: Request, deps: Deps): Promise<Response> {
+  const cors = corsHeaders(req, deps.env);
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
+  if (req.method !== 'POST') return json({ ok: false, error: 'method_not_allowed' }, 405, cors);
+  const off = () => json({ ok: true, enabled: false }, 200, cors);
+  if (!globalOn(deps) || !deps.providers.stripe || !deps.env('STRIPE_PUBLISHABLE_KEY')) return off();
+  const body = await readJson(req, 1024);
+  const kiosk = String(body?.kiosk_id ?? '');
+  if (!UUID_RE.test(kiosk)) return json({ ok: false, error: 'bad_request' }, 400, cors);
+  const ipHash = (await sha256Hex((deps.env('PAYMENTS_IP_SALT') || 'recebaa') + clientIp(req))).slice(0, 24);
+  const lim = await deps.db.rpc('payment_rate_hit', { p_bucket: 'pwcfg:ip:' + ipHash, p_max: 60, p_window_seconds: 600 });
+  if (lim.data === false) return json({ ok: false, error: 'rate_limited' }, 429, cors);
+  const r = await deps.db.rpc('wallet_public_config', { p_kiosk: kiosk });
+  if (r.error || !r.data?.enabled) return off();
+  return json({ ok: true, enabled: true, publishable_key: deps.env('STRIPE_PUBLISHABLE_KEY'), stripe_account: r.data.stripe_account }, 200, cors);
 }
