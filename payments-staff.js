@@ -58,6 +58,17 @@
           '<button type="button" class="rpay-sbtn" data-a="disconnect">Desconectar conta</button>';
       }
       h += '</div>';
+      // carteiras (Apple Pay / Google Pay via Stripe): só depois que os pagamentos online estiverem ligados
+      if (s.enabled) {
+        var wc = s.wallets_connection;
+        h += '<div class="m" style="margin-top:10px"><b>Apple Pay e Google Pay</b> (opcional, via Stripe). Exige conta Stripe própria conectada; o valor cai direto na sua conta.</div><div class="grid">' +
+          (wc === 'connected' ? '<span class="rpay-chip g">Stripe conectada ' + esc(s.wallets_account || '') + '</span>' : wc === 'sandbox' ? '<span class="rpay-chip y">Stripe (TESTE) ' + esc(s.wallets_account || '') + '</span>' : '<span class="rpay-chip">Stripe não conectada</span>') +
+          '<span class="rpay-chip ' + (s.wallets_enabled ? 'g' : '') + '">' + (s.wallets_enabled ? 'Carteiras ATIVAS' : 'Carteiras desligadas') + '</span></div><div class="grid">';
+        if (wc !== 'connected' && wc !== 'sandbox') h += '<button type="button" class="rpay-sbtn pri" data-a="wconnect">Conectar conta Stripe</button>';
+        else h += '<button type="button" class="rpay-sbtn ' + (s.wallets_enabled ? 'red' : 'pri') + '" data-a="wtoggle">' + (s.wallets_enabled ? 'Desligar carteiras' : 'Ligar carteiras') + '</button>' +
+          '<button type="button" class="rpay-sbtn" data-a="wdisconnect">Desconectar Stripe</button>';
+        h += '</div>';
+      }
     }
     h += '<div class="grid"><button type="button" class="rpay-sbtn dk" data-a="validate">🧾 Validar comprovante</button><button type="button" class="rpay-sbtn" data-a="list">Pagamentos recentes</button></div>';
     card.innerHTML = h;
@@ -78,7 +89,7 @@
       if (r.error) { toast('⚠️ ' + r.error.message); return reload(); }
       ST.status = r.data; P.invalidateStaffStatus && P.invalidateStaffStatus();
       var g = document.getElementById('umb-grid'); if (g) render(g);
-      toast(args.p_enabled === true ? '✅ Pagamentos online LIGADOS' : args.p_enabled === false ? '⏸️ Pagamentos online desligados' : '✅ Salvo');
+      toast(args.p_wallets_enabled === true ? '✅ Carteiras LIGADAS' : args.p_wallets_enabled === false ? '⏸️ Carteiras desligadas' : args.p_enabled === true ? '✅ Pagamentos online LIGADOS' : args.p_enabled === false ? '⏸️ Pagamentos online desligados' : '✅ Salvo');
     });
   }
 
@@ -93,6 +104,13 @@
       setSettings({ p_enabled: turnOn });
     }
     else if (a === 'disconnect') { if (confirm('Desconectar a conta de pagamentos? Os pagamentos online serão desligados.')) sb.rpc('payments_disconnect', { p_token: tok() }).then(reload); }
+    else if (a === 'wconnect') walletConnect();
+    else if (a === 'wtoggle') {
+      var on = !ST.status.wallets_enabled;
+      if (on && !confirm('Ligar Apple Pay e Google Pay?\n\nOs clientes verão o botão da carteira do celular e o dinheiro cairá direto na sua conta Stripe (taxas da Stripe se aplicam).')) return;
+      setSettings({ p_wallets_enabled: on });
+    }
+    else if (a === 'wdisconnect') { if (confirm('Desconectar a conta Stripe? As carteiras serão desligadas.')) sb.rpc('payments_disconnect_wallets', { p_token: tok() }).then(reload); }
     else if (a === 'validate') openValidate();
     else if (a === 'list') openList();
   }
@@ -106,6 +124,15 @@
       else if (j && j.error === 'unsupported') connectMock();
       else toast('⚠️ ' + ((j && j.message) || 'Não foi possível iniciar a conexão.'));
     }).catch(function () { toast('⚠️ Sem conexão.'); });
+  }
+  function walletConnect() {
+    var hdr = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+    fetch(SUPABASE_URL + '/functions/v1/payments-oauth', { method: 'POST', headers: hdr, body: JSON.stringify({ action: 'start_wallet', session_token: tok() }) })
+      .then(function (r) { return r.json(); }).then(function (j) {
+        if (j && j.ok && /^https:\/\//.test(j.url)) window.location.href = j.url;
+        else if (j && j.error === 'unsupported') return fetch(SUPABASE_URL + '/functions/v1/payments-oauth', { method: 'POST', headers: hdr, body: JSON.stringify({ action: 'connect_wallet_mock', session_token: tok() }) }).then(function () { reload(); });
+        else toast('⚠️ ' + ((j && j.message) || 'Não foi possível iniciar a conexão.'));
+      }).catch(function () { toast('⚠️ Sem conexão.'); });
   }
   function connectMock() {
     fetch(SUPABASE_URL + '/functions/v1/payments-oauth', { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }, body: JSON.stringify({ action: 'connect_mock', session_token: tok() }) })

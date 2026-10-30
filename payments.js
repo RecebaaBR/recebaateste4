@@ -138,11 +138,61 @@
       '<div class="row tot"><span>Total</span><span>' + esc(brl(q.amount_cents)) + '</span></div>' +
       (q.pending_orders ? '<div class="note">' + esc(q.pending_orders) + ' pedido(s) ainda não aceito(s) pelo atendente ficam de fora e podem ser pagos depois.</div>' : '') +
       (errMsg ? '<div class="err">' + esc(errMsg) + '</div>' : '') +
+      '<div id="rpay-wallet" class="rpay-wallet" hidden></div>' +
       '<div class="opts"><button type="button" class="rpay-btn pri" data-a="pix">Pagar com Pix</button>' +
       '<button type="button" class="rpay-btn dark" data-a="card">Pagar com cartão</button>' +
       '<button type="button" class="rpay-btn sec" data-a="close">Voltar</button></div>' +
       '<div class="note">O pagamento vai direto para ' + esc(S.kiosk.name || 'o estabelecimento') + '. O Recebaa não guarda seu dinheiro e não vê nem armazena dados do seu cartão (o cartão é digitado no ambiente seguro do provedor de pagamento). ' +
       'Ao continuar, você concorda com os <a href="/terms.html" target="_blank" rel="noopener">Termos</a> e a <a href="/privacy.html" target="_blank" rel="noopener">Política de Privacidade</a>.</div>');
+    mountWallet(q);
+  }
+
+  // ---------- carteiras (Apple Pay / Google Pay via Stripe) [pagamentos] ----------
+  // Só se o servidor disse que as carteiras estão ligadas (quote.wallets_available). O wallet.js (e, dele, o stripe.js)
+  // só é baixado neste caso, e o botão só aparece se o navegador realmente tiver a carteira.
+  function mountWallet(q) {
+    if (!q || q.wallets_available !== true) return;
+    var host = document.getElementById('rpay-wallet'); if (!host) return;
+    P.load('/wallet.js').then(function () {
+      if (!P.wallet || !document.getElementById('rpay-wallet')) return;
+      P.wallet.mount(document.getElementById('rpay-wallet'), {
+        kioskId: S.kiosk.id, amountCents: q.amount_cents,
+        create: walletCreate, paid: walletPaid, failed: walletFailed
+      });
+    }).catch(function () { /* sem carteira: Pix e cartão continuam */ });
+  }
+  // cria a cobrança no servidor (valor calculado lá) e devolve o client_secret
+  function walletCreate() {
+    if (S.busy) return Promise.reject(new Error('Aguarde'));
+    S.busy = true;
+    var key = S.idem.wallet || (S.idem.wallet = rid());
+    return fnCall('create-payment', { kiosk_id: S.kiosk.id, umbrella: Number(S.umb), method: 'wallet', idempotency_key: key }).then(function (r) {
+      S.busy = false;
+      var b = r.body || {};
+      if (!b.ok) { if (r.status >= 400 && r.status < 500) delete S.idem.wallet; throw new Error(b.message || 'Não foi possível iniciar o pagamento.'); }
+      delete S.idem.wallet;
+      var p = b.payment;
+      var rec = (b.client_token && b.receipt_token)
+        ? { pid: p.id, ct: b.client_token, rt: b.receipt_token, kiosk: S.kiosk.id, umb: String(S.umb), method: 'wallet', amount: p.amount_cents, status: 'pending', ts: Date.now() }
+        : loadRec(p.id);
+      if (!rec) throw new Error('Este pagamento já foi iniciado em outro aparelho.');
+      S.rec = rec; saveRec(rec);
+      return { clientSecret: b.client_secret, amountCents: p.amount_cents, returnUrl: location.origin + '/?kiosk=' + encodeURIComponent(S.kiosk.id) + '&umbrella=' + encodeURIComponent(S.umb) + '&rpay=' + encodeURIComponent(p.id) };
+    }, function (e) { S.busy = false; throw e; });
+  }
+  function walletPaid() {
+    modal('<h3>Confirmando seu pagamento…</h3><div class="st" id="rpay-st">⏳ Aguarde um instante.</div><div class="acts"><button type="button" class="rpay-btn sec" data-a="check">Já paguei</button></div>');
+    startPolling();
+  }
+  function walletFailed(msg) {
+    var rec = S.rec;
+    var back = function () { S.quoteAt = 0; refreshQuote(true).then(function () { openChoose(msg || 'Pagamento não concluído. Nada foi cobrado.'); }); };
+    if (!rec) return back();
+    fnCall('payment-status', { payment_id: rec.pid, client_token: rec.ct, action: 'cancel' }).then(function (r) {
+      var st = r.body && r.body.payment;
+      if (st && st.status === 'paid') return onStatus(st);
+      rec.status = (st && st.status) || 'cancelled'; saveRec(rec); back();
+    }).catch(back);
   }
 
   function start(method) {
@@ -269,6 +319,7 @@
       if (['created', 'pending'].indexOf(st.status) > -1) {
         if (st.method === 'pix' && st.pix_copy_paste) return showPay({ amount_cents: st.amount_cents, expires_at: st.expires_at, pix_copy_paste: st.pix_copy_paste });
         if (st.checkout_url) return goCheckout(st.checkout_url);
+        if (st.method === 'wallet') { return walletPaid(); }
       }
       onStatus(st);
     });

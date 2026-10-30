@@ -1,3 +1,4 @@
+import { appendFileSync } from 'node:fs'; const require_fs = m => appendFileSync('/tmp/claude-0/-home-claude/b560f117-9361-5ab3-b80f-d61c90a09e0b/scratchpad/trace.txt', m + ' ' + Date.now() + '\n');
 // E2E no navegador (Chromium/Playwright) contra o index.html REAL, com um "Supabase de mentira" que roda em PGlite
 // (migrações reais + RLS/grants reais + Edge Functions reais com o provedor MOCK). Nenhum dinheiro, nenhuma credencial.
 import { test, describe, before, after } from 'node:test';
@@ -81,8 +82,8 @@ async function sbRoute(route) {
       const name = url.pathname.split('/').pop();
       const h = { 'content-type': 'application/json', origin: ORIGIN, 'cf-connecting-ip': '10.1.1.' + (seen.length % 200) };
       const rq = new Request('https://fn.invalid/' + name, { method, headers: h, body: method === 'POST' ? req.postData() : undefined });
-      const { handleCreatePayment, handlePaymentStatus, handleOAuth } = await import('../../supabase/functions/_shared/handlers.ts');
-      const handler = { 'create-payment': handleCreatePayment, 'payment-status': handlePaymentStatus, 'payments-oauth': handleOAuth }[name];
+      const { handleCreatePayment, handlePaymentStatus, handleOAuth, handleWalletConfig } = await import('../../supabase/functions/_shared/handlers.ts');
+      const handler = { 'create-payment': handleCreatePayment, 'payment-status': handlePaymentStatus, 'payments-oauth': handleOAuth, 'wallet-config': handleWalletConfig }[name];
       const out = await handler(rq, ctx.deps);
       return route.fulfill({ status: out.status, headers: { ...CORS, 'content-type': 'application/json' }, body: await out.text() });
     }
@@ -92,10 +93,35 @@ async function sbRoute(route) {
   return route.fulfill({ status: 404, headers: CORS, body: '{}' });
 }
 
-async function newPage() {
-  const context = await browser.newContext({ viewport: { width: 420, height: 860 }, permissions: [] });
-  await context.route('**/*', route => {
+// stripe.js FALSO: imita só a superfície usada por wallet.js (Stripe(), elements(), expressCheckout, confirmPayment).
+// confirmPayment avisa o "servidor" (rota local) que simula: Stripe captura o pagamento e envia o webhook assinado.
+const FAKE_STRIPE_JS = `(function(){
+  window.__stripe = { inits: [], elementsOpts: null, ecOpts: null, confirm: null };
+  window.Stripe = function(pk, opts){ window.__stripe.inits.push({ pk: pk, opts: opts });
+    return {
+      elements: function(o){ window.__stripe.elementsOpts = o; var h = {};
+        return { submit: function(){ return Promise.resolve({}); },
+          create: function(type, co){ window.__stripe.ecOpts = { type: type, co: co };
+            return { on: function(ev, cb){ h[ev] = cb; }, destroy: function(){},
+              mount: function(el){ el.innerHTML = '<button id="fake-wallet-btn" type="button">Google Pay</button>';
+                document.getElementById('fake-wallet-btn').onclick = function(){ h.confirm({}); };
+                setTimeout(function(){ h.ready({ availablePaymentMethods: window.__fakeAvail || null }); }, 0); } }; } }; },
+      confirmPayment: function(a){ window.__stripe.confirm = { secret: a.clientSecret, redirect: a.redirect };
+        if (window.__fakeDecline) return Promise.resolve({ error: { message: 'Cartão recusado (simulado)' } });
+        return fetch('/__fake_stripe_capture', { method: 'POST', body: a.clientSecret }).then(function(){ return {}; }); } }; };
+})();`;
+
+async function newPage({ ua = null, avail = null, decline = false } = {}) {
+  const context = await browser.newContext({ viewport: { width: 420, height: 860 }, permissions: [], ...(ua ? { userAgent: ua } : {}) });
+  await context.route('**/*', async route => {
     const u = new URL(route.request().url());
+    if (u.hostname === 'js.stripe.com' && u.pathname === '/v3/') { seen.push('STRIPEJS'); return route.fulfill({ status: 200, contentType: 'text/javascript', body: FAKE_STRIPE_JS }); }
+    if (u.hostname === '127.0.0.1' && u.pathname === '/__fake_stripe_capture') {
+      const id = (route.request().postData() || '').split('_secret_')[0];
+      ctx.stripe.pay(id);
+      const r = await ctx.stripeWebhook('payment_intent.succeeded', ctx.stripe.pis.get(id));
+      return route.fulfill({ status: r.status, body: '{}' });
+    }
     if (u.hostname === SB_HOST) return sbRoute(route);
     if (u.hostname === '127.0.0.1') { seen.push('static ' + u.pathname); return route.continue(); }
     return route.abort();                  // nada de internet (fontes, CDN, pixel)
@@ -104,16 +130,17 @@ async function newPage() {
   page.on('dialog', d => d.accept());
   page.errors = [];
   page.on('pageerror', e => page.errors.push(String(e)));
+  await page.addInitScript(({ avail, decline }) => { window.__fakeAvail = avail; window.__fakeDecline = decline; }, { avail, decline });
   await page.addInitScript(() => { try { localStorage.setItem('rcb_px', '0'); localStorage.setItem('recebaa-terms-accepted', '1'); } catch (e) {} });
   return page;
 }
 const FN_CALLS = () => seen.filter(s => s.includes('/functions/v1/'));
 
-before(async () => {
+before(async () => { require_fs('before0');
   ctx = await setup();
-  server = await startStatic();
+  require_fs('setupdone'); server = await startStatic();
   base = 'http://127.0.0.1:' + server.address().port;
-  browser = await chromium.launch({ args: ['--no-sandbox'] });
+  require_fs('server'); browser = await chromium.launch({ args: ['--no-sandbox'] });
 });
 after(async () => { await browser?.close(); server?.close(); });
 
@@ -369,5 +396,95 @@ describe('flag LIGADA: Pix completo (criar -> pagar -> webhook -> comprovante QR
     await page.waitForFunction(() => /Desligado/.test(document.querySelector('#rpay-staff-card')?.textContent || ''), null, { timeout: 15000 });
     assert.equal((await ctx.pg.query('select payments_enabled from kiosks where id=$1', [kid])).rows[0].payments_enabled, false);
     assert.deepEqual(page.errors, []);
+  });
+});
+
+describe('carteiras (Apple Pay / Google Pay via Stripe): E2E com stripe.js falso e webhook assinado', () => {
+  const CHROME = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36';
+  const FIREFOX = 'Mozilla/5.0 (X11; Linux x86_64; rv:130.0) Gecko/20100101 Firefox/130.0';
+  const stripeSeen = () => seen.filter(x => x === 'STRIPEJS' || /wallet\.js|wallet-config/.test(x));
+
+  test('flag das carteiras DESLIGADA (Pix/cartão ligados): sem wallet.js, sem stripe.js, sem wallet-config e sem UI nova', async () => {
+    const { kid } = await ctx.kiosk({ name: 'Quiosque Sem Carteira' });
+    await seedOrder(ctx.pg, kid, 1, [{ q: 1, p: 20 }]);
+    require_fs('A'); seen.length = 0;
+    const page = await newPage({ ua: CHROME, avail: { googlePay: true } });
+    require_fs('B'); await openTable(page, kid, 1); require_fs('C'); await openOrdersTab(page); require_fs('D');
+    await page.click('#rpay-bar [data-a=open]'); await page.waitForSelector('#rpay-modal [data-a=pix]');
+    await page.waitForTimeout(1200);
+    assert.deepEqual(stripeSeen(), [], 'nada de Stripe: ' + stripeSeen());
+    assert.equal(await page.$('#rpay-wallet'), null);
+    assert.ok(await page.$('#rpay-modal [data-a=pix]') && await page.$('#rpay-modal [data-a=card]'), 'Pix e cartão intactos');
+    assert.deepEqual(page.errors, []);
+  });
+
+  test('navegador SEM carteira provável (Firefox): stripe.js nem é baixado e não há botão', async () => {
+    const { kid } = await ctx.kiosk({ name: 'Quiosque FF', wallets: true });
+    await seedOrder(ctx.pg, kid, 1, [{ q: 1, p: 20 }]);
+    require_fs('A'); seen.length = 0;
+    const page = await newPage({ ua: FIREFOX, avail: { googlePay: true } });
+    require_fs('B'); await openTable(page, kid, 1); require_fs('C'); await openOrdersTab(page); require_fs('D');
+    await page.click('#rpay-bar [data-a=open]'); await page.waitForSelector('#rpay-modal [data-a=pix]');
+    await page.waitForTimeout(1200);
+    assert.ok(!seen.includes('STRIPEJS'), 'stripe.js não deve ser requisitado');
+    assert.ok(!seen.some(x => /wallet-config/.test(x)));
+    assert.equal(await page.isVisible('#rpay-wallet'), false);
+  });
+
+  test('stripe.js carregado mas a carteira NÃO está disponível: o botão não aparece', async () => {
+    const { kid } = await ctx.kiosk({ name: 'Quiosque Sem Wallet', wallets: true });
+    await seedOrder(ctx.pg, kid, 1, [{ q: 1, p: 20 }]);
+    seen.length = 0;
+    const page = await newPage({ ua: CHROME, avail: null });
+    await openTable(page, kid, 1); await openOrdersTab(page);
+    await page.click('#rpay-bar [data-a=open]'); await page.waitForSelector('#rpay-modal [data-a=pix]');
+    await page.waitForFunction(() => window.__stripe && window.__stripe.inits.length === 1, null, { timeout: 15000 });
+    await page.waitForTimeout(500);
+    assert.equal(await page.isVisible('#rpay-wallet'), false, 'contêiner escondido');
+    assert.equal(await page.isVisible('#fake-wallet-btn'), false);
+  });
+
+  test('fluxo completo: botão aparece, paga, webhook assinado, comprovante em QR, validação pela equipe', async () => {
+    const { kid, tok } = await ctx.kiosk({ name: 'Quiosque Carteira', wallets: true });
+    await seedOrder(ctx.pg, kid, 1, [{ q: 2, p: 12.5, n: 'Cerveja' }, { q: 1, p: 7.5, n: 'Porção' }]);      // R$ 32,50
+    seen.length = 0;
+    const page = await newPage({ ua: CHROME, avail: { googlePay: true, applePay: false } });
+    await openTable(page, kid, 1); await openOrdersTab(page);
+    await page.click('#rpay-bar [data-a=open]');
+    await page.waitForSelector('#rpay-wallet:not([hidden]) #fake-wallet-btn', { timeout: 15000 });
+    assert.ok(seen.includes('STRIPEJS'));
+    const init = await page.evaluate(() => window.__stripe);
+    assert.equal(init.inits[0].pk, 'pk_test_FAKE_not_a_real_key');
+    assert.match(init.inits[0].opts.stripeAccount, /^acct_/, 'direct charge: conta conectada');
+    assert.deepEqual(init.elementsOpts, { mode: 'payment', amount: 3250, currency: 'brl' });
+    assert.equal(init.ecOpts.co.paymentMethods.link, 'never');
+    await page.click('#fake-wallet-btn');
+    await page.waitForSelector('#rpay-modal .ok', { timeout: 20000 });
+    assert.match(await page.textContent('#rpay-modal'), /Pagamento confirmado[\s\S]*R\$ 32,50/);
+    const conf = await page.evaluate(() => window.__stripe.confirm);
+    assert.equal(conf.redirect, 'if_required');
+    const pi = [...ctx.stripe.pis.values()].at(-1);
+    assert.equal(pi.amount, 3250); assert.ok(conf.secret.startsWith(pi.id));
+    const rt = await page.evaluate(() => JSON.parse(localStorage.getItem(Object.keys(localStorage).filter(k => k.startsWith('rpay:v1:p:'))[0])).rt);
+    const scanner = await newPage();
+    await scanner.goto(`${base}/#comprovante=${rt}`);
+    await scanner.waitForSelector('#rpay-receipt .card.good', { timeout: 15000 });
+    const v = await ctx.anon.rpc('verify_payment_receipt', { p_token: tok, p_receipt: rt });
+    assert.equal(v.data.valid, true); assert.equal(v.data.first_validation, true);
+    assert.deepEqual(page.errors, []);
+  });
+
+  test('carteira recusada: pagamento cancelado, volta às opções com aviso, nada cobrado', async () => {
+    const { kid } = await ctx.kiosk({ name: 'Quiosque Recusa', wallets: true });
+    await seedOrder(ctx.pg, kid, 1, [{ q: 1, p: 25 }]);
+    const page = await newPage({ ua: CHROME, avail: { googlePay: true }, decline: true });
+    await openTable(page, kid, 1); await openOrdersTab(page);
+    await page.click('#rpay-bar [data-a=open]');
+    await page.waitForSelector('#fake-wallet-btn', { state: 'visible', timeout: 15000 });
+    await page.click('#fake-wallet-btn');
+    await page.waitForSelector('#rpay-modal .err', { timeout: 20000 });
+    assert.match(await page.textContent('#rpay-modal .err'), /recusado/);
+    assert.equal((await ctx.pg.query(`select status from payments where kiosk_id=$1`, [kid])).rows[0].status, 'cancelled');
+    assert.equal([...ctx.stripe.pis.values()].at(-1).status, 'canceled');
   });
 });
