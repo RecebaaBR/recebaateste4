@@ -368,12 +368,16 @@
     sb.rpc = function (name, args) {
       var pr = orig(name, args);
       if (name === 'add_order_items') {
-        Promise.resolve(pr).then(function (r) {
+        // o retorno do supabase-js é um "thenable" que DISPARA a requisição a cada .then(): consumir uma única vez
+        // e devolver a promessa já resolvida, senão o RPC rodaria duas vezes (itens duplicados)
+        var real = Promise.resolve(pr);
+        real.then(function (r) {
           if (r && !r.error) setTimeout(function () {
             S.quoteAt = 0;
             refreshQuote(true).then(function () { if (scopeHold() && !(S.quote && S.quote.live_payment) && !document.getElementById('rpay-modal')) openChoose(); });
           }, 400);
         }).catch(function () { /* ok */ });
+        return real;
       }
       return pr;
     };

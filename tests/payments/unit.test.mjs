@@ -147,7 +147,7 @@ describe('Mercado Pago: consulta e status', () => {
 describe('higiene do repositório', () => {
   const files = [];
   (function walk(d) { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) { if (!['node_modules', '.git'].includes(e.name)) walk(p); } else files.push(p); } })(path.join(repo, 'supabase/functions'));
-  for (const f of ['payments-boot.js', 'payments.js', 'payments-staff.js', 'mesa-qr.js', 'wallet.js', 'docs/pagamentos.md', 'supabase/migrations/20261031_payments_v1.sql', 'supabase/migrations/20261101_payments_wallets_v1.sql']) if (fs.existsSync(path.join(repo, f))) files.push(path.join(repo, f));
+  for (const f of ['payments-boot.js', 'payments.js', 'payments-staff.js', 'payments-panel.js', 'mesa-qr.js', 'wallet.js', 'docs/pagamentos.md', 'supabase/migrations/20261031_payments_v1.sql', 'supabase/migrations/20261101_payments_wallets_v1.sql', 'supabase/migrations/20261102_payments_panel_v1.sql']) if (fs.existsSync(path.join(repo, f))) files.push(path.join(repo, f));
   test('nenhum segredo/chave de provedor no código novo', () => {
     const bad = /(APP_USR-[0-9a-f-]{8,}|TEST-[0-9a-f]{12,}|sk_live_|sk_test_|whsec_[A-Za-z0-9]{10,}|-----BEGIN [A-Z ]*PRIVATE|service_role['"]?\s*[:=]\s*['"]eyJ)/;
     for (const f of files) assert.ok(!bad.test(fs.readFileSync(f, 'utf8')), f);
@@ -164,11 +164,43 @@ describe('higiene do repositório', () => {
   test('Edge Functions leem segredos só de Deno.env (nada hardcoded) e o front não referencia segredos', () => {
     const idx = fs.readFileSync(path.join(repo, 'supabase/functions/create-payment/index.ts'), 'utf8');
     assert.ok(/Deno\.env\.get/.test(idx));
-    for (const f of ['payments-boot.js', 'payments.js', 'payments-staff.js', 'mesa-qr.js', 'wallet.js']) {
+    for (const f of ['payments-boot.js', 'payments.js', 'payments-staff.js', 'payments-panel.js', 'mesa-qr.js', 'wallet.js']) {
       const p = path.join(repo, f); if (!fs.existsSync(p)) continue;
       const s = fs.readFileSync(p, 'utf8');
       assert.ok(!/(access_token|MP_CLIENT|SERVICE_ROLE|webhook_secret|STRIPE_SECRET|STRIPE_WEBHOOK|sk_(live|test)_|whsec_|card_number|cardNumber|security_code|cvv)/i.test(s), f + ' menciona segredo/cartão');
     }
+  });
+});
+
+describe('painel de pagamentos: higiene do front', () => {
+  const FILES = ['payments.js', 'payments-staff.js', 'payments-panel.js', 'wallet.js', 'mesa-qr.js'];
+  test('sem onclick/eval/document.write inline: eventos por data-a + delegação', () => {
+    for (const f of FILES) {
+      const s = fs.readFileSync(path.join(repo, f), 'utf8');
+      assert.ok(!/\bonclick\s*=/.test(s), f + ' usa onclick inline');
+      assert.ok(!/\beval\(|new Function\(|document\.write\(/.test(s), f + ' usa eval/document.write');
+    }
+  });
+  test('todo texto vindo do banco no painel passa por esc() (campos de texto livre)', () => {
+    const s = fs.readFileSync(path.join(repo, 'payments-panel.js'), 'utf8');
+    for (const field of ['p.manual_note', 'p.marked_by_name', 'pk.name', 'pk.city', 'p.umbrella_num', 'e.by_name']) {
+      const re = new RegExp('(?<!esc\\()' + field.replace('.', '\\.') + '(?![\\w])', 'g');
+      for (const m of s.matchAll(re)) {
+        const line = s.slice(s.lastIndexOf('\n', m.index) + 1, s.indexOf('\n', m.index));
+        if (line.includes('toFixed(2)')) continue;            // linha do CSV (não é HTML)
+        assert.ok(line.includes('esc('), field + ' sem esc() em: ' + line.trim().slice(0, 120));
+      }
+    }
+  });
+  test('CSV: células com = + - @ ganham apóstrofo (sem injeção de fórmula)', () => {
+    const s = fs.readFileSync(path.join(repo, 'payments-panel.js'), 'utf8');
+    assert.ok(/\^\[=\+\\-@\\t\\r\]/.test(s));
+  });
+  test('a chave Pix nunca vai para o log de eventos nem para o payload do BR Code de leitura pública', () => {
+    const mig = fs.readFileSync(path.join(repo, 'supabase/migrations/20261102_payments_panel_v1.sql'), 'utf8');
+    for (const m of mig.matchAll(/pay_event\([^;]*pix_key[^;]*;/g)) assert.ok(!/key_value|p_value|\bv\b/.test(m[0].replace(/'pix_key_(set|cleared)'/, '')), m[0]);
+    assert.ok(/alter table public\.kiosk_pix_keys enable row level security/i.test(mig));
+    assert.ok(/revoke all on public\.kiosk_pix_keys from public, anon, authenticated/i.test(mig));
   });
 });
 

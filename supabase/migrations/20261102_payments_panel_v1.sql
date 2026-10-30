@@ -817,6 +817,35 @@ begin
   perform private.pay_event(null, p_kiosk_id, case when p_allowed then 'platform_allowed' else 'platform_blocked' end, null);
 end $$;
 
+-- ---------- sinal público "há alguma forma de pagamento disponível" ----------
+-- O app do cliente só baixa o módulo de pagamentos quando kiosks.payments_enabled OU kiosks.pay_ui for true.
+-- pay_ui nasce false e é mantido por gatilhos a partir de pay_methods(): com tudo desligado, nada de pagamento é carregado nem requisitado.
+alter table public.kiosks add column if not exists pay_ui boolean not null default false;
+
+create or replace function private.pay_ui_sync(p_kiosk uuid) returns void language plpgsql security definer set search_path = public, extensions as $$
+declare v boolean;
+begin
+  v := coalesce((private.pay_methods(p_kiosk)->>'any')::boolean, false);
+  update public.kiosks set pay_ui = v where id = p_kiosk and pay_ui is distinct from v;
+end $$;
+
+create or replace function private.tg_pay_ui() returns trigger language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if tg_table_name = 'kiosks' then perform private.pay_ui_sync(new.id);
+  elsif tg_op = 'DELETE' then perform private.pay_ui_sync(old.kiosk_id);
+  else perform private.pay_ui_sync(new.kiosk_id); end if;
+  return null;
+end $$;
+
+drop trigger if exists trg_pay_ui on public.kiosk_payments;
+create trigger trg_pay_ui after insert or update on public.kiosk_payments for each row execute function private.tg_pay_ui();
+drop trigger if exists trg_pay_ui on public.kiosk_pix_keys;
+create trigger trg_pay_ui after insert or update or delete on public.kiosk_pix_keys for each row execute function private.tg_pay_ui();
+drop trigger if exists trg_pay_ui on public.kiosks;
+create trigger trg_pay_ui after update of payments_enabled, wallets_enabled, is_active, blocked on public.kiosks for each row execute function private.tg_pay_ui();
+
+select private.pay_ui_sync(kiosk_id) from public.kiosk_payments;
+
 
 -- ---------- permissões ----------
 revoke execute on function

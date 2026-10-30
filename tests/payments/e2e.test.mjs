@@ -487,3 +487,203 @@ describe('carteiras (Apple Pay / Google Pay via Stripe): E2E com stripe.js falso
     assert.equal([...ctx.stripe.pis.values()].at(-1).status, 'canceled');
   });
 });
+
+// ============ aba "Pagamentos" do dono, Pix direto e modo obrigatório (Tarefa 3) ============
+import { ownerToken, VALID_CPF, clientOrder, seedProduct } from './helpers.mjs';
+import { parseBrCode } from '../../supabase/functions/_shared/brcode.ts';
+
+async function mountPanel(page, kid, tok, { waiter = false } = {}) {
+  await page.goto(`${base}/`);
+  await page.evaluate(({ kid, tok, waiter }) => {
+    window._sessToken = tok; if (waiter) window._isWaiterMode = true;
+    const g = document.createElement('div'); g.id = 'umb-grid'; g.innerHTML = '<div id="first"></div>'; document.body.appendChild(g);
+    window.RecebaaPay.afterUmbrellas(g, [{ id: 'a', number: 1, is_active: true }], { id: kid, name: 'Q', business_type: 'quiosque' });
+  }, { kid, tok, waiter });
+}
+const jc = (page, sel) => page.evaluate(s => document.querySelector(s).click(), sel);   // o dashboard real fica oculto fora do login: clique via DOM
+const PP = '#rpay-pp';
+async function openPanel(page, tab) {
+  await page.waitForSelector('#rpay-panel-nav', { state: 'attached', timeout: 15000 });
+  await jc(page, '#rpay-panel-nav');
+  await page.waitForSelector(PP + ' .tabs', { state: 'attached', timeout: 15000 });
+  if (tab) { await jc(page, `${PP} [data-a=tab][data-t=${tab}]`); await page.waitForTimeout(150); }
+}
+const wsel = (page, sel, t = 15000) => page.waitForSelector(sel, { state: 'attached', timeout: t });
+
+describe('Aba Pagamentos (dono)', () => {
+  test('negócio NÃO liberado / garçom: a aba não existe', async () => {
+    const off = await ctx.kiosk({ enable: false, invite: false, name: 'Q Off' });
+    const p1 = await newPage(); await mountPanel(p1, off.kid, off.tok); await p1.waitForSelector('#rpay-mesaqr-card'); await p1.waitForTimeout(800);
+    assert.equal(await p1.$('#rpay-panel-nav'), null);
+    assert.equal(await p1.$('#kpage-pagamentos'), null);
+    const on = await ctx.kiosk({ name: 'Q On' });
+    const wid = (await ctx.pg.query(`insert into waiters(kiosk_id,name,email,password) values ($1,'Gabriel','g@x.com','x') returning id`, [on.kid])).rows[0].id;
+    const wtok = await ownerToken(ctx.pg, on.kid, 'waiter', wid);
+    const p2 = await newPage(); await mountPanel(p2, on.kid, wtok); await p2.waitForSelector('#rpay-mesaqr-card'); await p2.waitForTimeout(800);
+    assert.equal(await p2.$('#rpay-panel-nav'), null, 'garçom não vê a aba');
+    const p3 = await newPage(); await mountPanel(p3, on.kid, on.tok, { waiter: true }); await p3.waitForSelector('#rpay-mesaqr-card'); await p3.waitForTimeout(800);
+    assert.equal(await p3.$('#rpay-panel-nav'), null, 'modo garçom não monta');
+    // o servidor também recusa o garçom
+    const r = await ctx.anon.rpc('payments_panel_get', { p_token: wtok });
+    assert.ok(r.error);
+    assert.deepEqual(p1.errors.concat(p2.errors, p3.errors), []);
+  });
+
+  test('Ajustes: motivos na tela, chave Pix validada no servidor, liga Pix direto, modo obrigatório e volta para opcional com 1 clique', async () => {
+    const { kid, tok } = await ctx.kiosk({ enable: false, name: 'Q Ajustes' });
+    const page = await newPage(); await mountPanel(page, kid, tok); await openPanel(page);
+    await wsel(page, PP + ' [data-a=sw][data-k=pix_direct]');
+    const txt = await page.textContent(PP);
+    assert.match(txt, /Conecte sua conta do Mercado Pago/);
+    assert.match(txt, /Cadastre sua chave Pix/);
+    assert.match(txt, /Ligue ao menos uma forma de pagamento/);
+    assert.equal(await page.getAttribute(`${PP} [data-a=sw][data-k=pix_direct]`, 'disabled') !== null, true);
+    assert.equal(await page.getAttribute(`${PP} [data-a=mode][data-v=required]`, 'disabled') !== null, true);
+    // chave inválida: o servidor recusa e nada é gravado
+    await jc(page, `${PP} [data-a=tab][data-t=contas]`);
+    await wsel(page, '#rpay-kv');
+    await page.evaluate(() => { document.getElementById('rpay-kv').value = '111.111.111-11'; document.getElementById('rpay-kn').value = 'Quiosque Ajustes'; document.getElementById('rpay-kc').value = 'Natal'; });
+    await jc(page, `${PP} [data-a=pixsave]`); await page.waitForTimeout(600);
+    assert.equal((await ctx.pg.query('select count(*)::int n from kiosk_pix_keys where kiosk_id=$1', [kid])).rows[0].n, 0);
+    await page.evaluate(v => { document.getElementById('rpay-kv').value = v; }, VALID_CPF);
+    await jc(page, `${PP} [data-a=pixsave]`);
+    await page.waitForFunction(() => /Chave atual/.test(document.getElementById('rpay-pp').textContent), null, { timeout: 15000 });
+    const row = (await ctx.pg.query('select * from kiosk_pix_keys where kiosk_id=$1', [kid])).rows[0];
+    assert.equal(row.key_value, '52998224725'); assert.equal(row.city, 'NATAL');
+    assert.ok(!(await page.textContent(PP)).includes('52998224725'), 'a chave aparece mascarada');
+    // liga o Pix direto e exige pagamento
+    await jc(page, `${PP} [data-a=tab][data-t=ajustes]`); await page.waitForTimeout(150);
+    assert.equal(await page.getAttribute(`${PP} [data-a=sw][data-k=pix_direct]`, 'disabled'), null);
+    await jc(page, `${PP} [data-a=sw][data-k=pix_direct]`);
+    await page.waitForFunction(() => document.querySelector('#rpay-pp [data-a=sw][data-k=pix_direct]')?.textContent === 'Desligar', null, { timeout: 15000 });
+    assert.equal((await ctx.pg.query('select pix_direct_enabled from kiosk_payments where kiosk_id=$1', [kid])).rows[0].pix_direct_enabled, true);
+    await jc(page, `${PP} [data-a=mode][data-v=required]`);
+    await wsel(page, PP + ' .ban.y');
+    assert.match(await page.textContent(PP + ' .ban.y'), /obrigatório por pedido/);
+    assert.equal((await ctx.pg.query('select checkout_mode from kiosk_payments where kiosk_id=$1', [kid])).rows[0].checkout_mode, 'required');
+    await jc(page, `${PP} .ban.y [data-a=mode][data-v=optional]`);
+    await page.waitForFunction(() => !document.querySelector('#rpay-pp .ban.y'), null, { timeout: 15000 });
+    assert.equal((await ctx.pg.query('select checkout_mode from kiosk_payments where kiosk_id=$1', [kid])).rows[0].checkout_mode, 'optional');
+    const ev = (await ctx.pg.query(`select kind from payment_events where kiosk_id=$1 and kind in ('config_changed','pix_key_set') `, [kid])).rows.map(r => r.kind);
+    assert.ok(ev.includes('config_changed') && ev.includes('pix_key_set'), 'auditoria gravada');
+    assert.ok(!JSON.stringify((await ctx.pg.query('select detail from payment_events where kiosk_id=$1', [kid])).rows).includes('52998224725'), 'chave fora do log');
+    assert.deepEqual(page.errors, []);
+  });
+
+  test('bloqueio do admin: painel avisa e não deixa religar', async () => {
+    const { kid, tok } = await ctx.kiosk({ pixDirect: true, name: 'Q Bloq' });
+    await ctx.pg.query('update kiosk_payments set platform_blocked = true, invited = false where kiosk_id = $1', [kid]);
+    const r = await ctx.anon.rpc('payments_panel_set', { p_token: tok, p_patch: { pix_direct: true } });
+    assert.match(r.error.message, /Bloqueado pela plataforma/);
+  });
+
+  test('Pix direto ponta a ponta: pedido em espera -> BR Code (decodificado) -> baixa manual pelo painel -> pedido liberado -> comprovante', async () => {
+    const { kid, tok } = await ctx.kiosk({ enable: false, pixDirect: true, mode: 'required', name: 'Q Direto' });
+    const pc = await seedProduct(ctx.pg, kid, 'Cerveja', 12.5), pp = await seedProduct(ctx.pg, kid, 'Porção', 7.5);
+    const placed = await clientOrder(ctx, kid, 1, [{ id: pc, q: 2, p: 12.5, n: 'Cerveja' }, { id: pp, q: 1, p: 7.5, n: 'Porção' }]);      // R$ 32,50
+    assert.ok(!placed.error && !placed.itemsError, JSON.stringify(placed));
+    const held = (await ctx.pg.query('select payment_hold, status from orders where kiosk_id=$1', [kid])).rows[0];
+    assert.equal(held.payment_hold, true);
+    const staffView = await ctx.anon.rpc('read_orders', { p_token: tok });
+    assert.equal(staffView.data.length, 0, 'invisível para a equipe enquanto não paga');
+    const page = await newPage(); await openTable(page, kid, 1);
+    await openOrdersTab(page);
+    await page.waitForSelector('#rpay-bar [data-a=open]', { timeout: 15000 });
+    assert.match(await page.textContent('#rpay-bar'), /aguardando pagamento/i);
+    await page.click('#rpay-bar [data-a=open]');
+    await page.waitForSelector('#rpay-modal [data-a=pixdirect]');
+    assert.equal(await page.$('#rpay-modal [data-a=pix]'), null, 'Pix online/cartão não ligados: só o direto');
+    await page.click('#rpay-modal [data-a=pixdirect]');
+    await page.waitForSelector('#rpay-code', { timeout: 15000 });
+    const code = await page.inputValue('#rpay-code');
+    const d = parseBrCode(code);
+    assert.ok(d.ok && d.crcOk); assert.equal(d.fields['54'], '32.50'); assert.equal(d.merchant['01'], '52998224725');
+    assert.ok(await page.$('#rpay-modal .qr svg'));
+    // ainda segue em espera
+    assert.equal((await ctx.anon.rpc('read_orders', { p_token: tok })).data.length, 0);
+    // o dono baixa pelo painel
+    const owner = await newPage(); await mountPanel(owner, kid, tok); await openPanel(owner, 'lista');
+    await wsel(owner, PP + ' tr.clk');
+    assert.match(await owner.textContent(PP + ' #rpay-tbl'), /Pix direto[\s\S]*Pendente/);
+    await jc(owner, PP + ' tr.clk');
+    await wsel(owner, '#rpay-pm [data-a=mmark]');
+    await jc(owner, '#rpay-pm [data-a=mmark]');
+    await owner.waitForFunction(() => /Pago/.test(document.querySelector('#rpay-pp #rpay-tbl')?.textContent || ''), null, { timeout: 15000 });
+    const pay = (await ctx.pg.query('select status, manual, marked_by_role, marked_at from payments where kiosk_id=$1', [kid])).rows[0];
+    assert.equal(pay.status, 'paid'); assert.equal(pay.manual, true); assert.equal(pay.marked_by_role, 'kiosk'); assert.ok(pay.marked_at);
+    // cliente vê o comprovante; pedido foi liberado para a equipe
+    await page.waitForSelector('#rpay-modal .ok', { timeout: 20000 });
+    assert.match(await page.textContent('#rpay-modal'), /Pagamento confirmado[\s\S]*R\$ 32,50/);
+    assert.match(await page.textContent('#rpay-modal'), /Pedido enviado ao atendente/);
+    const after = (await ctx.anon.rpc('read_orders', { p_token: tok })).data;
+    assert.equal(after.length, 1); assert.equal(after[0].status, 'pending');
+    // detalhe: baixa registrada com autor; reemitir comprovante gera outro QR e invalida o antigo
+    await jc(owner, PP + ' tr.clk'); await wsel(owner, '#rpay-pm [data-a=mreissue]');
+    assert.match(await owner.textContent('#rpay-pm'), /Baixa manual[\s\S]*Responsável/);
+    const oldRt = await page.evaluate(() => JSON.parse(localStorage.getItem(Object.keys(localStorage).filter(k => k.startsWith('rpay:v1:p:'))[0])).rt);
+    await jc(owner, '#rpay-pm [data-a=mreissue]');
+    await wsel(owner, '#rpay-pm .qr svg');
+    const link = await owner.inputValue('#rpay-pm input[readonly]');
+    assert.match(link, /#comprovante=[0-9a-f]{48}$/); assert.ok(!link.endsWith(oldRt));
+    const v = await ctx.anon.rpc('verify_payment_receipt', { p_token: tok, p_receipt: oldRt });
+    assert.equal(v.data.valid, false, 'QR antigo invalidado');
+    assert.deepEqual(page.errors.concat(owner.errors), []);
+  });
+
+  test('modo obrigatório: ao confirmar o pedido o pagamento abre sozinho; sem forma de pagamento, volta para opcional (nada fica preso)', async () => {
+    const { kid, tok } = await ctx.kiosk({ enable: false, pixDirect: true, mode: 'required', name: 'Q Auto' });
+    const prod = await seedProduct(ctx.pg, kid, 'Cerveja', 12.5);
+    const page = await newPage(); await openTable(page, kid, 2);
+    await page.waitForFunction(() => window.RecebaaPay && document.getElementById('tab-orders'), null, { timeout: 15000 });
+    await page.evaluate(() => document.getElementById('tab-orders').click());
+    await page.waitForTimeout(1500);            // quote carregada (checkout_mode=required)
+    await page.evaluate(async ({ kid, prod }) => {
+      const o = await sb.rpc('place_order', { p_order: { kiosk_id: kid, umbrella_num: '2', order_number: 0, customer_name: 'Maria', status: 'pending', total: 12.5, idempotency_key: 'auto-' + Date.now() }, p_items: null });
+      await sb.rpc('add_order_items', { p_items: [{ order_id: o.data.id, product_id: prod, product_name: 'Cerveja', quantity: 1, unit_price: 12.5 }] });
+    }, { kid, prod });
+    await page.waitForSelector('#rpay-modal [data-a=pixdirect]', { timeout: 20000 });
+    assert.match(await page.textContent('#rpay-modal'), /só será enviado ao atendente depois que o pagamento for confirmado/);
+    assert.equal((await ctx.pg.query('select count(*)::int n from order_items i join orders o on o.id=i.order_id where o.kiosk_id=$1', [kid])).rows[0].n, 1, 'item gravado uma única vez');
+    assert.match(await page.textContent('#rpay-modal'), /R\$ 12,50/);
+    // dono desliga o Pix direto: nenhum método disponível => modo volta a ser opcional e o pedido em espera segue seu caminho
+    const r = await ctx.anon.rpc('payments_panel_set', { p_token: tok, p_patch: { pix_direct: false } });
+    assert.equal(r.data.mode_reset, true); assert.equal(r.data.checkout_mode, 'optional');
+  });
+
+  test('lista: filtros (mesa, método, estado conferir), totais, paginação e CSV sem injeção de fórmula', async () => {
+    const { kid, tok } = await ctx.kiosk({ pixDirect: true, name: 'Q Lista' });
+    for (const [u, amt] of [[1, 10], [2, 20], [3, 30]]) {
+      await seedOrder(ctx.pg, kid, u, [{ q: 1, p: amt }]);
+      const r = await ctx.create({ kiosk_id: kid, umbrella: u, method: u === 3 ? 'pix_direct' : 'pix_direct', idempotency_key: idem() });
+      assert.equal(r.status, 200);
+    }
+    const ids = (await ctx.pg.query('select id, umbrella_num from payments where kiosk_id=$1 order by umbrella_num', [kid])).rows;
+    await ctx.anon.rpc('payment_manual_settle', { p_token: tok, p_payment_id: ids[0].id });
+    await ctx.pg.query(`update payments set needs_review = true where id = $1`, [ids[1].id]);
+    const page = await newPage(); await mountPanel(page, kid, tok); await openPanel(page, 'lista');
+    await wsel(page, PP + ' tr.clk');
+    assert.equal((await page.$$(PP + ' tr.clk')).length, 3);
+    assert.match(await page.textContent(PP + ' .tot'), /R\$ 10,00[\s\S]*Para conferir/);
+    await page.evaluate(() => { document.getElementById('rpay-f-st').value = 'review'; });
+    await jc(page, PP + ' [data-a=filter]');
+    await page.waitForFunction(() => document.querySelectorAll('#rpay-pp tr.clk').length === 1, null, { timeout: 15000 });
+    assert.match(await page.textContent(PP + ' tr.clk'), /conferir/);
+    await jc(page, PP + ' [data-a=clear]'); await jc(page, PP + ' [data-a=tab][data-t=lista]');
+    await page.evaluate(() => { document.getElementById('rpay-f-umb').value = '3'; });
+    await jc(page, PP + ' [data-a=filter]');
+    await page.waitForFunction(() => document.querySelectorAll('#rpay-pp tr.clk').length === 1, null, { timeout: 15000 });
+    // resolver "conferir"
+    await jc(page, PP + ' [data-a=clear]'); await page.waitForFunction(() => document.querySelectorAll('#rpay-pp tr.clk').length === 3, null, { timeout: 15000 });
+    const csv = await page.evaluate(() => [window.RecebaaPay.panel._csvCell('=HYPERLINK("x")'), window.RecebaaPay.panel._csvCell('+1'), window.RecebaaPay.panel._csvCell('ok "q"')]);
+    assert.deepEqual(csv, ['"\'=HYPERLINK(""x"")"', '"\'+1"', '"ok ""q"""']);
+    const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 15000 }), jc(page, PP + ' [data-a=csv]')]);
+    const body = fs.readFileSync(await dl.path(), 'utf8');
+    assert.equal(body.trim().split(/\r?\n/).length, 4);
+    // cancelar cobrança pendente pelo detalhe
+    await jc(page, PP + ' tr.clk'); await wsel(page, '#rpay-pm [data-a=mcancel]');
+    await jc(page, '#rpay-pm [data-a=mcancel]');
+    await page.waitForFunction(() => !document.getElementById('rpay-pm'), null, { timeout: 15000 });
+    assert.equal((await ctx.pg.query(`select count(*)::int n from payments where kiosk_id=$1 and status='cancelled'`, [kid])).rows[0].n, 1);
+    assert.deepEqual(page.errors, []);
+  });
+});

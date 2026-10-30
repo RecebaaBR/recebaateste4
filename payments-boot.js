@@ -42,7 +42,7 @@
   P.clientReady = function (kiosk, umb) {
     try {
       // desligado por padrão: sem a flag do negócio não carrega nada e não faz nenhuma requisição
-      if (!(kiosk && kiosk.id && kiosk.id !== 'demo' && kiosk.payments_enabled === true)) return;
+      if (!(kiosk && kiosk.id && kiosk.id !== 'demo' && (kiosk.payments_enabled === true || kiosk.pay_ui === true))) return;
       P.load('/payments.js').then(function () { if (P.client) P.client.init(kiosk, umb); }).catch(noop);
     } catch (e) { /* nunca quebra o app */ }
   };
