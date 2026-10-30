@@ -317,3 +317,67 @@ Se a limpeza em paralelo mudar esses trechos, basta reaplicar as 5 linhas acima.
 
 ### 12.8 O que NÃO foi testado (precisa de credenciais/ambiente reais)
 API real da Stripe (formatos, erros, `Idempotency-Key`, busca por metadata), Connect/OAuth reais para conta brasileira, Apple Pay e Google Pay reais (inclui a verificação de domínio), `stripe.js`/Express Checkout reais (os testes usam um `stripe.js` falso), CSP e Permissions-Policy em navegador real e na Vercel, entrega real de webhooks e janela de tolerância com relógio real, Edge Functions no runtime Deno.
+
+---
+
+## 13. Aba "Pagamentos" do dono, Pix direto e checkout obrigatório por pedido (Tarefa 3)
+
+Tudo continua **desligado por padrão** e atrás das mesmas duas travas (chave geral `PAYMENTS_GLOBAL_ENABLED` + liberação por negócio pelo admin). Nada foi aplicado, publicado ou conectado. Migração nova (NÃO aplicada): `supabase/migrations/20261102_payments_panel_v1.sql` (depois da `20261101`).
+
+### 13.1 O que existe
+- **Aba "💳 Pagamentos"** no painel do dono (arquivo novo `payments-panel.js`; carregado só para o **dono** de um negócio liberado; garçom e modo garçom não montam a aba, e o servidor também recusa). Três seções:
+  1. **Ajustes**: chaves geral / Pix online / cartão / Apple Pay-Google Pay / Pix direto, cada uma com o **motivo** quando não pode ser ligada (não liberado, bloqueado pela plataforma, sem conta conectada, sem chave Pix, chave geral global desligada); modo de checkout; aviso e botão de 1 clique "Voltar para opcional agora"; contagem de pedidos em espera; últimas alterações (auditoria).
+  2. **Contas e Pix**: estado das conexões (Mercado Pago e Stripe: só estado e final da conta, nunca tokens), conectar/desconectar, e cadastro da **chave Pix** (CPF, CNPJ, e-mail, telefone ou aleatória + beneficiário + cidade), validada **no servidor** (dígitos verificadores de CPF/CNPJ, formatos, tamanhos EMV).
+  3. **Pagamentos**: lista paginada (25/página, máx. 100 por chamada) com filtros (período, mesa, método, estado incl. **conferir**), totais (pagos, pendentes, para conferir), detalhe e ações do dono (cancelar cobrança pendente, marcar como conferido, reemitir comprovante com QR novo e invalidação do antigo, "Marcar como pago" do Pix direto) e **CSV** (células iniciadas por `= + - @` recebem apóstrofo).
+- **Pix direto**: o cliente paga para a **chave Pix do próprio negócio** por um BR Code estático (EMV, CRC16/CCITT-FALSE, GUI `br.gov.bcb.pix`, valor sempre calculado no banco, identificador `RCB`+20 hex ligando o Pix à cobrança). Como não há gateway, **não há confirmação automática**: a equipe (dono ou garçom) usa **"Marcar como pago"** (na lista da equipe ou no painel). Fica gravado **quem** (papel e nome) e **quando** (`marked_by*`, `marked_at`, observação opcional) e o cliente recebe o **mesmo comprovante em QR**. A baixa é idempotente; se feita depois de expirar/cancelar, o pagamento vai para "conferir" (`late_payment`).
+- **Modos de checkout** (`kiosk_payments.checkout_mode`): `optional` (padrão; comportamento de sempre) e `required` ("obrigatório por pedido").
+
+### 13.2 Modelo de dados (migração `20261102`)
+- `kiosk_payments`: `checkout_mode` ('optional'|'required'), `pix_online_enabled`, `card_enabled` (padrão true), `pix_direct_enabled` (padrão **false**).
+- `kiosk_pix_keys` (`kiosk_id` PK, tipo, chave normalizada, beneficiário, cidade, quem/quando): RLS ligada, **tudo revogado** de `public/anon/authenticated`; só funções `SECURITY DEFINER` com sessão de dono leem/gravam. A chave **não** vai para o log de eventos.
+- `payments`: `manual`, `marked_by`, `marked_by_role`, `marked_by_name`, `marked_at`, `manual_note`, `review_resolved_at/by`, `hold_scope`; método `pix_direct` e provedor `direct` aceitos.
+- `orders`: `payment_hold`, `hold_expires_at`, `hold_released_at`. **Sem alterar o enum `order_status`.**
+- `kiosks.pay_ui` (padrão false, mantido por gatilhos a partir de `pay_methods()`): sinal público "há alguma forma de pagamento disponível". Necessário porque o Pix direto funciona **sem** `payments_enabled` (sem gateway); sem ele o app do cliente nunca carregaria o módulo. Com tudo desligado `pay_ui=false` e **nenhum** script/requisição de pagamento é feito (coberto por teste).
+- Funções (todas por token de sessão, `SECURITY DEFINER`, `search_path` fixo, rate limit e auditoria sem segredos): `payments_panel_get/set` (lista branca de campos), `pix_key_set/clear`, `payments_search`, `payment_detail`, `payment_owner_cancel`, `payment_review_resolve`, `payment_reissue_receipt`, `payment_manual_settle`. `payment_prepare` (6 argumentos, só `service_role`) substitui a de 5.
+- `admin_set_payments_access(false)` agora também desliga o Pix direto e volta o modo para opcional; `payments_panel_set` rejeita religar negócio bloqueado.
+- Disponibilidade efetiva por método = `pay_methods(kiosk)`: liberação + não bloqueado + chave geral do negócio + conexão + chave do método (+ chave Pix cadastrada para o direto). O servidor aplica isso **em cada criação de pagamento**, não só na tela.
+
+### 13.3 Modo "obrigatório por pedido" (pedido em espera)
+1. Com `checkout_mode='required'` e ao menos um método disponível, `place_order` cria o pedido **retido** (`payment_hold=true`, expira em 30 min). Retido = **invisível** para equipe/admin (`read_orders` filtra), **sem evento em tempo real** (sem alerta sonoro/visual) e fora da conta da mesa.
+2. O app do cliente detecta o fim de `add_order_items` e **abre o pagamento sozinho** (também há o botão "Pagar e enviar pedido" na aba de pedidos). Texto: "Seu pedido só será enviado ao atendente depois que o pagamento for confirmado".
+3. O valor é **sempre** o dos itens no banco (preço mínimo por produto conferido no servidor; valor do cliente ignorado).
+4. Pagamento confirmado (webhook, ou baixa manual do Pix direto) => `hold_release`: o pedido deixa de ser retido, **gera o evento de inserção normal** e só então a equipe vê/ouve. Cada pagamento cobre só os pedidos retidos da mesa naquele momento (`hold_scope`).
+5. Expirou sem pagar => descartado (soft: `status='cancelled'`, retenção mantida; nunca chega à equipe).
+6. Falha segura: se o gateway/Edge cair, o cliente vê o erro e "Seu pedido ainda NÃO foi enviado ao atendente" com opções de tentar de novo, escolher outra forma ou **Cancelar pedido**; nada vai para a equipe sem pagamento. O dono volta para **opcional com 1 clique** (e o servidor volta sozinho para opcional se nenhuma forma de pagamento ficar disponível: `mode_reset`).
+
+### 13.4 Casos de borda (decisões tomadas)
+- **Pagamento tardio** (pago depois de expirar/cancelar): marcado `late_payment` + `needs_review`; o pedido retido descartado **não** é ressuscitado automaticamente; o dono decide (conferir/estornar fora do sistema).
+- **Valor divergente** (webhook com valor diferente): vai para `needs_review`; pedido não é liberado automaticamente.
+- **Cliente fechou a página**: o pagamento segue no servidor; ao reabrir a mesa, o app retoma (`resume`) ou o dono baixa manualmente. O pedido só é liberado quando houver baixa/webhook.
+- **Trocar para opcional com pedidos em espera**: continuam em espera até pagar ou expirar (não "vazam" para a equipe). Ficam visíveis ao cliente; o dono vê a contagem.
+- **Cancelar pelo dono** só afeta o banco (cobrança pendente); se o cliente já pagou no banco dele o Pix direto, o dono resolve com "Marcar como pago" ou estorna fora do sistema.
+- **Estorno depois de liberado**: o pedido já está com a equipe; estorno/disputa tratados como já eram (revisão), sem desfazer pedido.
+- **Pix direto**: o BR Code estático usa campo 01 = `11`; **não foi validado em apps de banco reais** (só decodificado e conferido o CRC nos testes). Não há confirmação automática: risco de baixa errada pela equipe (por isso grava autor e hora) e de o cliente informar que pagou sem ter pago.
+- **Limites**: até 9 pedidos retidos por mesa; edição de itens trava depois da liberação ou com pagamento ativo; reemissão de comprovante invalida o QR anterior e zera a contagem de validações.
+- **Achado em produção (a confirmar no banco real)**: `place_order` da `20261030` falha com `service_amount` nulo se a coluna for NOT NULL sem default (os testes reconstruídos exigiram `coalesce(service_amount,0)`, o que a nova migração já faz).
+
+### 13.5 O que o dono precisa fazer / decidir
+1. Aplicar `20261102_payments_panel_v1.sql` primeiro em **branch/teste** (depois da `20261101`); republicar `create-payment payment-status payment-webhook payments-oauth` (arquivos compartilhados novos: `brcode.ts`, `direct.ts`). Nada disso foi feito neste PR.
+2. Decidir se o **Pix direto** entra no piloto (é o único método sem gateway) e quem na equipe pode dar baixa (hoje dono e garçom). Testar o BR Code no app de **pelo menos 2 bancos** antes de ligar.
+3. Decidir se oferece o modo **obrigatório** (recomendo começar só no `optional` e testar o obrigatório em um negócio piloto com acompanhamento).
+4. Rever Termos/Privacidade (13.6) antes de qualquer ativação real.
+5. Rollback: dono "Voltar para opcional" / desligar chaves; plataforma `PAYMENTS_GLOBAL_ENABLED=0` ou bloquear o negócio no admin (desliga tudo e volta para opcional).
+
+### 13.6 Termos e Privacidade (NÃO alterados neste PR)
+- **Chave Pix do negócio** (CPF/CNPJ/e-mail/telefone) é dado pessoal do dono, armazenada pelo Recebaa e **exibida ao cliente dentro do copia-e-cola/QR**: informar finalidade (receber pagamentos), base legal, que é visível a quem pagar e que o dono pode removê-la a qualquer momento (`pix_key_clear`).
+- **Baixa manual**: registramos nome do atendente (ou "Responsável"), papel, data/hora e observação livre (até 200 caracteres); informar finalidade (prova da conferência) e retenção. Orientar a **não digitar dados pessoais** do cliente na observação.
+- Termos: no Pix direto o Recebaa **não intermedia nem confirma** o pagamento; a confirmação é do estabelecimento. No modo obrigatório, explicar que o pedido só é enviado após o pagamento e que pedidos não pagos em 30 minutos são descartados.
+
+### 13.7 Âncoras no `index.html`
+**Nenhuma nova.** A aba se injeta sozinha na cadeia já existente `afterUmbrellas` (âncora 5 da seção 10) -> `mesa-qr.js` -> `payments-staff.js` -> `payments-panel.js`, inserindo o botão logo após "Relatórios" e a página `#kpage-pagamentos` após `#kpage-reports`. O modo obrigatório abre o pagamento envolvendo `sb.rpc('add_order_items')` dentro de `payments.js` (zero mudanças no `index.html`). Só dependemos dos ids `#kiosk-dash`, `#kpage-reports` e de `kPage()`; se a limpeza do PR #36 renomear isso, ajustar `mount()` em `payments-panel.js`.
+- Dentro de `payments-boot.js` o app do cliente passa a carregar o módulo se `kiosk.payments_enabled === true` **ou** `kiosk.pay_ui === true`.
+
+### 13.8 Testes novos (PGlite com as migrações reais + handlers + Chromium)
+`panel.test.mjs` (banco: painel, chave Pix, lista/filtros/totais, ações, modo obrigatório, retenção/liberação/expiração, permissões), `direct.test.mjs` (BR Code/CRC16, create-payment direto, baixa manual, obrigatório ponta a ponta), E2E da aba no navegador (aba ausente para não liberado/garçom, motivos na tela, chave Pix inválida/válida, ligar Pix direto e modo obrigatório, voltar a opcional com 1 clique, pedido em espera -> BR Code decodificado -> baixa pelo painel -> pedido liberado -> comprovante, abertura automática do pagamento, filtros/CSV/cancelamento) e higiene (sem `onclick` inline, `esc()` nos textos do banco, anti-injeção no CSV, chave fora do log). O fixture `baseline.sql` ganhou o gatilho `trg_order_number` (numeração de pedidos de produção).
+- **Bug real evitado**: o retorno de `sb.rpc()` do supabase-js dispara a requisição a cada `.then()`; o observador do `add_order_items` consome uma única vez (teste confere item gravado 1x).
+- **Não testável sem credenciais**: BR Code em apps de banco reais; Mercado Pago/Stripe reais; migração no banco real; Edge Functions em Deno; Realtime; navegadores móveis reais.
