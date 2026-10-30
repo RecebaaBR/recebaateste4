@@ -59,6 +59,13 @@
 
   // ---------- estado ----------
   var S = { kiosk: null, umb: null, quote: null, quoteAt: 0, rec: null, tick: null, clock: null, ticks: 0, busy: false, idem: {}, loading: false };
+  // modo de checkout OBRIGATÓRIO: pedidos retidos aguardam o pagamento; a cobrança é só deles (hold) e o valor vem do servidor
+  function scopeHold() { var q = S.quote; return !!(q && q.held && q.held.count > 0); }
+  function amounts(q) {
+    if (q && q.held && q.held.count > 0) return { sub: q.held.subtotal_cents, svc: q.held.service_cents, total: q.held.amount_cents };
+    return { sub: q ? q.subtotal_cents : 0, svc: q ? q.service_cents : 0, total: q ? q.amount_cents : 0 };
+  }
+  var LABELS = { pix: 'Pix', card: 'Cartão', wallet: 'Carteira', pix_direct: 'Pix direto' };
   function word() { return (S.kiosk && S.kiosk.business_type === 'bar_restaurante') ? 'Mesa' : 'Guarda-sol'; }
 
   function refreshQuote(force) {
@@ -68,6 +75,7 @@
     S.loading = true;
     return sb.rpc('payment_quote', { p_kiosk: S.kiosk.id, p_umbrella: String(S.umb) }).then(function (r) {
       S.quote = (r && r.data) || null; S.quoteAt = Date.now(); S.loading = false;
+      watchOrders();
       renderBar();
     }).catch(function () { S.loading = false; });
   }
@@ -83,8 +91,12 @@
     var paid = rec && rec.status === 'paid' ? rec : null;
     var live = q.live_payment;
     var html = '';
-    if (q.amount_cents > 0 && !live) {
-      html = '<div class="t"><b>' + esc(brl(q.amount_cents)) + '</b>Pague agora direto no celular (Pix ou cartão)' +
+    var heldQ = q.held && q.held.count > 0 ? q.held : null;
+    if (heldQ && !live) {
+      html = '<div class="t"><b>Pedido aguardando pagamento</b>' + esc(brl(heldQ.amount_cents)) + '<br><small>Seu pedido só é enviado ao atendente depois do pagamento.</small></div>' +
+        '<button type="button" class="rpay-btn pri" data-a="open">Pagar e enviar pedido</button><button type="button" class="rpay-btn sec" data-a="holdcancel">Cancelar pedido</button>';
+    } else if (q.amount_cents > 0 && !live) {
+      html = '<div class="t"><b>' + esc(brl(q.amount_cents)) + '</b>Pague agora direto no celular' +
         (q.pending_orders ? '<br><small>' + esc(q.pending_orders) + ' pedido(s) aguardando aceite não entram na conta.</small>' : '') + '</div>' +
         '<button type="button" class="rpay-btn pri" data-a="open">💳 Pagar agora</button>';
     } else if (live) {
@@ -109,6 +121,8 @@
     else if (a === 'close') closeModal();
     else if (a === 'pix') start('pix');
     else if (a === 'card') start('card');
+    else if (a === 'pixdirect') start('pix_direct');
+    else if (a === 'holdcancel') holdCancel();
     else if (a === 'copy') copyCode();
     else if (a === 'check') checkNow();
     else if (a === 'cancel') cancelPay();
@@ -130,18 +144,24 @@
 
   function openChoose(errMsg) {
     stopTimers();
-    var q = S.quote;
-    if (!q || !q.enabled || !(q.amount_cents > 0)) { toast('Não há consumo aceito para pagar agora.'); return; }
-    modal('<h3>Pagar a conta · ' + esc(word()) + ' ' + esc(S.umb) + '</h3><div class="sub">' + esc(S.kiosk.name || '') + '</div>' +
-      '<div class="row"><span>Consumo</span><span>' + esc(brl(q.subtotal_cents)) + '</span></div>' +
-      (q.service_cents > 0 ? '<div class="row"><span>Serviço (' + esc(q.service_percent) + '%)</span><span>' + esc(brl(q.service_cents)) + '</span></div>' : '') +
-      '<div class="row tot"><span>Total</span><span>' + esc(brl(q.amount_cents)) + '</span></div>' +
-      (q.pending_orders ? '<div class="note">' + esc(q.pending_orders) + ' pedido(s) ainda não aceito(s) pelo atendente ficam de fora e podem ser pagos depois.</div>' : '') +
-      (errMsg ? '<div class="err">' + esc(errMsg) + '</div>' : '') +
-      (q.wallets_available === true ? '<div id="rpay-wallet" class="rpay-wallet" hidden></div>' : '') +
-      '<div class="opts"><button type="button" class="rpay-btn pri" data-a="pix">Pagar com Pix</button>' +
-      '<button type="button" class="rpay-btn dark" data-a="card">Pagar com cartão</button>' +
-      '<button type="button" class="rpay-btn sec" data-a="close">Voltar</button></div>' +
+    var q = S.quote, a = amounts(q), hold = scopeHold();
+    if (!q || !q.enabled || !(a.total > 0)) { toast('Não há consumo aceito para pagar agora.'); return; }
+    var m = q.methods || { pix: true, card: true, wallet: !!q.wallets_available, pix_direct: false };
+    var btns = '';
+    if (m.pix) btns += '<button type="button" class="rpay-btn pri" data-a="pix">Pagar com Pix</button>';
+    if (m.card) btns += '<button type="button" class="rpay-btn dark" data-a="card">Pagar com cartão</button>';
+    if (m.pix_direct) btns += '<button type="button" class="rpay-btn ' + (m.pix ? 'sec' : 'pri') + '" data-a="pixdirect">Pix direto <small>(o atendente confirma)</small></button>';
+    if (!btns && !m.wallet) btns = '<div class="err">Nenhuma forma de pagamento está disponível agora. ' + (hold ? 'Seu pedido ainda NÃO foi enviado: cancele e chame o atendente.' : 'Chame o atendente.') + '</div>';
+    modal('<h3>' + (hold ? 'Pagar para enviar o pedido' : 'Pagar a conta') + ' · ' + esc(word()) + ' ' + esc(S.umb) + '</h3><div class="sub">' + esc(S.kiosk.name || '') + '</div>' +
+      (hold ? '<div class="note" style="margin:0 0 8px"><b>Seu pedido só será enviado ao atendente depois que o pagamento for confirmado.</b></div>' : '') +
+      '<div class="row"><span>Consumo</span><span>' + esc(brl(a.sub)) + '</span></div>' +
+      (a.svc > 0 ? '<div class="row"><span>Serviço (' + esc(q.service_percent) + '%)</span><span>' + esc(brl(a.svc)) + '</span></div>' : '') +
+      '<div class="row tot"><span>Total</span><span>' + esc(brl(a.total)) + '</span></div>' +
+      (!hold && q.pending_orders ? '<div class="note">' + esc(q.pending_orders) + ' pedido(s) ainda não aceito(s) pelo atendente ficam de fora e podem ser pagos depois.</div>' : '') +
+      (errMsg ? '<div class="err">' + esc(errMsg) + (hold ? ' Seu pedido ainda NÃO foi enviado ao atendente.' : '') + '</div>' : '') +
+      (m.wallet ? '<div id="rpay-wallet" class="rpay-wallet" hidden></div>' : '') +
+      '<div class="opts">' + btns +
+      (hold ? '<button type="button" class="rpay-btn sec" data-a="close">Voltar</button><button type="button" class="rpay-btn sec" data-a="holdcancel">Cancelar pedido</button>' : '<button type="button" class="rpay-btn sec" data-a="close">Voltar</button>') + '</div>' +
       '<div class="note">O pagamento vai direto para ' + esc(S.kiosk.name || 'o estabelecimento') + '. O Recebaa não guarda seu dinheiro e não vê nem armazena dados do seu cartão (o cartão é digitado no ambiente seguro do provedor de pagamento). ' +
       'Ao continuar, você concorda com os <a href="/terms.html" target="_blank" rel="noopener">Termos</a> e a <a href="/privacy.html" target="_blank" rel="noopener">Política de Privacidade</a>.</div>');
     mountWallet(q);
@@ -151,12 +171,12 @@
   // Só se o servidor disse que as carteiras estão ligadas (quote.wallets_available). O wallet.js (e, dele, o stripe.js)
   // só é baixado neste caso, e o botão só aparece se o navegador realmente tiver a carteira.
   function mountWallet(q) {
-    if (!q || q.wallets_available !== true) return;
+    if (!q || !(q.wallets_available === true || (q.methods && q.methods.wallet === true))) return;
     var host = document.getElementById('rpay-wallet'); if (!host) return;
     P.load('/wallet.js').then(function () {
       if (!P.wallet || !document.getElementById('rpay-wallet')) return;
       P.wallet.mount(document.getElementById('rpay-wallet'), {
-        kioskId: S.kiosk.id, amountCents: q.amount_cents,
+        kioskId: S.kiosk.id, amountCents: amounts(q).total,
         create: walletCreate, paid: walletPaid, failed: walletFailed
       });
     }).catch(function () { /* sem carteira: Pix e cartão continuam */ });
@@ -166,14 +186,14 @@
     if (S.busy) return Promise.reject(new Error('Aguarde'));
     S.busy = true;
     var key = S.idem.wallet || (S.idem.wallet = rid());
-    return fnCall('create-payment', { kiosk_id: S.kiosk.id, umbrella: Number(S.umb), method: 'wallet', idempotency_key: key }).then(function (r) {
+    return fnCall('create-payment', { kiosk_id: S.kiosk.id, umbrella: Number(S.umb), method: 'wallet', idempotency_key: key, hold: scopeHold() }).then(function (r) {
       S.busy = false;
       var b = r.body || {};
       if (!b.ok) { if (r.status >= 400 && r.status < 500) delete S.idem.wallet; throw new Error(b.message || 'Não foi possível iniciar o pagamento.'); }
       delete S.idem.wallet;
       var p = b.payment;
       var rec = (b.client_token && b.receipt_token)
-        ? { pid: p.id, ct: b.client_token, rt: b.receipt_token, kiosk: S.kiosk.id, umb: String(S.umb), method: 'wallet', amount: p.amount_cents, status: 'pending', ts: Date.now() }
+        ? { pid: p.id, ct: b.client_token, rt: b.receipt_token, kiosk: S.kiosk.id, umb: String(S.umb), method: 'wallet', amount: p.amount_cents, status: 'pending', hold: scopeHold(), ts: Date.now() }
         : loadRec(p.id);
       if (!rec) throw new Error('Este pagamento já foi iniciado em outro aparelho.');
       S.rec = rec; saveRec(rec);
@@ -198,25 +218,26 @@
   function start(method) {
     if (S.busy) return;
     S.busy = true;
-    var key = S.idem[method] || (S.idem[method] = rid());
+    var hold = scopeHold(), ik = method + (hold ? ':h' : '');
+    var key = S.idem[ik] || (S.idem[ik] = rid());
     modal('<h3>Preparando pagamento…</h3><div class="st">Aguarde um instante.</div>');
-    fnCall('create-payment', { kiosk_id: S.kiosk.id, umbrella: Number(S.umb), method: method, idempotency_key: key }).then(function (r) {
+    fnCall('create-payment', { kiosk_id: S.kiosk.id, umbrella: Number(S.umb), method: method, idempotency_key: key, hold: hold }).then(function (r) {
       S.busy = false;
       var b = r.body || {};
       if (!b.ok) {
-        if (r.status >= 400 && r.status < 500) delete S.idem[method];   // erro definitivo: próxima tentativa usa chave nova
+        if (r.status >= 400 && r.status < 500) delete S.idem[ik];   // erro definitivo: próxima tentativa usa chave nova
         openChoose(b.message || 'Não foi possível iniciar o pagamento. Tente novamente.');
         return;
       }
-      delete S.idem[method];
+      delete S.idem[ik];
       var p = b.payment;
       var rec = (b.client_token && b.receipt_token)
-        ? { pid: p.id, ct: b.client_token, rt: b.receipt_token, kiosk: S.kiosk.id, umb: String(S.umb), method: method, amount: p.amount_cents, status: 'pending', ts: Date.now() }
+        ? { pid: p.id, ct: b.client_token, rt: b.receipt_token, kiosk: S.kiosk.id, umb: String(S.umb), method: method, amount: p.amount_cents, status: 'pending', hold: hold, ts: Date.now() }
         : loadRec(p.id);
       if (!rec) { openChoose('Este pagamento já foi iniciado em outro aparelho. Aguarde ele expirar ou chame o atendente.'); return; }
       S.rec = rec; saveRec(rec);
       if (method === 'card' && p.checkout_url) { goCheckout(p.checkout_url); return; }
-      showPay(p);
+      showPay(Object.assign({ method: method }, p));
     }).catch(function () { S.busy = false; openChoose('Sem conexão. Verifique a internet e tente de novo.'); });
   }
 
@@ -230,15 +251,15 @@
   function showPay(p) {
     var code = p.pix_copy_paste || '';
     P.loadQr().then(function () {
-      modal('<h3>Pague com Pix</h3><div class="sub">' + esc(S.kiosk.name || '') + ' · ' + esc(word()) + ' ' + esc(S.umb) + '</div>' +
+      modal('<h3>Pague com Pix' + (p.method === 'pix_direct' ? ' direto' : '') + '</h3><div class="sub">' + esc(S.kiosk.name || '') + ' · ' + esc(word()) + ' ' + esc(S.umb) + '</div>' +
         '<div class="row tot"><span>Total</span><span>' + esc(brl(p.amount_cents)) + '</span></div>' +
         '<div class="qr">' + (code ? P.qrSvg(code, 220) : '') + '</div>' +
-        '<div class="note" style="margin-top:0">Abra o app do seu banco, escolha Pix e leia o QR Code ou use o “copia e cola”.</div>' +
+        '<div class="note" style="margin-top:0">Abra o app do seu banco, escolha Pix e leia o QR Code ou use o “copia e cola”.' + (p.method === 'pix_direct' ? '<br><b>Este Pix vai direto para a conta do estabelecimento. Depois de pagar, o atendente confirma o recebimento e esta tela atualiza sozinha.</b>' : '') + '</div>' +
         '<textarea id="rpay-code" readonly aria-label="Código Pix copia e cola"></textarea>' +
         '<div class="acts"><button type="button" class="rpay-btn pri" data-a="copy">📋 Copiar código Pix</button>' +
         '<button type="button" class="rpay-btn sec" data-a="check">Já paguei</button>' +
         '<button type="button" class="rpay-btn sec" data-a="cancel">Cancelar / trocar forma de pagamento</button></div>' +
-        '<div class="st" id="rpay-st">⏳ Aguardando pagamento… <span id="rpay-left"></span></div>');
+        '<div class="st" id="rpay-st">' + (p.method === 'pix_direct' ? '⏳ Aguardando o atendente confirmar o pagamento…' : '⏳ Aguardando pagamento…') + ' <span id="rpay-left"></span></div>');
       var ta = document.getElementById('rpay-code'); if (ta) ta.value = code;
       startClock(p.expires_at);
       startPolling();
@@ -317,12 +338,45 @@
       if (!st || !st.found) { toast('Pagamento não encontrado.'); return; }
       if (st.status === 'paid') return onStatus(st);
       if (['created', 'pending'].indexOf(st.status) > -1) {
-        if (st.method === 'pix' && st.pix_copy_paste) return showPay({ amount_cents: st.amount_cents, expires_at: st.expires_at, pix_copy_paste: st.pix_copy_paste });
+        if ((st.method === 'pix' || st.method === 'pix_direct') && st.pix_copy_paste) return showPay({ method: st.method, amount_cents: st.amount_cents, expires_at: st.expires_at, pix_copy_paste: st.pix_copy_paste });
         if (st.checkout_url) return goCheckout(st.checkout_url);
         if (st.method === 'wallet') { return walletPaid(); }
       }
       onStatus(st);
     });
+  }
+
+  // ---------- modo obrigatório: cancelar o pedido retido, abrir o checkout assim que o pedido é enviado ----------
+  function holdCancel() {
+    if (!confirm('Cancelar o pedido que ainda não foi pago?')) return;
+    sb.rpc('read_orders', { p_token: null, p_kiosk: S.kiosk.id, p_umbrella: String(S.umb), p_filters: [], p_order: 'created_at desc', p_limit: 50, p_items: false }).then(function (r) {
+      var rows = (r && r.data) || [];
+      var held = rows.filter(function (o) { return o.payment_hold && !o.hold_released_at && o.status === 'pending'; });
+      return Promise.all(held.map(function (o) { return sb.rpc('client_cancel_order', { p_order_id: o.id }); }));
+    }).then(function () {
+      toast('Pedido cancelado.'); stopTimers();
+      var m = document.getElementById('rpay-modal'); if (m) m.remove();
+      S.quoteAt = 0; refreshQuote(true);
+    }).catch(function () { toast('Não foi possível cancelar agora.'); });
+  }
+  // Sem alterar o index.html: observa o envio dos itens do pedido (add_order_items) e, no modo obrigatório, abre o pagamento na hora.
+  var watching = false;
+  function watchOrders() {
+    if (watching || !S.quote || S.quote.checkout_mode !== 'required' || typeof sb === 'undefined' || typeof sb.rpc !== 'function') return;
+    watching = true;
+    var orig = sb.rpc.bind(sb);
+    sb.rpc = function (name, args) {
+      var pr = orig(name, args);
+      if (name === 'add_order_items') {
+        Promise.resolve(pr).then(function (r) {
+          if (r && !r.error) setTimeout(function () {
+            S.quoteAt = 0;
+            refreshQuote(true).then(function () { if (scopeHold() && !(S.quote && S.quote.live_payment) && !document.getElementById('rpay-modal')) openChoose(); });
+          }, 400);
+        }).catch(function () { /* ok */ });
+      }
+      return pr;
+    };
   }
 
   // ---------- comprovante (QR) ----------
@@ -332,7 +386,7 @@
       '<div style="text-align:center;font-size:26px;font-weight:800;margin:6px 0">' + esc(brl(st.amount_cents != null ? st.amount_cents : rec.amount)) + '</div>' +
       '<div class="sub" style="text-align:center">' + esc(st.kiosk_name || rec.kname || '') + ' · ' + esc(word()) + ' ' + esc(rec.umb) + ' · ' + esc(dhm(st.paid_at || rec.paid_at)) + '</div>' +
       '<div class="qr">' + P.qrSvg(receiptUrl(rec.rt), 230) + '</div>' +
-      '<div class="note" style="text-align:center;margin-top:0"><b>Mostre este QR ao atendente.</b> Ele confirma no sistema que o pagamento foi feito. Dica: tire uma captura de tela.</div>';
+      (rec.hold ? '<div class="note" style="text-align:center"><b>Pedido enviado ao atendente.</b></div>' : '') + '<div class="note" style="text-align:center;margin-top:0"><b>Mostre este QR ao atendente.</b> Ele confirma no sistema que o pagamento foi feito. Dica: tire uma captura de tela.</div>';
   }
   function showReceiptInModal(st) {
     var rec = S.rec;

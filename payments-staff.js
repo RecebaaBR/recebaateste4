@@ -153,6 +153,7 @@
       if (a === 'close') closeModal();
       else if (a === 'check') doVerify(document.getElementById('rpay-in').value);
       else if (a === 'scan') scan();
+      else if (a === 'mark') markPaid(t.getAttribute('data-id'));
     });
     document.body.appendChild(m);
     return m;
@@ -211,7 +212,17 @@
     }).catch(function () { toast('⚠️ Não foi possível abrir a câmera.'); });
   }
 
+  var METHOD = { pix: 'Pix', card: 'Cartão', wallet: 'Carteira', pix_direct: 'Pix direto' };
   var LABEL = { paid: ['Pago', 'g'], pending: ['Aguardando', 'y'], expired: ['Expirou', ''], failed: ['Falhou', 'r'], cancelled: ['Cancelado', ''], refunded: ['Estornado', 'r'] };
+  // baixa MANUAL do Pix direto (equipe): registra quem marcou e quando; o servidor confere o negócio e a sessão
+  function markPaid(id) {
+    if (!id || !confirm('Confirma que o Pix já caiu na conta do estabelecimento?\n\nA baixa fica registrada com o seu nome e a hora.')) return;
+    sb.rpc('payment_manual_settle', { p_token: tok(), p_payment_id: id }).then(function (r) {
+      if (r.error) { toast('⚠️ ' + r.error.message); return; }
+      toast(r.data && r.data.result === 'already_paid' ? 'Este pagamento já estava baixado.' : '✅ Pagamento baixado');
+      openList();
+    });
+  }
   function openList() {
     modal('<h3 style="margin:0 0 8px">Pagamentos recentes</h3><div id="rpay-list" class="m">Carregando…</div><div style="margin-top:12px"><button type="button" class="rpay-sbtn" data-a="close">Fechar</button></div>');
     function load() {
@@ -221,8 +232,8 @@
         if (!rows.length) { el.textContent = 'Nenhum pagamento online ainda.'; return; }
         el.innerHTML = '<table><tr><th>Hora</th><th>Mesa</th><th>Valor</th><th>Situação</th></tr>' + rows.map(function (p) {
           var l = LABEL[p.status] || [p.status, ''];
-          return '<tr><td>' + esc(dhm(p.paid_at || p.created_at)) + '</td><td>' + esc(p.umbrella_num) + '</td><td>' + esc(brl(p.amount_cents)) + ' · ' + (p.method === 'pix' ? 'Pix' : 'Cartão') + '</td><td><span class="rpay-chip ' + l[1] + '">' + esc(l[0]) + '</span>' +
-            (p.validated_at ? ' <span class="rpay-chip g">baixa</span>' : '') + ((p.late_payment || p.needs_review) ? ' <span class="rpay-chip r">conferir</span>' : '') + '</td></tr>';
+          return '<tr><td>' + esc(dhm(p.paid_at || p.created_at)) + '</td><td>' + esc(p.umbrella_num) + '</td><td>' + esc(brl(p.amount_cents)) + ' · ' + esc(METHOD[p.method] || p.method) + '</td><td><span class="rpay-chip ' + l[1] + '">' + esc(l[0]) + '</span>' +
+            (p.validated_at ? ' <span class="rpay-chip g">baixa</span>' : '') + ((p.method === 'pix_direct' && (p.status === 'pending' || p.status === 'expired')) ? ' <button type="button" class="rpay-sbtn pri" data-a="mark" data-id="' + esc(p.id) + '">Marcar como pago</button>' : '') + ((p.late_payment || p.needs_review) ? ' <span class="rpay-chip r">conferir</span>' : '') + '</td></tr>';
         }).join('') + '</table>';
       });
     }
@@ -233,6 +244,8 @@
     mount: function (grid, kiosk, status) {
       ST.kiosk = kiosk; ST.status = status;
       injectCss(); render(grid);
+      // painel completo "Pagamentos" (aba própria) só para o dono de negócio liberado
+      if (status && status.role === 'kiosk' && status.available) P.load('/payments-panel.js').then(function () { if (P.panel) P.panel.mount(status); }).catch(function () { /* ok */ });
     }
   };
 })();
