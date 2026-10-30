@@ -304,7 +304,7 @@ describe('flag LIGADA: Pix completo (criar -> pagar -> webhook -> comprovante QR
     const dec = jsQR(Uint8ClampedArray.from(px), 460, 460);
     assert.equal(dec.data, `${base}/#comprovante=${rt}`);
     assert.match(rt, /^[0-9a-f]{48}$/);
-    assert.ok(!/Quiosque|Maria|32|mesa/i.test(dec.data.replace(base, '')));
+    assert.ok(!/Quiosque|Maria|32|mesa/i.test(dec.data.replace(base, '').replace(rt, '')));      // o token hex aleatório pode conter "32" por acaso: testa só o restante do link;
 
     // quem escaneia (sem login) vê a verificação pública; token inválido não valida
     const scanner = await newPage();
