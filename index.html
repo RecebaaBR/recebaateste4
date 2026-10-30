@@ -1,6 +1,4 @@
-<!DOCTYPE htm
-
-        l>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -498,6 +496,16 @@ tr:hover td{background:var(--sand-50)}
 @keyframes cloudFloat1{0%{transform:translateX(0)}100%{transform:translateX(calc(100vw + 350px))}}
 @keyframes cloudFloat2{0%{transform:translateX(0)}100%{transform:translateX(calc(100vw + 450px))}}
 @keyframes cloudFloat3{0%{transform:translateX(0)}100%{transform:translateX(calc(-100vw - 450px))}}
+
+/* ── Compatibilidade com o modo padrão (DOCTYPE correto) ─────────────────────
+   Antes a página rodava em quirks mode. No modo padrão, linhas que só têm
+   elementos inline pequenos passam a ter a altura do "strut" do pai, e
+   max-height em % sem pai de altura definida deixa de valer. As regras abaixo
+   devolvem exatamente o layout anterior. */
+.textarea{display:block}                      /* sem folga de linha abaixo do textarea */
+#login-forgot-wrap{font-size:12.5px}          /* link "Esqueci minha senha" (mesmo font-size do link) */
+.recebaa-footer span{display:block}           /* 2a linha do rodapé (Privacidade · Termos) */
+.auth-logo img{transform:scale(.8)}           /* era max-height:80% resolvido pelo quirks */
 </style>
 <!-- EmailJS SDK + inicialização -->
 <script src="/vendor/emailjs-4.4.1.min.js"></script>
@@ -780,6 +788,12 @@ tr:hover td{background:var(--sand-50)}
 @media (prefers-reduced-motion:reduce){
   .lpx .order-pop,.lpx .op-bell{animation:none}
 }
+</style>
+<style id="lpx-doctype-compat">
+/* Mesmo ajuste de modo padrão, só para o mockup do celular e o card de QR da landing */
+.lpx .ph-top span{display:block}
+.lpx .ph-item small{display:block}
+.lpx .viz-qr b{display:block}
 </style>
 
   <main>
@@ -4526,7 +4540,7 @@ function openBillModal(){
     names.forEach(function(name){
       var pct = total > 0 ? Math.round(byName[name]/total*100) : 0;
       resumoHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9">'
-        +'<div><span style="font-size:13px">👤 '+esc(name)+'</span>'
+        +'<div style="font-size:13px"><span style="font-size:13px">👤 '+esc(name)+'</span>'
         +'<span style="font-size:11px;color:#94a3b8;margin-left:6px">'+pct+'%</span></div>'
         +'<span style="font-size:13px;font-weight:600">'+fmt(byName[name])+'</span>'
         +'</div>';
@@ -5009,10 +5023,10 @@ function openKioskSettingsModal(){
     +'<div style="border-top:1px solid #f1f5f9;padding-top:14px">'
     +'<label style="font-size:12.5px;font-weight:600;color:#334155;display:block;margin-bottom:4px">🖼️ Logo do negócio</label>'
     +'<div style="font-size:11.5px;color:#94a3b8;margin-bottom:8px">Aparece no menu do seu painel. Formatos aceitos: JPG ou PNG, até 2MB.</div>'
-    +(currentLogo ? '<div style="margin-bottom:8px"><img src="'+esc(currentLogo)+'" style="max-width:120px;max-height:80px;border-radius:8px;border:1px solid var(--sand-100)"/><div style="font-size:11px;color:#94a3b8;margin-top:4px">Logo atual</div></div>' : '<div style="font-size:11.5px;color:#b45309;background:#fffbeb;padding:6px 10px;border-radius:6px;margin-bottom:8px">Nenhum logo próprio cadastrado ainda.</div>')
+    +(currentLogo ? '<div style="margin-bottom:8px"><img src="'+esc(currentLogo)+'" style="display:block;max-width:120px;max-height:80px;border-radius:8px;border:1px solid var(--sand-100)"/><div style="font-size:11px;color:#94a3b8;margin-top:4px">Logo atual</div></div>' : '<div style="font-size:11.5px;color:#b45309;background:#fffbeb;padding:6px 10px;border-radius:6px;margin-bottom:8px">Nenhum logo próprio cadastrado ainda.</div>')
     +'<input type="file" id="kiosk-logo-file" accept="image/png,image/jpeg" onchange="previewKioskLogo(this)"/>'
-    +'<img id="kiosk-logo-preview" class="hidden" style="max-width:120px;max-height:80px;margin-top:8px;border-radius:8px;border:1px solid var(--sand-100)"/>'
-    +(currentLogo ? '<div style="margin-top:8px"><a href="#" onclick="removeKioskLogo();return false" style="color:#ef4444;font-size:11.5px;text-decoration:underline">Remover logo atual</a></div>' : '')
+    +'<img id="kiosk-logo-preview" class="hidden" style="display:block;max-width:120px;max-height:80px;margin-top:8px;border-radius:8px;border:1px solid var(--sand-100)"/>'
+    +(currentLogo ? '<div style="margin-top:8px;font-size:11.5px"><a href="#" onclick="removeKioskLogo();return false" style="color:#ef4444;font-size:11.5px;text-decoration:underline">Remover logo atual</a></div>' : '')
     +'</div>'
     +'<div style="display:flex;gap:8px;margin-top:6px">'
     +'<button class="btn btn-ghost" style="flex:1" onclick="closeKioskSettingsModal()">Cancelar</button>'
@@ -5173,7 +5187,7 @@ function openAddWaiterModal(){
     +'<input id="new-waiter-password" type="password" class="input" style="width:100%" placeholder="••••••••"/></div>'
     +'<label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;background:#f8fafc;padding:10px;border-radius:8px">'
     +'<input type="checkbox" id="new-waiter-can-edit-menu" style="accent-color:var(--ocean-500);margin-top:2px"/>'
-    +'<span style="font-size:12.5px;color:#475569"><b>Permitir editar o Cardápio</b><br><span style="font-size:11px;color:#94a3b8">Só marque se confiar nesse garçom para adicionar, editar ou remover produtos. Por padrão, fica bloqueado.</span></span>'
+    +'<span style="font-size:12.5px;color:#475569"><b>Permitir editar o Cardápio</b><br><span style="display:block;font-size:11px;color:#94a3b8">Só marque se confiar nesse garçom para adicionar, editar ou remover produtos. Por padrão, fica bloqueado.</span></span>'
     +'</label>'
     +'<div style="display:flex;gap:8px;margin-top:6px">'
     +'<button class="btn btn-ghost" style="flex:1" onclick="closeAddWaiterModal()">Cancelar</button>'
@@ -6807,7 +6821,7 @@ function orderCard(o){
     +'<span style="font-size:12px;background:var(--sand-100);padding:2px 8px;border-radius:99px">&#x2602;&#xFE0F; '+esc(o.umb||o.umbrella_num||'?')+'</span>'
     +'<span class="pill '+p.c+'">'+p.l+'</span></div></div>'
     +'<div class="oc-body"><div class="oc-customer">&#x1F464; '+esc(o.customer_name||o.customer||'?')+' &middot; <span style="font-size:10px;color:var(--sl-400)">&#x1F550; '+(o.time||'')+'</span></div>'
-    +(o.created_by?'<div style="font-size:11px;color:#7c3aed;background:#f5f3ff;display:inline-block;padding:2px 8px;border-radius:99px;margin-bottom:6px">🧑‍🍳 Lançado por '+esc(o.created_by)+'</div>':'<div style="font-size:11px;color:#0891b2;background:#ecfeff;display:inline-block;padding:2px 8px;border-radius:99px;margin-bottom:6px">📱 Pedido do cliente</div>')
+    +(o.created_by?'<div style="font-size:11px;color:#7c3aed;background:#f5f3ff;display:block;width:fit-content;padding:2px 8px;border-radius:99px;margin-bottom:6px">🧑‍🍳 Lançado por '+esc(o.created_by)+'</div>':'<div style="font-size:11px;color:#0891b2;background:#ecfeff;display:block;width:fit-content;padding:2px 8px;border-radius:99px;margin-bottom:6px">📱 Pedido do cliente</div>')
     +(o.items||[]).map(i=>'<div class="oc-item-row"><span>'+i.qty+'\xd7 '+esc(i.name)+'</span><span>'+fmt(i.qty*i.price)+'</span></div>').join('')
     +(rawNotes?'<div class="oc-note">&#x1F4DD; '+esc(rawNotes)+'</div>':'')
     +(isBill?'<div style="background:#8b5cf6;color:#fff;border-radius:8px;padding:8px 12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:500">💰 Valor a cobrar</span><span style="font-size:18px;font-weight:700">'+fmt(o.total)+'</span></div>':'<div class="oc-total"><span>Total</span><span>'+fmt(o.total)+'</span></div>')
@@ -7086,7 +7100,7 @@ function renderHistTable(list, skipFilterSetup){
       var isChecked = window._histSelected && window._histSelected[o.id];
       return '<tr>'
         +'<td>'+(!isSpecial && o.status==='pending'?'<input type="checkbox" class="hist-row-check" data-oid="'+o.id+'" '+(isChecked?'checked':'')+' onchange="toggleHistSelection(\''+o.id+'\',this.checked)"/>':'')+'</td>'
-        +'<td><b>#'+(o.order_number||'—')+'</b>'+groupChip+'</td>'
+        +'<td'+(groupChip?' style="line-height:1"':'')+'><b>#'+(o.order_number||'—')+'</b>'+groupChip+'</td>'
         +'<td>☂️ '+esc(o.umb||o.umbrella_num||'?')+'</td>'
         +'<td style="width:90px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(o.customer_name||'?')+'</td>'
         +'<td style="color:var(--sl-500);font-size:11px;width:260px;text-align:left">'+(isSpecial?esc(notesClean.split(' · ')[0]):(o.items||[]).map(i=>'<div style="text-align:left;white-space:nowrap">'+i.qty+'× '+esc(i.name)+'</div>').join(''))+'</td>'
