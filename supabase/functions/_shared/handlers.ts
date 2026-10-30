@@ -34,6 +34,9 @@ function globalOn(deps: Deps): boolean { return deps.env('PAYMENTS_GLOBAL_ENABLE
 
 /** Descriptografa as credenciais do negócio; renova o token OAuth se estiver perto de vencer. */
 async function sellerFor(deps: Deps, kioskId: string, conn: any, provider: PaymentProvider): Promise<Seller> {
+  if (provider.name === 'direct') {                  // Pix direto: a "conta" é a chave Pix do próprio negócio (não é segredo); sem token
+    return { accountId: JSON.stringify({ key: conn?.pix_key ?? '', name: conn?.pix_name ?? '', city: conn?.pix_city ?? '' }), accessToken: '' };
+  }
   if (provider.name === 'stripe') {                  // direct charges: chave da plataforma + id da conta conectada; nada a decifrar
     if (!conn || !conn.account_id || !['connected', 'sandbox'].includes(conn.status)) throw new ProviderError('negócio sem conta Stripe', false);
     return { accountId: String(conn.account_id), accessToken: '' };
@@ -62,6 +65,7 @@ async function reconcile(deps: Deps, paymentId: string, hintProviderPaymentId?: 
   const r = await deps.db.rpc('payment_for_webhook', { p_payment_id: paymentId });
   if (r.error || !r.data?.found) return null;
   const row = r.data;
+  if (row.provider === 'direct') return { result: 'manual', status: row.status };      // Pix direto: não há o que consultar, a baixa é manual
   const provider = deps.providers[row.provider];
   if (!provider) return null;
   const seller = await sellerFor(deps, row.kiosk_id, row.connection, provider);   // token do DONO da cobrança, nunca outro
@@ -89,7 +93,7 @@ export async function handleCreatePayment(req: Request, deps: Deps): Promise<Res
   const body = await readJson(req);
   if (!body) return json({ ok: false, error: 'bad_request' }, 400, cors);
   const kiosk = String(body.kiosk_id ?? ''), umb = String(body.umbrella ?? ''), method = String(body.method ?? ''), idem = String(body.idempotency_key ?? '');
-  if (!UUID_RE.test(kiosk) || !/^[0-9]{1,6}$/.test(umb) || !['pix', 'card', 'wallet'].includes(method) || !/^[A-Za-z0-9_-]{16,100}$/.test(idem)) {
+  if (!UUID_RE.test(kiosk) || !/^[0-9]{1,6}$/.test(umb) || !['pix', 'card', 'wallet', 'pix_direct'].includes(method) || !/^[A-Za-z0-9_-]{16,100}$/.test(idem)) {
     return json({ ok: false, error: 'bad_request', message: 'Requisição inválida.' }, 400, cors);
   }
 
@@ -107,7 +111,7 @@ export async function handleCreatePayment(req: Request, deps: Deps): Promise<Res
   if (a.error || b.error) return json({ ok: false, error: 'unavailable' }, 503, cors);
   if (a.data === false || b.data === false) return json({ ok: false, error: 'rate_limited', message: 'Muitas tentativas. Aguarde alguns minutos.' }, 429, cors);
 
-  const prep = await deps.db.rpc('payment_prepare', { p_kiosk: kiosk, p_umbrella: umb, p_method: method, p_idem: idem, p_ttl_minutes: Number(deps.env('PAYMENTS_TTL_MINUTES')) || 20 });
+  const prep = await deps.db.rpc('payment_prepare', { p_kiosk: kiosk, p_umbrella: umb, p_method: method, p_idem: idem, p_ttl_minutes: Number(deps.env('PAYMENTS_TTL_MINUTES')) || 20, p_hold: body.hold === true });
   if (prep.error) {
     const mapped = mapDbError(prep.error.message);
     if (mapped) { for (const [k, v] of Object.entries(cors)) mapped.headers.set(k, v); return mapped; }
@@ -140,11 +144,11 @@ export async function handleCreatePayment(req: Request, deps: Deps): Promise<Res
     const feePct = Math.max(0, Math.min(10, Number(deps.env('PAYMENTS_APP_FEE_PERCENT')) || 0));
     const expiresAt = new Date(Date.parse(p.expires_at));
     const ch = await provider.createCharge(seller, {
-      paymentId: p.payment_id, method: method as 'pix' | 'card', amountCents: p.amount_cents,
+      paymentId: p.payment_id, method: method as 'pix' | 'card' | 'wallet' | 'pix_direct', amountCents: p.amount_cents,
       description: `Consumo - Mesa ${p.umbrella_num} - ${String(p.kiosk_name).slice(0, 40)}`,
       notificationUrl: `${fnBase}/payment-webhook?pid=${p.payment_id}`,
       backUrl: `${base}/?kiosk=${kiosk}&umbrella=${umb}&rpay=${p.payment_id}`,
-      expiresAt, feeCents: Math.round(p.amount_cents * feePct / 100),
+      expiresAt, feeCents: method === 'pix_direct' ? 0 : Math.round(p.amount_cents * feePct / 100),
       payerEmail: deps.env('PAYMENTS_PAYER_EMAIL') || 'pagamentos@recebaa.com.br',
     });
     const payload: Record<string, string> = {};
@@ -300,6 +304,7 @@ export async function handleOAuth(req: Request, deps: Deps): Promise<Response> {
   const lim = await deps.db.rpc('payment_rate_hit', { p_bucket: 'poauth:' + (await sha256Hex(token)).slice(0, 16), p_max: 20, p_window_seconds: 600 });
   if (lim.data === false) return json({ ok: false, error: 'rate_limited' }, 429, cors);
 
+  if (action === 'global_status') return json({ ok: true, global: true }, 200, cors);   // chegou aqui = o kill switch global está LIGADO (desligado responde 503 acima)
   if (action === 'start_wallet') {
     const st = deps.providers.stripe;
     if (!st?.oauthAuthorizeUrl) return json({ ok: false, error: 'unsupported' }, 400, cors);

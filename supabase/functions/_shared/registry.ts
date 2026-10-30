@@ -2,6 +2,7 @@ import type { PaymentProvider, Deps, Db } from './types.ts';
 import { makeMercadoPago } from './mercadopago.ts';
 import { makeMockProvider, MockLedger } from './mock.ts';
 import { makeStripe } from './stripe.ts';
+import { makeDirectPix } from './direct.ts';
 import { makeTokenCrypto } from './crypto.ts';
 
 export const mockLedger = new MockLedger();
@@ -24,6 +25,7 @@ export function buildProviders(env: (k: string) => string | undefined, fetchFn: 
       toleranceSec: Number(env('STRIPE_WEBHOOK_TOLERANCE_SEC')) || 300,
     }, fetchFn);
   }
+  out.direct = makeDirectPix();       // Pix direto (sem gateway): sempre disponível; quem manda é a flag do negócio no banco
   if (env('PAYMENTS_ALLOW_MOCK') === '1' && env('PAYMENTS_MOCK_SECRET')) {
     out.mock = makeMockProvider(env('PAYMENTS_MOCK_SECRET')!, ledger);
   }

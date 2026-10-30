@@ -11,7 +11,7 @@ export interface Seller { accountId: string; accessToken: string }
 
 export interface ChargeInput {
   paymentId: string;          // nosso id (vai como external_reference)
-  method: 'pix' | 'card' | 'wallet';
+  method: 'pix' | 'card' | 'wallet' | 'pix_direct';
   amountCents: number;        // calculado no servidor
   description: string;
   notificationUrl: string;
@@ -35,13 +35,13 @@ export interface OAuthTokens { accountId: string; accessToken: string; refreshTo
 
 /** Interface do provedor: trocar de provedor = implementar isto. */
 export interface PaymentProvider {
-  name: 'mercadopago' | 'mock' | 'stripe';
+  name: 'mercadopago' | 'mock' | 'stripe' | 'direct';
   createCharge(seller: Seller, input: ChargeInput): Promise<ChargeResult>;
   /** Consulta o pagamento NO PROVEDOR (fonte da verdade). null = não existe/não é deste vendedor. */
   fetchPayment(seller: Seller, providerPaymentId: string): Promise<ProviderPayment | null>;
   /** Procura pagamentos pela nossa referência (para atualizar sem webhook e para o cartão, cujo id só nasce no checkout). */
   searchByReference(seller: Seller, externalReference: string): Promise<ProviderPayment | null>;
-  cancelCharge(seller: Seller, providerRef: string, method: 'pix' | 'card' | 'wallet'): Promise<boolean>;
+  cancelCharge(seller: Seller, providerRef: string, method: 'pix' | 'card' | 'wallet' | 'pix_direct'): Promise<boolean>;
   /** Valida a ASSINATURA do webhook. Não confia no conteúdo; só diz se veio do provedor e qual id consultar. */
   verifyWebhook(input: { headers: Headers; url: URL; rawBody: string }): Promise<{ valid: boolean; topic?: string; providerPaymentId?: string; paymentId?: string }>;
   oauthAuthorizeUrl?(state: string): string;
