@@ -2867,6 +2867,171 @@ var sbw = (function(){
   }
   return { from:from };
 })();
+
+// ── Pedidos: leitura/escrita só por funções do banco ───────────────────
+// A chave pública não acessa mais as tabelas orders/order_items diretamente.
+// Este adaptador mantém a mesma sintaxe de consulta usada no app, mas envia
+// tudo pelas funções read_orders/place_order/etc. (equipe com token, cliente por guarda-sol).
+(function(){
+  var origFrom = sb.from.bind(sb);
+  var origChannel = sb.channel.bind(sb);
+  function failed(err){ return { data:null, error:err||{message:'Erro'} }; }
+  function notFound(){ return failed({ message:'Registro não encontrado', code:'PGRST116' }); }
+  function parseInList(v){
+    if(Array.isArray(v)) return v;
+    return String(v).replace(/^\(|\)$/g,'').split(',').map(function(x){ return x.trim().replace(/^"|"$/g,''); });
+  }
+  function builder(table){
+    var st = { op:null, payload:null, filters:[], order:null, limit:null, single:false, sel:'*', retSel:false };
+    var q = {};
+    function add(c,o,v){ st.filters.push({c:c,o:o,v:v}); return q; }
+    q.select = function(s){ if(st.op===null||st.op==='select'){ st.op='select'; st.sel=s||'*'; } else { st.retSel=true; } return q; };
+    q.insert = function(d){ st.op='insert'; st.payload=d; return q; };
+    q.update = function(d){ st.op='update'; st.payload=d; return q; };
+    q.delete = function(){ st.op='delete'; return q; };
+    q.eq = function(c,v){ return add(c,'eq',v); };
+    q.neq = function(c,v){ return add(c,'neq',v); };
+    q.gt = function(c,v){ return add(c,'gt',v); };
+    q.gte = function(c,v){ return add(c,'gte',v); };
+    q.lte = function(c,v){ return add(c,'lte',v); };
+    q.in = function(c,a){ return add(c,'in',a); };
+    q.not = function(c,op,v){
+      if(op==='eq'||op==='neq') return add(c,'neq',v);
+      if(op==='in') return add(c,'nin',parseInList(v));
+      throw new Error('Operador não suportado: '+op);
+    };
+    q.order = function(c,o){ st.order = c+' '+((o && o.ascending===false)?'desc':'asc'); return q; };
+    q.limit = function(n){ st.limit=n; return q; };
+    q.single = function(){ st.single=true; return q; };
+    q.maybeSingle = function(){ st.single='maybe'; return q; };
+    function pick(c){ var f=st.filters.filter(function(x){ return x.c===c && x.o==='eq'; })[0]; return f?f.v:null; }
+    function mode(){ return window._sessToken ? 'staff' : (window._adminToken ? 'admin' : 'client'); }
+    function token(){ return window._sessToken || window._adminToken || null; }
+    function finish(rows){
+      if(st.single){
+        if(!rows || !rows.length) return st.single==='maybe' ? {data:null,error:null} : notFound();
+        return { data: rows[0], error: null };
+      }
+      return { data: rows, error: null };
+    }
+    function expired(err){ if(err && /Sess[aã]o expirada/i.test(err.message||'')) handleSessionExpired(); }
+    async function readOrders(filters){
+      var m = mode(), kiosk=null, umb=null;
+      filters = filters.slice();
+      if(m==='client'){
+        var fk = filters.filter(function(f){ return f.c==='kiosk_id' && f.o==='eq'; })[0];
+        var fu = filters.filter(function(f){ return f.c==='umbrella_num' && f.o==='eq'; })[0];
+        kiosk = fk?fk.v:null; umb = fu?String(fu.v):null;
+      }
+      var r = await sb.rpc('read_orders', { p_token: token(), p_kiosk: kiosk, p_umbrella: umb, p_filters: filters,
+        p_order: st.order || 'created_at desc', p_limit: st.limit || 1000, p_items: /order_items/.test(st.sel) });
+      if(r.error){ expired(r.error); return { rows:null, error:r.error }; }
+      return { rows: r.data || [], error:null };
+    }
+    async function runOrders(){
+      if(st.op==='select'){
+        var rd = await readOrders(st.filters);
+        if(rd.error) return failed(rd.error);
+        return finish(rd.rows);
+      }
+      if(st.op==='insert'){
+        var r = await sb.rpc('place_order', { p_order: st.payload, p_items: null });
+        if(r.error) return failed(r.error);
+        return { data: (st.single ? r.data : (st.retSel ? [r.data] : null)), error:null };
+      }
+      if(st.op==='update'){
+        if(mode()==='client'){
+          var oid = pick('id');
+          if(st.payload && st.payload.status==='cancelled' && oid){
+            var c = await sb.rpc('client_cancel_order', { p_order_id: oid });
+            if(c.error) return failed(c.error);
+            return { data: st.retSel ? (c.data||[]) : null, error:null };
+          }
+          return failed({ message:'Acesso negado' });
+        }
+        var ids = null;
+        var idf = st.filters.filter(function(f){ return f.c==='id'; });
+        if(st.filters.length===1 && idf.length===1){ ids = idf[0].o==='in' ? idf[0].v : [idf[0].v]; }
+        else {
+          var rd2 = await readOrders(st.filters);
+          if(rd2.error) return failed(rd2.error);
+          ids = rd2.rows.map(function(o){ return o.id; });
+        }
+        if(!ids.length) return { data: st.retSel ? [] : null, error:null };
+        var u = await sb.rpc('staff_write', { p_token: token(), p_table:'orders', p_op:'update', p_ids: ids, p_data: st.payload });
+        if(u.error){ expired(u.error); return failed(u.error); }
+        return { data: st.retSel ? ids.map(function(i){ return {id:i}; }) : null, error:null };
+      }
+      return failed({ message:'Operação não suportada' });
+    }
+    async function runItems(){
+      if(st.op==='insert'){
+        var rows = Array.isArray(st.payload) ? st.payload : [st.payload];
+        var r = await sb.rpc('add_order_items', { p_items: rows });
+        return r.error ? failed(r.error) : { data:null, error:null };
+      }
+      if(st.op==='delete'){
+        var idf = st.filters.filter(function(f){ return f.c==='id'; })[0];
+        if(!idf) return failed({message:'Filtro obrigatório'});
+        var d = await sb.rpc('staff_write', { p_token: token(), p_table:'order_items', p_op:'delete', p_ids: idf.o==='in'?idf.v:[idf.v], p_data:null });
+        if(d.error){ expired(d.error); return failed(d.error); }
+        return { data:null, error:null };
+      }
+      if(st.op==='select'){
+        var rows2;
+        var byOrder = pick('order_id'), byId = pick('id');
+        if(byOrder){
+          var r2 = await sb.rpc('order_items_of', { p_order_id: byOrder });
+          if(r2.error) return failed(r2.error);
+          rows2 = r2.data || [];
+        } else if(byId){
+          var r3 = await sb.rpc('staff_item', { p_token: token(), p_item_id: byId });
+          if(r3.error){ expired(r3.error); return failed(r3.error); }
+          rows2 = r3.data ? [r3.data] : [];
+        } else return failed({ message:'Filtro obrigatório' });
+        st.filters.forEach(function(f){
+          if(f.c==='order_id' || f.c==='id' || f.o!=='eq') return;
+          rows2 = rows2.filter(function(row){ return String(row[f.c])===String(f.v); });
+        });
+        return finish(rows2);
+      }
+      return failed({ message:'Operação não suportada' });
+    }
+    q.then = function(ok, fail){
+      var p = (table==='orders') ? runOrders() : runItems();
+      return p.then(ok, fail);
+    };
+    return q;
+  }
+  sb.from = function(table){
+    if(table==='orders' || table==='order_items') return builder(table);
+    return origFrom(table);
+  };
+  // Tempo real de pedidos: usa order_events (sem nome de cliente nem observações)
+  sb.channel = function(name, opts){
+    var ch = origChannel(name, opts);
+    var origOn = ch.on.bind(ch);
+    ch.on = function(type, filter, cb){
+      if(type==='postgres_changes' && filter && filter.table==='orders'){
+        var ev = filter.event;
+        var nf = Object.assign({}, filter, { event:'INSERT', table:'order_events' });
+        return origOn(type, nf, function(payload){
+          var n = (payload && payload.new) || {};
+          if(ev==='INSERT' && n.kind!=='insert') return;
+          if(ev==='UPDATE' && n.kind!=='update') return;
+          var clean = {};
+          Object.keys(n).forEach(function(k){
+            if(n[k]!==null && k!=='kind' && k!=='event_id' && k!=='event_at') clean[k]=n[k];
+          });
+          cb(Object.assign({}, payload, { new: clean, eventType: ev }));
+        });
+      }
+      return origOn(type, filter, cb);
+    };
+    return ch;
+  };
+})();
+
 async function adminListKiosks(){
   var r = await sb.rpc('admin_list_kiosks',{ p_token: window._adminToken });
   if(r.error && /Sess[aã]o expirada/i.test(r.error.message||'')) handleSessionExpired();
