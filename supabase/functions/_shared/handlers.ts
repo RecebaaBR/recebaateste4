@@ -230,7 +230,11 @@ export async function handlePaymentWebhook(req: Request, deps: Deps): Promise<Re
 
   // 2) só nos interessa notificação de pagamento
   if (v.topic && v.topic !== 'payment') return json({ ok: true, ignored: 'topic' });
-  const pid = url.searchParams.get('pid') ?? v.paymentId ?? '';      // Stripe: metadata.pid (id opaco nosso; será revalidado na API)
+  let pid = url.searchParams.get('pid') ?? v.paymentId ?? '';
+  if (!UUID_RE.test(pid) && v.providerPaymentId && provider.name === 'stripe') {     // evento de charge sem metadata: acha pelo id do PaymentIntent
+    const f = await deps.db.rpc('payment_find_by_ref', { p_provider: 'stripe', p_ref: v.providerPaymentId });
+    if (typeof f.data === 'string') pid = f.data;
+  }      // Stripe: metadata.pid (id opaco nosso; será revalidado na API)
   if (!UUID_RE.test(pid) || !v.providerPaymentId) return json({ ok: true, ignored: 'no_reference' });
 
   // 3) NÃO confia no corpo: consulta o provedor (com o token do dono da cobrança) e liquida de forma idempotente

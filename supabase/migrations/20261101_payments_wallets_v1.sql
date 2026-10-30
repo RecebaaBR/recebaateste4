@@ -193,6 +193,12 @@ begin
   return jsonb_build_object('enabled', true, 'stripe_account', kp.stripe_account_id);
 end $$;
 
+-- webhook da Stripe de eventos de charge (ex.: reembolso) pode não trazer metadata.pid: acha o pagamento pelo id do PaymentIntent
+create or replace function public.payment_find_by_ref(p_provider text, p_ref text)
+returns uuid language sql security definer stable set search_path = public, extensions as $$
+  select id from public.payments where provider = p_provider and provider_ref = p_ref limit 1
+$$;
+
 create or replace function public.payment_for_webhook(p_payment_id uuid)
 returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 declare p public.payments; kp public.kiosk_payments;
@@ -283,8 +289,9 @@ end $$;
 
 -- ---------- permissões ----------
 revoke execute on function
+  public.payment_find_by_ref(text,text),
   public.set_payments_settings(text,boolean,numeric,boolean), public.payments_disconnect_wallets(text),
   public.payments_store_stripe_account(uuid,text,text), public.wallet_public_config(uuid)
 from public, anon, authenticated;
 grant execute on function public.set_payments_settings(text,boolean,numeric,boolean), public.payments_disconnect_wallets(text) to anon;
-grant execute on function public.payments_store_stripe_account(uuid,text,text), public.wallet_public_config(uuid) to service_role;
+grant execute on function public.payments_store_stripe_account(uuid,text,text), public.wallet_public_config(uuid), public.payment_find_by_ref(text,text) to service_role;
