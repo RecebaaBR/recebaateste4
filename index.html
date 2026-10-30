@@ -698,6 +698,16 @@ tr:hover td{background:var(--sand-50)}
   .lpx .vlist{grid-template-columns:1fr;gap:26px}
 }
 
+
+.lpx .foot-cols{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:32px}
+.lpx .fc{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.lpx .fc h4{margin:0 0 8px;font:700 15px 'DM Sans',sans-serif;color:#fff}
+.lpx .fc p{margin-top:12px;font-size:14px;line-height:1.5;color:#b9d0dc;max-width:20em}
+.lpx .fc a,.lpx .fc button.lp-link{font-size:15px;padding:7px 0;overflow-wrap:anywhere;text-align:left}
+.lpx .foot small{border-top:1px solid #24506c;padding-top:20px}
+@media (max-width:900px){.lpx .foot-cols{grid-template-columns:1fr 1fr}.lpx .fc-brand{grid-column:span 2}}
+@media (max-width:560px){.lpx .foot-cols{grid-template-columns:1fr}.lpx .fc-brand{grid-column:auto}}
+
 /* nav */
 .lp-nav.lpx-nav{height:64px;padding:0 24px;background:#fff!important;border-bottom:1px solid #d6e3e6!important;box-shadow:none!important}
 .lpx-nav .lp-logo-icon{height:38px}
@@ -838,17 +848,29 @@ tr:hover td{background:var(--sand-50)}
   <!-- RODAPÉ -->
   <footer class="foot">
     <div class="wrap">
-      <div class="foot-in">
-        <div><img src="" class="recebaa-logo-img" alt="Recebaa" style="height:34px;width:auto;background:#fff;border-radius:8px;padding:4px 8px"/></div>
-        <nav aria-label="Acesso">
+      <div class="foot-cols">
+        <div class="fc fc-brand">
+          <img src="" class="recebaa-logo-img" alt="Recebaa" style="height:44px;width:auto;background:#fff;border-radius:10px;padding:5px 10px"/>
+          <p>Pedidos por QR Code para quiosques e barracas de praia.</p>
+        </div>
+        <div class="fc">
+          <h4>Fale com a gente</h4>
+          <a href="https://wa.me/5511971674448" target="_blank" rel="noopener">WhatsApp (11) 97167-4448</a>
+          <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a>
+        </div>
+        <div class="fc">
+          <h4>Acessar</h4>
           <button class="lp-link" onclick="goToClient()">Sou cliente</button>
-          <button class="lp-link" onclick="goToScreen('kiosk')">Entrar no painel</button>
-          <button class="lp-link" onclick="goToScreen('admin')">Administração</button>
-          <a href="/privacy.html">Política de Privacidade</a>
+          <button class="lp-link" onclick="goToScreen('kiosk')">Entrar no painel do negócio</button>
+          <button class="lp-link" onclick="goToScreen('admin')">Área do administrador</button>
+        </div>
+        <div class="fc">
+          <h4>Informações legais</h4>
           <a href="/terms.html">Termos de Uso</a>
-        </nav>
+          <a href="/privacy.html">Política de Privacidade</a>
+        </div>
       </div>
-      <small>© 2026 Recebaa. Tecnologia para quiosques e barracas de praia. Feito no Brasil.</small>
+      <small>© 2026 Recebaa. Feito no Brasil.</small>
     </div>
   </footer>
 </div>
@@ -11064,6 +11086,7 @@ function aPage(name,btn){
     var html = '<div class="recebaa-footer">📧 Contato: <a href="mailto:pediu.recebaa@gmail.com">pediu.recebaa@gmail.com</a> · 💬 WhatsApp: <a href="https://wa.me/5511971674448">(11) 97167-4448</a> · © 2026 Recebaa<br/><span style="font-size:12px;opacity:.75"><a href="/privacy.html">Política de Privacidade</a> · <a href="/terms.html">Termos de Uso</a></span></div>';
     // Cada .screen recebe um footer no final
     document.querySelectorAll('.screen').forEach(function(s){
+      if(s.classList.contains('lpx')) return; // a landing nova já tem contatos no próprio rodapé
       if(!s.querySelector(':scope > .recebaa-footer')){
         s.insertAdjacentHTML('beforeend', html);
       }
@@ -11071,7 +11094,7 @@ function aPage(name,btn){
     // Landing também (vários seletores possíveis)
     ['.lp-wrapper','#screen-landing','.landing-page'].forEach(function(sel){
       var lp = document.querySelector(sel);
-      if(lp && !lp.querySelector(':scope > .recebaa-footer')){
+      if(lp && !lp.classList.contains('lpx') && !lp.querySelector(':scope > .recebaa-footer')){
         lp.insertAdjacentHTML('beforeend', html);
       }
     });
