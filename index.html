@@ -5,8 +5,20 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>Recebaa</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<title>Recebaa — Pedidos por QR Code para quiosques e barracas de praia</title>
+<meta name="description" content="Seu cliente escaneia o QR Code, faz o pedido pelo celular e ele chega direto no seu painel. Menos erros e menos pedidos perdidos na alta temporada. Teste grátis."/>
+<meta name="theme-color" content="#0ea5e9"/>
+<link rel="icon" type="image/jpeg" href="/logo-recebaa.jpg"/>
+<link rel="apple-touch-icon" href="/logo-recebaa.jpg"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Recebaa"/>
+<meta property="og:locale" content="pt_BR"/>
+<meta property="og:title" content="Recebaa — Pedidos por QR Code para quiosques e barracas de praia"/>
+<meta property="og:description" content="Pedido certo, sem correria. Seu cliente pede pelo celular e o pedido chega direto no seu painel. Teste grátis."/>
+<meta property="og:url" content="https://www.recebaa.com.br/"/>
+<meta property="og:image" content="https://www.recebaa.com.br/logo-recebaa.jpg"/>
+<meta name="twitter:card" content="summary"/>
+<script src="/vendor/supabase-2.39.3.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -476,7 +488,7 @@ tr:hover td{background:var(--sand-50)}
 @keyframes cloudFloat3{0%{transform:translateX(0)}100%{transform:translateX(calc(-100vw - 450px))}}
 </style>
 <!-- EmailJS SDK + inicialização -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="/vendor/emailjs-4.4.1.min.js"></script>
 <script>
   (function(){
     try{
@@ -2824,6 +2836,43 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // ── Supabase client ──────────────────────────────────
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ── Gravações autenticadas ──────────────────────────────────────────
+// Toda escrita de quem opera o negócio passa pela função staff_write do banco,
+// que valida o token de sessão (gerado no login) e só mexe nos dados do próprio negócio.
+function handleSessionExpired(){
+  if(window._sessExpiredShown) return;
+  window._sessExpiredShown = true;
+  toast('⏱️ Sessão expirada. Entre novamente.');
+  setTimeout(function(){ location.reload(); }, 1800);
+}
+var sbw = (function(){
+  function tokenFor(table){ return (table==='kiosks' && window._adminToken) ? window._adminToken : window._sessToken; }
+  function from(table){
+    var op=null, payload=null, ids=null;
+    var b = {
+      insert:function(d){ op='insert'; payload=d; return b; },
+      update:function(d){ op='update'; payload=d; return b; },
+      delete:function(){ op='delete'; return b; },
+      eq:function(c,v){ if(c==='id') ids=[v]; return b; },
+      in:function(c,a){ if(c==='id') ids=a; return b; },
+      select:function(){ return b; },
+      single:function(){ return b; },
+      then:function(ok,fail){
+        return sb.rpc('staff_write',{ p_token:tokenFor(table), p_table:table, p_op:op, p_ids:ids, p_data:(payload===null?null:payload) })
+          .then(function(r){ if(r.error && /Sess[aã]o expirada/i.test(r.error.message||'')) handleSessionExpired(); return r; })
+          .then(ok,fail);
+      }
+    };
+    return b;
+  }
+  return { from:from };
+})();
+async function adminListKiosks(){
+  var r = await sb.rpc('admin_list_kiosks',{ p_token: window._adminToken });
+  if(r.error && /Sess[aã]o expirada/i.test(r.error.message||'')) handleSessionExpired();
+  return { data: r.data || [], error: r.error };
+}
+
 // ══════════════════════════════════════════════════════
 // ⚙️  CONFIGURAÇÃO — EmailJS (envio de código de verificação)
 // ══════════════════════════════════════════════════════
@@ -3973,7 +4022,7 @@ function buildCatTabs(){
   const cats=getCats();
   $('cat-tabs').innerHTML=cats.map((c,i)=>{
     const id=c.id||c.id; const emoji=c.emoji||'🍴';
-    return '<button class="cat-tab'+(i===0?' active':'')+'" onclick="scrollCat(\''+id+'\',this)">'+emoji+' '+c.name+'</button>';
+    return '<button class="cat-tab'+(i===0?' active':'')+'" onclick="scrollCat(\''+id+'\',this)">'+esc(emoji)+' '+esc(c.name)+'</button>';
   }).join('');
   adjustCatTabsSticky();
 }
@@ -4070,7 +4119,7 @@ async function decrementPromoSoldForProduct(productId, qty){
     if(current.promo_price!=null && current.promo_limit!=null && newSold < Number(current.promo_limit)){
       updates.promo_active = true;
     }
-    await sb.from('products').update(updates).eq('id', productId);
+    await sb.rpc('promo_adjust', { p_product_id: productId, p_delta: -Number(qty) });
 
     var prodLocal = catalog.find(function(p){ return p.id===productId; });
     if(prodLocal){
@@ -4120,7 +4169,7 @@ async function incrementPromoSold(items){
       updates.promo_active = false;
     }
     try{
-      await sb.from('products').update(updates).eq('id', pid);
+      await sb.rpc('promo_adjust', { p_product_id: pid, p_delta: Number(qty) });
     }catch(e){}
     prod.promo_sold = newSold;
     if(updates.promo_active === false) prod.promo_active = false;
@@ -4139,7 +4188,7 @@ function buildMenu(){
     });
     if(!prods.length) return;
     html += '<div class="menu-section" id="cat-'+cat.id+'">'
-      +'<div class="cat-title">'+(cat.emoji||'🍴')+' '+cat.name+'</div>'
+      +'<div class="cat-title">'+esc(cat.emoji||'🍴')+' '+esc(cat.name)+'</div>'
       +'<div class="products-grid">'+prods.map(productCard).join('')+'</div></div>';
   });
   $('menu-content').innerHTML = html || '<div style="padding:40px;text-align:center;color:#94a3b8">Nenhum produto disponível.</div>';
@@ -5412,11 +5461,7 @@ async function checkBillStillNeeded(){
   if(validOrders.length > 0) return; // ainda tem pedido válido → mantém a conta
   // Não há mais pedidos válidos → cancelar PEDIDO DE CONTA pendente desta sessão
   try{
-    await sb.from('orders').update({status:'cancelled'})
-      .eq('kiosk_id', currentKiosk.id)
-      .eq('umbrella_num', String(window._umb||'?'))
-      .eq('customer_name', 'PEDIDO DE CONTA')
-      .eq('status','pending');
+    await sb.rpc('cancel_account_order', { p_kiosk_id: currentKiosk.id, p_umbrella: String(window._umb||'?') });
     window._billRequested = false;
     applyBillBlock();
     toast('ℹ️ Conta cancelada automaticamente (todos os pedidos foram cancelados).');
@@ -5650,7 +5695,7 @@ async function renderWaiters(){
     return;
   }
 
-  var resp = await sb.rpc('list_waiters', { p_kiosk_id: currentKiosk.id });
+  var resp = await sb.rpc('list_waiters', { p_token: window._sessToken });
   if(resp.error){
     list.innerHTML = '<div style="padding:24px;text-align:center;color:#ef4444">Erro ao carregar garçons: '+esc(resp.error.message)+'</div>';
     return;
@@ -5678,7 +5723,7 @@ async function renderWaiters(){
 }
 
 async function toggleWaiterMenuPermission(waiterId, newState){
-  var resp = await sb.rpc('set_waiter_menu_permission', { p_waiter_id: waiterId, p_can_edit_menu: newState });
+  var resp = await sb.rpc('set_waiter_menu_permission', { p_token: window._sessToken, p_waiter_id: waiterId, p_can_edit_menu: newState });
   if(resp.error){ toast('❌ Erro: '+resp.error.message); return; }
   toast(newState ? '✅ Garçom agora pode editar o Cardápio' : '🔒 Acesso ao Cardápio bloqueado pra esse garçom');
   renderWaiters();
@@ -5804,7 +5849,7 @@ async function saveKioskSettings(){
       updates.logo_url = null;
     }
 
-    var resp = await sb.from('kiosks').update(updates).eq('id', currentKiosk.id);
+    var resp = await sbw.from('kiosks').update(updates).eq('id', currentKiosk.id);
     if(resp.error){
       toast('❌ Erro ao salvar: ' + resp.error.message);
       setLoading('kiosk-settings-save-btn', false, 'Salvar');
@@ -5838,7 +5883,7 @@ async function saveKioskSettings(){
 }
 
 async function toggleWaiterActive(waiterId, newState){
-  var resp = await sb.rpc('set_waiter_active', { p_waiter_id: waiterId, p_active: newState });
+  var resp = await sb.rpc('set_waiter_active', { p_token: window._sessToken, p_waiter_id: waiterId, p_active: newState });
   if(resp.error){ toast('❌ Erro: '+resp.error.message); return; }
   toast(newState ? '✅ Garçom reativado' : '⏸️ Garçom desativado');
   renderWaiters();
@@ -5850,7 +5895,7 @@ function confirmDeleteWaiter(waiterId, waiterName){
 }
 
 async function deleteWaiterConfirmed(waiterId){
-  var resp = await sb.rpc('delete_waiter', { p_waiter_id: waiterId });
+  var resp = await sb.rpc('delete_waiter', { p_token: window._sessToken, p_waiter_id: waiterId });
   if(resp.error){ toast('❌ Erro: '+resp.error.message); return; }
   toast('🗑️ Garçom removido');
   renderWaiters();
@@ -5913,7 +5958,7 @@ async function saveNewWaiter(){
   }
 
   var resp = await sb.rpc('register_waiter', {
-    p_kiosk_id: currentKiosk.id, p_name: name, p_email: email, p_password: pass, p_can_edit_menu: canEditMenu
+    p_token: window._sessToken, p_name: name, p_email: email, p_password: pass, p_can_edit_menu: canEditMenu
   });
   setLoading('add-waiter-save-btn', false, 'Cadastrar');
   if(resp.error){
@@ -5986,6 +6031,7 @@ async function doLogin(){
       if(!k.is_active){ toast('⏸️ Negócio inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
       currentKiosk = k;
+      window._sessToken = w.token || null;
       window._currentWaiter = { id: w.id, name: w.name, canEditMenu: !!w.can_edit_menu };
     } else {
       currentKiosk={id:'demo',name:'Negócio Pôr do Sol (Demo)',owner_name:'Demo',business_type:'quiosque'};
@@ -6022,6 +6068,7 @@ async function doLogin(){
     if(!k.is_active){ toast('⏸️ Negócio inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
     currentKiosk=k;
+    window._sessToken = k.token || null;
     // login_kiosk (RPC) pode não retornar business_type/logo_url; busca à parte, sem quebrar se a coluna não existir.
     try{
       var btResp = await sb.from('kiosks').select('business_type,logo_url').eq('id',k.id).single();
@@ -6178,7 +6225,7 @@ async function saveKioskSettings(){
       updates.logo_url = null;
     }
 
-    var resp = await sb.from('kiosks').update(updates).eq('id', currentKiosk.id);
+    var resp = await sbw.from('kiosks').update(updates).eq('id', currentKiosk.id);
     if(resp.error){
       toast('❌ Erro ao salvar: ' + resp.error.message);
       setLoading('kiosk-settings-save-btn', false, 'Salvar');
@@ -6212,7 +6259,7 @@ async function saveKioskSettings(){
 }
 
 async function toggleWaiterActive(waiterId, newState){
-  var resp = await sb.rpc('set_waiter_active', { p_waiter_id: waiterId, p_active: newState });
+  var resp = await sb.rpc('set_waiter_active', { p_token: window._sessToken, p_waiter_id: waiterId, p_active: newState });
   if(resp.error){ toast('❌ Erro: '+resp.error.message); return; }
   toast(newState ? '✅ Garçom reativado' : '⏸️ Garçom desativado');
   renderWaiters();
@@ -6224,7 +6271,7 @@ function confirmDeleteWaiter(waiterId, waiterName){
 }
 
 async function deleteWaiterConfirmed(waiterId){
-  var resp = await sb.rpc('delete_waiter', { p_waiter_id: waiterId });
+  var resp = await sb.rpc('delete_waiter', { p_token: window._sessToken, p_waiter_id: waiterId });
   if(resp.error){ toast('❌ Erro: '+resp.error.message); return; }
   toast('🗑️ Garçom removido');
   renderWaiters();
@@ -6287,7 +6334,7 @@ async function saveNewWaiter(){
   }
 
   var resp = await sb.rpc('register_waiter', {
-    p_kiosk_id: currentKiosk.id, p_name: name, p_email: email, p_password: pass, p_can_edit_menu: canEditMenu
+    p_token: window._sessToken, p_name: name, p_email: email, p_password: pass, p_can_edit_menu: canEditMenu
   });
   setLoading('add-waiter-save-btn', false, 'Cadastrar');
   if(resp.error){
@@ -6360,6 +6407,7 @@ async function doLogin(){
       if(!k.is_active){ toast('⏸️ Negócio inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
       currentKiosk = k;
+      window._sessToken = w.token || null;
       window._currentWaiter = { id: w.id, name: w.name, canEditMenu: !!w.can_edit_menu };
     } else {
       currentKiosk={id:'demo',name:'Negócio Pôr do Sol (Demo)',owner_name:'Demo',business_type:'quiosque'};
@@ -6396,6 +6444,7 @@ async function doLogin(){
     if(!k.is_active){ toast('⏸️ Negócio inativo. Entre em contato com o suporte.'); setLoading('login-btn',false,'Entrar'); return; }
 
     currentKiosk=k;
+    window._sessToken = k.token || null;
     // login_kiosk (RPC) pode não retornar business_type/logo_url; busca à parte, sem quebrar se a coluna não existir.
     try{
       var btResp = await sb.from('kiosks').select('business_type,logo_url').eq('id',k.id).single();
@@ -6500,7 +6549,8 @@ async function doRegister(){
       p_phone: phone,
       p_city: $('reg-city').value.trim(),
       p_beach: $('reg-beach').value.trim(),
-      p_owner_doc: doc
+      p_owner_doc: doc,
+      p_business_type: _regBusinessType || 'quiosque'
     });
     if(resp.error){
       var msg = resp.error.message || '';
@@ -6524,9 +6574,9 @@ async function doRegister(){
     // Grava o tipo de negócio (quiosque ou bar/restaurante) escolhido no cadastro.
     // Feito à parte pois register_kiosk (RPC) não recebe esse parâmetro.
     // Se a coluna business_type ainda não existir no banco, falha em silêncio.
-    try{ await sb.from('kiosks').update({business_type:_regBusinessType}).eq('id',data.id); }catch(e){}
+    window._sessToken = data.token || null;
     // Criar categorias padrão (mesmo aguardando aprovação, pra já estar pronto quando aprovar)
-    await sb.from('categories').insert(MOCK_CATS.map((c,i)=>({kiosk_id:data.id,name:c.name,emoji:c.emoji,sort_order:i+1})));
+    await sbw.from('categories').insert(MOCK_CATS.map((c,i)=>({kiosk_id:data.id,name:c.name,emoji:c.emoji,sort_order:i+1})));
 
     // Se o negócio enviou um logo próprio, sobe pro Storage e salva a URL
     if(window._regLogoFile){
@@ -6535,7 +6585,7 @@ async function doRegister(){
       var {data: ud, error: ue} = await sb.storage.from('product-images').upload(path, window._regLogoFile, {upsert:true});
       if(!ue && ud){
         var {data: urlData} = sb.storage.from('product-images').getPublicUrl(path);
-        await sb.from('kiosks').update({ logo_url: urlData.publicUrl }).eq('id', data.id);
+        await sbw.from('kiosks').update({ logo_url: urlData.publicUrl }).eq('id', data.id);
       }
     }
 
@@ -6824,6 +6874,8 @@ async function closeUmbrellaSession(umbNum, applyService){
 
 function doLogout(){
   releaseWakeLock();
+  try{ if(window._sessToken) sb.rpc('logout_session',{ p_token: window._sessToken }); }catch(e){}
+  window._sessToken = null;
   if(window._accessChecker){ clearInterval(window._accessChecker); window._accessChecker=null; }
   if(realtimeChannel) sb.removeChannel(realtimeChannel);
   if(_bizTermObserver){ _bizTermObserver.disconnect(); _bizTermObserver=null; }
@@ -6882,17 +6934,16 @@ function renderForgotStep1(){
   var div = document.getElementById('dyn-forgot-pwd');
   if(!div) return;
   div.innerHTML = fpShell('Recuperar senha',
-    '<div style="font-size:12.5px;color:#64748b">Informe o e-mail cadastrado no seu negócio. Vamos enviar um código de verificação para ele.</div>'
-    +'<div><label style="font-size:12px;font-weight:500;color:#475569;display:block;margin-bottom:4px">E-mail cadastrado *</label>'
-    +'<input id="fp-email" type="email" class="input" style="width:100%" placeholder="seu@email.com"/></div>'
-    +'<div style="display:flex;gap:8px;margin-top:6px">'
-    +'<button class="btn btn-ghost" style="flex:1" onclick="closeForgotPasswordModal()">Cancelar</button>'
-    +'<button class="btn btn-ocean" id="fp-send-btn" style="flex:1" onclick="submitForgotSendCode()">Enviar código</button>'
+    '<div style="font-size:13px;color:#475569;line-height:1.5">Para sua segurança, a redefinição de senha é feita pela nossa equipe. Chame a gente no WhatsApp ou por e-mail informando o e-mail cadastrado no seu negócio.</div>'
+    +'<div style="margin-top:10px;font-size:13px"><a href="https://wa.me/5511971674448" target="_blank" rel="noopener" style="color:#16a34a;font-weight:600">WhatsApp (11) 97167-4448</a><br/>'
+    +'<a href="mailto:pediu.recebaa@gmail.com" style="color:#0369a1">pediu.recebaa@gmail.com</a></div>'
+    +'<div style="display:flex;gap:8px;margin-top:12px">'
+    +'<button class="btn btn-ocean" style="flex:1" onclick="closeForgotPasswordModal()">Entendi</button>'
     +'</div>');
-  setTimeout(function(){ var el=document.getElementById('fp-email'); if(el) el.focus(); }, 50);
 }
 
 async function submitForgotSendCode(){
+  renderForgotStep1(); return; // desativado: redefinição agora é feita pela equipe
   var email = (($('fp-email')||{}).value || '').trim();
   if(!email){ toast('⚠️ Informe o e-mail cadastrado'); return; }
 
@@ -7019,7 +7070,7 @@ async function submitForgotPasswordReset(){
 
   // O código de e-mail confirmado na etapa anterior já comprova posse do e-mail; agora gravamos a nova senha
   // via RPC, que gera o hash bcrypt no banco (compatível com login_kiosk)
-  var upd = await sb.rpc('reset_kiosk_password', { p_email: fpEmail, p_new_password: newPw });
+  var upd = { error: { message: 'Redefinição automática desativada. Fale com o suporte.' } };
   setLoading('fp-save-btn', false, 'Salvar nova senha');
   if(upd.error){
     toast('❌ Erro ao redefinir senha: ' + upd.error.message);
@@ -7781,7 +7832,7 @@ async function removeOrderItem(orderId, itemId){
 
   if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
     var itemInfoResp = await sb.from('order_items').select('product_id,is_promo,quantity').eq('id', itemId).single();
-    var delResp = await sb.from('order_items').delete().eq('id', itemId);
+    var delResp = await sbw.from('order_items').delete().eq('id', itemId);
     if(delResp.error){
       toast('❌ Erro ao remover item: ' + delResp.error.message);
       return;
@@ -7804,7 +7855,7 @@ async function removeOrderItem(orderId, itemId){
   }
 
   if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
-    await sb.from('orders').update(updates).eq('id', orderId);
+    await sbw.from('orders').update(updates).eq('id', orderId);
   }
 
   toast(o.items.length ? '🗑️ Item removido. Novo total: '+fmt(newTotal) : '🗑️ Item removido. Pedido cancelado (sem itens restantes).');
@@ -7865,7 +7916,7 @@ async function advOrder(id,st){
   const o=orders.find(x=>x.id===id); if(!o) return;
   var who = getCurrentActorName();
   if(isConfigured && !String(id).startsWith('local')){
-    await sb.from('orders').update({status:st, last_updated_by: who}).eq('id',id);
+    await sbw.from('orders').update({status:st, last_updated_by: who}).eq('id',id);
   }
   o.status=st;
   o.last_updated_by=who;
@@ -8233,7 +8284,7 @@ async function applyBulkHistStatus(){
   var who = getCurrentActorName();
 
   if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
-    var resp = await sb.from('orders').update({ status:newStatus, last_updated_by:who }).in('id', ids);
+    var resp = await sbw.from('orders').update({ status:newStatus, last_updated_by:who }).in('id', ids);
     if(resp.error){
       toast('❌ Erro ao atualizar em massa: '+resp.error.message);
       return;
@@ -8308,7 +8359,7 @@ async function changeHistStatus(id,st){
   if(!st) return;
   const o=orders.find(x=>x.id===id); if(!o) return;
   var who = getCurrentActorName();
-  if(isConfigured && !String(id).startsWith('local')) await sb.from('orders').update({status:st, last_updated_by: who}).eq('id',id);
+  if(isConfigured && !String(id).startsWith('local')) await sbw.from('orders').update({status:st, last_updated_by: who}).eq('id',id);
   o.status=st;
   o.last_updated_by=who;
   if(st==='cancelled') await decrementPromoSold(id);
@@ -8322,7 +8373,7 @@ function populateCatSelect(){
   const sel=$('prod-cat'); if(!sel) return;
   const cats=dbCategories.length?dbCategories:MOCK_CATS;
   sel.innerHTML='<option value="">Selecione...</option>'
-    +cats.map(c=>'<option value="'+c.id+'">'+c.name+'</option>').join('');
+    +cats.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>').join('');
 }
 
 function renderMgmt(){
@@ -8373,7 +8424,7 @@ async function duplicateProduct(id){
   };
 
   if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
-    var resp = await sb.from('products').insert(payload).select().single();
+    var resp = await sbw.from('products').insert(payload).select().single();
     if(resp.error){
       toast('❌ Erro ao duplicar: ' + resp.error.message);
       return;
@@ -8400,7 +8451,7 @@ function openEditProdModal(p){
 
   var cats = dbCategories.length ? dbCategories : MOCK_CATS;
   var catOptions = '<option value="">Selecione...</option>' + cats.map(function(c){
-    return '<option value="'+c.id+'"'+(c.id===(p.category_id||p.cat)?' selected':'')+'>'+c.name+'</option>';
+    return '<option value="'+esc(c.id)+'"'+(c.id===(p.category_id||p.cat)?' selected':'')+'>'+esc(c.name)+'</option>';
   }).join('');
 
   var div = document.createElement('div');
@@ -8414,7 +8465,7 @@ function openEditProdModal(p){
     +'</div>'
     +'<div style="padding:20px;display:flex;flex-direction:column;gap:14px">'
     +'<input type="hidden" id="epid" value="'+p.id+'"/>'
-    +(p.image_url?'<img src="'+p.image_url+'" style="width:100%;max-height:150px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0"/>':'')
+    +(p.image_url?'<img src="'+esc(p.image_url)+'" style="width:100%;max-height:150px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0"/>':'')
     +'<div onclick="var i=document.getElementById(\'ephoto\');if(i)i.click()" style="border:2px dashed #e2e8f0;border-radius:10px;padding:12px;text-align:center;cursor:pointer;background:#f8fafc;font-size:13px;color:#64748b">📷 Clique para trocar a foto<input type="file" id="ephoto" accept="image/*" style="display:none" onchange="epPhotoPreview(event)"/></div>'
     +'<img id="ep-preview" style="display:none;width:100%;max-height:150px;object-fit:cover;border-radius:10px"/>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
@@ -8509,7 +8560,7 @@ async function saveEditProd(){
       promo_active: !!promoActive, promo_price: promoPrice, promo_limit: promoLimit
     };
     if(imageUrl) updates.image_url=imageUrl;
-    var {error}=await sb.from('products').update(updates).eq('id',id);
+    var {error}=await sbw.from('products').update(updates).eq('id',id);
     if(error){toast('Erro: '+error.message);if(btn){btn.textContent='Salvar alterações';btn.disabled=false;}return;}
   }
   var p=catalog.find(function(x){return x.id===id;});
@@ -8528,7 +8579,7 @@ async function toggleBlock(id){
   const p=catalog.find(x=>x.id===id); if(!p) return;
   const nv=p.is_available===false;
   if(isConfigured && !String(id).startsWith('p') && !String(id).startsWith('local')){
-    await sb.from('products').update({is_available:nv}).eq('id',id);
+    await sbw.from('products').update({is_available:nv}).eq('id',id);
   }
   p.is_available=nv; renderMgmt();
   toast(nv?'\ud83d\udd13 Produto dispon\xedvel':'\ud83d\udd12 Produto bloqueado');
@@ -8538,7 +8589,7 @@ async function removeProd(id){
   const p=catalog.find(x=>x.id===id); if(!p) return;
   if(!confirm('Remover "'+p.name+'"?')) return;
   if(isConfigured && !String(id).startsWith('p') && !String(id).startsWith('local')){
-    await sb.from('products').delete().eq('id',id);
+    await sbw.from('products').delete().eq('id',id);
   }
   catalog.splice(catalog.findIndex(x=>x.id===id),1);
   renderMgmt(); toast('\ud83d\uddd1\ufe0f Produto removido');
@@ -8551,7 +8602,7 @@ function openAddModal(){
 
   var cats = dbCategories.length ? dbCategories : (typeof MOCK_CATS !== 'undefined' ? MOCK_CATS : []);
   var catOptions = '<option value="">Selecione...</option>' + cats.map(function(c){
-    return '<option value="'+c.id+'">'+c.name+'</option>';
+    return '<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>';
   }).join('');
 
   var div = document.createElement('div');
@@ -8674,7 +8725,7 @@ function toggleDynPromoFields(ns){
 async function resetPromoSold(productId){
   if(!confirm('Zerar a contagem de unidades vendidas dessa promoção?')) return;
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-    var resp = await sb.from('products').update({ promo_sold: 0 }).eq('id', productId);
+    var resp = await sbw.from('products').update({ promo_sold: 0 }).eq('id', productId);
     if(resp.error){ toast('❌ Erro: '+resp.error.message); return; }
   }
   var p = catalog.find(function(x){ return x.id===productId; });
@@ -8825,7 +8876,7 @@ async function saveDynProduct(){
       var {data:ud,error:ue} = await sb.storage.from('product-images').upload(path,dynPhotoFile,{upsert:true});
       if(!ue && ud){ var {data:url}=sb.storage.from('product-images').getPublicUrl(path); imageUrl=url.publicUrl; }
     }
-    var {data,error} = await sb.from('products').insert({
+    var {data,error} = await sbw.from('products').insert({
       kiosk_id:currentKiosk.id, category_id:catId,
       name, description:desc, price, cost_price:cost||null, emoji, image_url:imageUrl,
       is_available:available, sort_order:catalog.length, options: buildOptGroupsPayload('dyn'),
@@ -8885,7 +8936,7 @@ async function saveProduct(){
       const {data:ud,error:ue}=await sb.storage.from('product-images').upload(path,photoFile,{upsert:true});
       if(!ue && ud){const {data:url}=sb.storage.from('product-images').getPublicUrl(path);imageUrl=url.publicUrl;}
     }
-    const {data,error}=await sb.from('products').insert({
+    const {data,error}=await sbw.from('products').insert({
       kiosk_id:currentKiosk.id,category_id:catId,
       name,description:desc,price,emoji,image_url:imageUrl,
       is_available:available,sort_order:catalog.length
@@ -9185,7 +9236,7 @@ function setUmbStatusFilter(val){
 async function removeUmbrellaConsumptionItem(itemId, orderId, umbNum){
   if(!confirm('Remover este item da conta? Essa ação não pode ser desfeita.')) return;
 
-  var delResp = await sb.from('order_items').delete().eq('id', itemId);
+  var delResp = await sbw.from('order_items').delete().eq('id', itemId);
   if(delResp.error){
     toast('❌ Erro ao remover item: ' + delResp.error.message);
     return;
@@ -9199,7 +9250,7 @@ async function removeUmbrellaConsumptionItem(itemId, orderId, umbNum){
   if(!remainingItems || !remainingItems.length){
     updates.status = 'cancelled'; // pedido sem itens não faz mais sentido
   }
-  await sb.from('orders').update(updates).eq('id', orderId);
+  await sbw.from('orders').update(updates).eq('id', orderId);
 
   // Atualizar também o array em memória, se esse pedido estiver carregado
   var o = orders.find(function(x){ return x.id === orderId; });
@@ -9382,7 +9433,7 @@ async function toggleDirectOrders(){
   var current = currentKiosk.allow_direct_orders !== false;
   var next = !current;
   if(isConfigured && currentKiosk.id !== 'demo'){
-    var {error} = await sb.from('kiosks').update({allow_direct_orders: next}).eq('id', currentKiosk.id);
+    var {error} = await sbw.from('kiosks').update({allow_direct_orders: next}).eq('id', currentKiosk.id);
     if(error){ toast('Erro ao atualizar: ' + error.message); return; }
   }
   currentKiosk.allow_direct_orders = next;
@@ -9588,14 +9639,14 @@ async function saveUmbrella(){
   if(isConfigured && currentKiosk && currentKiosk.id !== 'demo'){
     if(editId){
       // Editar existente
-      var {error} = await sb.from('umbrellas').update({
+      var {error} = await sbw.from('umbrellas').update({
         number, area, label, is_active: active
       }).eq('id', editId);
       if(error){ toast('Erro: ' + error.message); setLoading('save-umb-btn', false, 'Salvar guarda-sol'); return; }
       toast('✅ Guarda-sol atualizado!');
     } else {
       // Criar novo
-      var {error} = await sb.from('umbrellas').insert({
+      var {error} = await sbw.from('umbrellas').insert({
         kiosk_id: currentKiosk.id, number, area, label, is_active: active
       });
       if(error){ toast('Erro: ' + error.message); setLoading('save-umb-btn', false, 'Salvar guarda-sol'); return; }
@@ -9613,7 +9664,7 @@ async function saveUmbrella(){
 async function deleteUmbrella(id, number){
   if(!confirm(swapUmbrellaWords('Remover guarda-sol Nº ' + number + '?'))) return;
   if(isConfigured && !String(id).startsWith('u')){
-    var {error} = await sb.from('umbrellas').delete().eq('id', id);
+    var {error} = await sbw.from('umbrellas').delete().eq('id', id);
     if(error){ toast('Erro: ' + error.message); return; }
   }
   toast('🗑️ Guarda-sol removido!');
@@ -10236,14 +10287,14 @@ async function loadAdminData(){
   kw.dataset.loaded='1';
 
   if(isConfigured){
-    var {data:kiosks}=await sb.from('kiosks').select('*').order('created_at',{ascending:false});
+    var {data:kiosks}=await adminListKiosks();
     var list=kiosks||[];
     window._adminKiosksAll = list;
     renderAdminKiosksTable(filterKiosksByType(list, window._adminKioskTypeFilter));
 
     var sw=$('admin-subs-wrap');
     if(sw) sw.innerHTML='<table><thead><tr><th>Negócio</th><th>Plano</th><th>Status</th></tr></thead><tbody>'
-      +list.map(function(k){return '<tr><td>'+k.name+'</td><td><span class="plan-badge plan-starter">starter</span></td><td><span class="active-dot">'+(k.is_active?'Ativa':'Inativa')+'</span></td></tr>';}).join('')
+      +list.map(function(k){return '<tr><td>'+esc(k.name)+'</td><td><span class="plan-badge plan-starter">starter</span></td><td><span class="active-dot">'+(k.is_active?'Ativa':'Inativa')+'</span></td></tr>';}).join('')
       +'</tbody></table>';
 
     var mg=$('admin-metrics-grid');
@@ -10334,21 +10385,21 @@ async function setKioskStatus(id, newStatus){
   if(newStatus === 'blocked')  { updates.is_active = false; updates.blocked = true;  }
 
   if(isConfigured){
-    var {error} = await sb.from('kiosks').update(updates).eq('id', id);
+    var {error} = await sbw.from('kiosks').update(updates).eq('id', id);
     if(error){
       // Se alguma coluna não existir, tentar removendo as opcionais
       if(/approved/i.test(error.message||'')){
         var u2 = Object.assign({}, updates); delete u2.approved;
-        var r2 = await sb.from('kiosks').update(u2).eq('id', id);
+        var r2 = await sbw.from('kiosks').update(u2).eq('id', id);
         if(r2.error && /blocked/i.test(r2.error.message||'')){
           var u3 = {is_active: updates.is_active};
-          await sb.from('kiosks').update(u3).eq('id', id);
+          await sbw.from('kiosks').update(u3).eq('id', id);
         } else if(r2.error){
           toast('Erro: '+r2.error.message); return;
         }
       } else if(/blocked/i.test(error.message||'')){
         var u2b = {is_active: updates.is_active};
-        await sb.from('kiosks').update(u2b).eq('id', id);
+        await sbw.from('kiosks').update(u2b).eq('id', id);
       } else {
         toast('Erro: '+error.message); return;
       }
@@ -10356,7 +10407,7 @@ async function setKioskStatus(id, newStatus){
   }
 
   // Recarregar a tabela
-  var {data:kiosks} = await sb.from('kiosks').select('*').order('created_at',{ascending:false});
+  var {data:kiosks} = await adminListKiosks();
   window._adminKiosksAll = kiosks||[];
   renderAdminKiosksTable(filterKiosksByType(window._adminKiosksAll, window._adminKioskTypeFilter));
   toast('✅ Negócio '+labels[newStatus]+' com sucesso!');
@@ -10672,7 +10723,8 @@ async function doAdminLogin(){
   }
   // Login OK
   adminLoggedIn = true;
-  try{ sessionStorage.setItem('recebaa-admin-session', JSON.stringify({ id: rows[0].id, email: rows[0].email, loginAt: Date.now() })); }catch(e){}
+  window._adminToken = rows[0].token || null;
+  try{ sessionStorage.setItem('recebaa-admin-session', JSON.stringify({ id: rows[0].id, email: rows[0].email, token: rows[0].token, loginAt: Date.now() })); }catch(e){}
   $('admin-login').classList.add('hidden');
   $('admin-dashboard').classList.remove('hidden');
   loadAdminData();
@@ -10680,6 +10732,8 @@ async function doAdminLogin(){
 }
 
 function doAdminLogout(){
+  try{ if(window._adminToken) sb.rpc('logout_session',{ p_token: window._adminToken }); }catch(e){}
+  window._adminToken = null;
   adminLoggedIn = false;
   try{ sessionStorage.removeItem('recebaa-admin-session'); }catch(e){}
   $('admin-login').classList.remove('hidden');
@@ -10700,6 +10754,8 @@ function restoreAdminSession(){
       sessionStorage.removeItem('recebaa-admin-session');
       return false;
     }
+    if(!session.token){ sessionStorage.removeItem('recebaa-admin-session'); return false; }
+    window._adminToken = session.token;
     adminLoggedIn = true;
     return true;
   }catch(e){ return false; }
