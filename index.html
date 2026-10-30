@@ -3650,6 +3650,8 @@ function handleQrDecoded(decodedText){
 function $(id){ return document.getElementById(id) }
 function fmt(v){ return 'R$ '+Number(v).toFixed(2).replace('.',',') }
 function timeNow(){ return new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) }
+// jsa: texto seguro p/ string JS dentro de onclick (só [A-Za-z0-9 _-]; resto vira \xNN/\uNNNN)
+function jsa(v){ return String(v==null?'':v).replace(/[^A-Za-z0-9 _\-]/g,function(c){var n=c.charCodeAt(0);return n<256?'\\x'+('0'+n.toString(16)).slice(-2):'\\u'+('000'+n.toString(16)).slice(-4);}); }
 // Escape HTML: previne XSS ao injetar texto digitado pelo usuário em innerHTML.
 // Sempre usar nesses casos: customer_name, notes, product_name, qualquer texto livre.
 function esc(s){
@@ -6034,7 +6036,7 @@ async function renderWaiters(){
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
       +'<button class="btn btn-ghost btn-sm" onclick="toggleWaiterMenuPermission(\''+w.id+'\','+(!w.can_edit_menu)+')">'+(w.can_edit_menu?'🔒 Bloquear Cardápio':'✅ Liberar Cardápio')+'</button>'
       +'<button class="btn btn-ghost btn-sm" onclick="toggleWaiterActive(\''+w.id+'\','+(!w.is_active)+')">'+(w.is_active?'⏸️ Desativar':'▶️ Reativar')+'</button>'
-      +'<button class="btn btn-ghost btn-sm" style="color:#ef4444" onclick="confirmDeleteWaiter(\''+w.id+'\',\''+esc(w.name).replace(/'/g,"\\'")+'\')">🗑️ Excluir</button>'
+      +'<button class="btn btn-ghost btn-sm" style="color:#ef4444" onclick="confirmDeleteWaiter(\''+w.id+'\',\''+jsa(w.name)+'\')">🗑️ Excluir</button>'
       +'</div>'
       +'</div>';
   }).join('');
@@ -8060,7 +8062,7 @@ function renderLiveOrders(){
       +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
       +callOrders.map(function(o){
         return '<div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #fde68a;border-radius:8px;padding:6px 10px">'
-          +'<span style="font-size:13px;color:#92400e">☂️ Guarda-sol '+(o.umbrella_num||o.umb||'?')+'</span>'
+          +'<span style="font-size:13px;color:#92400e">☂️ Guarda-sol '+esc(o.umbrella_num||o.umb||'?')+'</span>'
           +'<button class="btn btn-sm" style="background:#f59e0b;color:#fff;font-size:11px;padding:4px 10px" data-oid="'+o.id+'" onclick="atenderChamada(this.dataset.oid)">✅ Atendido</button>'
           +'</div>';
       }).join('')
@@ -8203,7 +8205,7 @@ function orderCard(o){
     +'<div class="oc-head"><div class="oc-num">#'+(o.order_number||o.num||'?')+'</div>'
     +'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
     +(groupTag?groupTag:'')
-    +'<span style="font-size:12px;background:var(--sand-100);padding:2px 8px;border-radius:99px">&#x2602;&#xFE0F; '+(o.umb||o.umbrella_num||'?')+'</span>'
+    +'<span style="font-size:12px;background:var(--sand-100);padding:2px 8px;border-radius:99px">&#x2602;&#xFE0F; '+esc(o.umb||o.umbrella_num||'?')+'</span>'
     +'<span class="pill '+p.c+'">'+p.l+'</span></div></div>'
     +'<div class="oc-body"><div class="oc-customer">&#x1F464; '+esc(o.customer_name||o.customer||'?')+' &middot; <span style="font-size:10px;color:var(--sl-400)">&#x1F550; '+(o.time||'')+'</span></div>'
     +(o.created_by?'<div style="font-size:11px;color:#7c3aed;background:#f5f3ff;display:inline-block;padding:2px 8px;border-radius:99px;margin-bottom:6px">🧑‍🍳 Lançado por '+esc(o.created_by)+'</div>':'<div style="font-size:11px;color:#0891b2;background:#ecfeff;display:inline-block;padding:2px 8px;border-radius:99px;margin-bottom:6px">📱 Pedido do cliente</div>')
@@ -9451,7 +9453,7 @@ function applyContasFilters(){
       var billTypeTag = esc((o.notes||'').split(' · ')[0] || '');
       var perPersonMatch = (o.notes||'').match(/\d+\s*pessoas?\s*×\s*R\$\s*[\d.,]+\s*cada/i);
       var perPersonTxt = perPersonMatch ? esc(perPersonMatch[0]) : '';
-      var umbId = esc(o.umbrella_num||o.umb||'');
+      var umbId = String(o.umbrella_num||o.umb||'').replace(/[^A-Za-z0-9_-]/g,'_');
       return '<div style="background:#fff;border-radius:var(--r);border:2px solid #8b5cf6;padding:16px;position:relative;margin-bottom:10px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px">'
         +'<div style="font-size:14px;font-weight:700;color:#6d28d9">🧾 ☂️ Guarda-sol '+esc(o.umbrella_num||o.umb||'?')+'</div>'
@@ -9475,7 +9477,7 @@ function applyContasFilters(){
         +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
         +'<div style="font-size:22px;font-weight:700;color:#6d28d9" id="conta-total-val-'+umbId+'">💰 '+fmt(o.total)+'</div>'
         +'<button class="btn btn-sm" style="background:#10b981;color:#fff;font-weight:600;font-size:13px;padding:10px 20px" '
-        +'data-umb="'+(o.umbrella_num||o.umb||'')+'" onclick="closeUmbrellaSession(this.dataset.umb, document.getElementById(\'conta-service-check-'+umbId+'\')&&document.getElementById(\'conta-service-check-'+umbId+'\').checked)">'
+        +'data-umb="'+esc(o.umbrella_num||o.umb||'')+'" onclick="closeUmbrellaSession(this.dataset.umb, document.getElementById(\'conta-service-check-'+umbId+'\')&&document.getElementById(\'conta-service-check-'+umbId+'\').checked)">'
         +'✅ Faturar e encerrar mesa</button>'
         +'</div>'
         +'</div>';
@@ -9643,7 +9645,7 @@ async function openUmbrellaConsumptionModal(umbNum){
     var itensTxt = g.items.map(function(i){
       return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 0">'
         +'<span style="font-size:12px;color:#5b21b6">• '+i.quantity+'× '+esc(i.product_name)+'</span>'
-        +'<button onclick="removeUmbrellaConsumptionItem(\''+i.id+'\',\''+i.order_id+'\',\''+umbStr+'\')" title="Remover item (não servido / errado)" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;padding:2px 6px;flex-shrink:0">🗑️</button>'
+        +'<button onclick="removeUmbrellaConsumptionItem(\''+i.id+'\',\''+i.order_id+'\',\''+jsa(umbStr)+'\')" title="Remover item (não servido / errado)" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;padding:2px 6px;flex-shrink:0">🗑️</button>'
         +'</div>';
     }).join('');
     return '<div style="padding:8px 0;border-bottom:1px dashed #ddd6fe">'
@@ -9675,7 +9677,7 @@ async function openUmbrellaConsumptionModal(umbNum){
     +'<span style="font-size:14px;font-weight:600;color:var(--sl-500)">Total a cobrar</span>'
     +'<span style="font-size:22px;font-weight:700;color:#6d28d9" id="umb-total-val">💰 '+fmt(totalGeral)+'</span>'
     +'</div>'
-    +'<button class="btn btn-sm" style="width:100%;background:#10b981;color:#fff;font-weight:600;padding:10px" onclick="closeUmbrellaConsumptionModal();closeUmbrellaSession(\''+umbStr+'\', document.getElementById(\'umb-service-check\')&&document.getElementById(\'umb-service-check\').checked)">✅ Faturar e encerrar mesa</button>';
+    +'<button class="btn btn-sm" style="width:100%;background:#10b981;color:#fff;font-weight:600;padding:10px" onclick="closeUmbrellaConsumptionModal();closeUmbrellaSession(\''+jsa(umbStr)+'\', document.getElementById(\'umb-service-check\')&&document.getElementById(\'umb-service-check\').checked)">✅ Faturar e encerrar mesa</button>';
 }
 
 // Recalcula a prévia do total com/sem o acréscimo de 10% de serviço
@@ -9858,7 +9860,7 @@ async function renderUmbrellas(){
       +'<div style="font-size:11px;color:var(--sl-400);margin-bottom:4px">'+esc(u.area||'')+'</div>'
       +statusBadge
       +'<div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:6px">'
-      +'<button class="btn btn-ghost btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" data-area="'+(u.area||'')+'" data-label="'+(u.label||'')+'" data-active="'+isActive+'" onclick="editUmbFromBtn(this)">✏️ Editar</button>'
+      +'<button class="btn btn-ghost btn-sm" data-uid="'+u.id+'" data-num="'+esc(u.number)+'" data-area="'+esc(u.area||'')+'" data-label="'+esc(u.label||'')+'" data-active="'+isActive+'" onclick="editUmbFromBtn(this)">✏️ Editar</button>'
       +'<button class="btn btn-danger btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" onclick="delUmbFromBtn(this)">🗑️</button>'
       +'</div>'
       +(isOpen
