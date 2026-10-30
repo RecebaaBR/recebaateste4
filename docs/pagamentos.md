@@ -351,7 +351,7 @@ Tudo continua **desligado por padrão** e atrás das mesmas duas travas (chave g
 6. Falha segura: se o gateway/Edge cair, o cliente vê o erro e "Seu pedido ainda NÃO foi enviado ao atendente" com opções de tentar de novo, escolher outra forma ou **Cancelar pedido**; nada vai para a equipe sem pagamento. O dono volta para **opcional com 1 clique** (e o servidor volta sozinho para opcional se nenhuma forma de pagamento ficar disponível: `mode_reset`).
 
 ### 13.4 Casos de borda (decisões tomadas)
-- **Pagamento tardio** (pago depois de expirar/cancelar): marcado `late_payment` + `needs_review`; o pedido retido descartado **não** é ressuscitado automaticamente; o dono decide (conferir/estornar fora do sistema).
+- **Pagamento tardio** (pago depois de expirar e de o pedido ser descartado): como o cliente pagou, o pedido **volta para a equipe** (status `pending`, evento normal) e o pagamento fica marcado `late_payment` + `needs_review` para o dono conferir (atender ou estornar fora do sistema).
 - **Valor divergente** (webhook com valor diferente): vai para `needs_review`; pedido não é liberado automaticamente.
 - **Cliente fechou a página**: o pagamento segue no servidor; ao reabrir a mesa, o app retoma (`resume`) ou o dono baixa manualmente. O pedido só é liberado quando houver baixa/webhook.
 - **Trocar para opcional com pedidos em espera**: continuam em espera até pagar ou expirar (não "vazam" para a equipe). Ficam visíveis ao cliente; o dono vê a contagem.
