@@ -671,11 +671,12 @@ tr:hover td{background:var(--sand-50)}
 .lpx .como{background:#fff;color:var(--tx);border-top:1px solid var(--linha)}
 .lpx .como h2{color:var(--mar)}
 .lpx .como .sec-head p{color:var(--tx2)}
-.lpx .steps3{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.lpx .steps3{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:20px}
 .lpx .steps3 li{display:flex;flex-direction:column;gap:10px;min-width:0}
 .lpx .steps3 .n{width:44px;height:44px;border-radius:50%;background:var(--sol);color:#fff;display:flex;align-items:center;justify-content:center;font:900 20px 'Fraunces',serif}
-.lpx .steps3 h3{font-size:20px;line-height:1.2}
-.lpx .steps3 p{font-size:15.5px;line-height:1.55;color:var(--tx2)}
+.lpx .steps3 h3{font-size:19px;line-height:1.2}
+.lpx .steps3 p{font-size:15px;line-height:1.55;color:var(--tx2)}
+.lpx .vm-btn.vm-add{background:var(--mar)}
 .lpx .viz{margin-top:auto;padding-top:10px}
 .lpx .viz-qr{background:var(--espuma);border-radius:16px;padding:22px;text-align:center;border:1px solid var(--linha)}
 .lpx .viz-qr svg{width:120px;height:120px;display:block;margin:0 auto 10px}
@@ -699,8 +700,9 @@ tr:hover td{background:var(--sand-50)}
 .lpx .vlist b{display:block;font-size:19px;color:var(--mar);margin-bottom:4px;font-family:'Fraunces',serif}
 .lpx .vlist span{font-size:16px;line-height:1.55;color:var(--tx2)}
 .lpx .hero{padding-bottom:88px}
-@media (max-width:1050px){
+@media (max-width:1150px){
   .lpx .steps3{grid-template-columns:1fr 1fr;gap:36px 28px}
+  .lpx .steps3 li:last-child{grid-column:1 / -1;width:calc(50% - 14px);justify-self:center}
 }
 @media (max-width:900px){
   .lpx .steps3{grid-template-columns:1fr 1fr;gap:36px 28px}
@@ -708,6 +710,7 @@ tr:hover td{background:var(--sand-50)}
 }
 @media (max-width:620px){
   .lpx .steps3{grid-template-columns:1fr;gap:40px}
+  .lpx .steps3 li:last-child{width:auto}
 }
 
 
@@ -799,17 +802,27 @@ tr:hover td{background:var(--sand-50)}
     <div class="wrap">
       <div class="sec-head">
         <h2>Como funciona</h2>
-        <p>Quatro passos, do QR Code à conta. O cliente não instala nada.</p>
+        <p>Você monta o cardápio uma vez. Depois é só receber os pedidos. O cliente não instala nada.</p>
       </div>
       <ol class="steps3">
         <li>
           <div class="n">1</div>
-          <h3>O cliente abre o cardápio</h3>
-          <p>Cada mesa tem um QR Code. Ele aponta a câmera do celular e o cardápio abre, sem baixar app.</p>
-          <div class="viz viz-qr" aria-hidden="true"><svg viewBox="0 0 25 25" shape-rendering="crispEdges" aria-hidden="true"><path stroke="#0b2e4a" d="M0 0.5h7m1 0h5m1 0h1m3 0h7m-25 1h1m5 0h1m2 0h1m2 0h3m1 0h1m1 0h1m5 0h1m-25 1h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m6 0h2m3 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h1m2 0h1m3 0h1m1 0h3m1 0h1m-25 1h1m5 0h1m1 0h3m1 0h1m1 0h1m3 0h1m5 0h1m-25 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-15 1h1m1 0h1m1 0h3m-17 1h1m1 0h1m3 0h2m1 0h2m3 0h1m1 0h1m2 0h1m2 0h1m1 0h1m-25 1h1m1 0h1m1 0h1m2 0h1m4 0h2m1 0h1m2 0h2m1 0h1m1 0h2m-24 1h1m2 0h3m1 0h4m3 0h1m2 0h2m1 0h2m1 0h1m-25 1h1m1 0h1m2 0h1m1 0h4m1 0h1m4 0h1m3 0h1m-22 1h1m1 0h6m1 0h1m2 0h1m2 0h2m1 0h1m5 0h1m-23 1h1m2 0h1m2 0h1m1 0h1m1 0h1m2 0h2m1 0h2m3 0h2m-25 1h4m1 0h3m4 0h1m1 0h2m1 0h2m2 0h2m1 0h1m-21 1h2m1 0h1m1 0h1m1 0h2m4 0h5m-22 1h3m1 0h1m1 0h1m1 0h2m5 0h6m2 0h1m-16 1h1m5 0h1m1 0h1m3 0h1m3 0h1m-25 1h7m1 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m3 0h1m-25 1h1m5 0h1m2 0h2m4 0h2m3 0h1m3 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h10m3 0h1m-25 1h1m1 0h3m1 0h1m2 0h2m1 0h1m3 0h2m2 0h1m1 0h2m-24 1h1m1 0h3m1 0h1m1 0h2m2 0h6m1 0h3m1 0h2m-25 1h1m5 0h1m4 0h2m3 0h2m1 0h2m-21 1h7m1 0h1m3 0h3m1 0h1m1 0h1m2 0h1m2 0h1"/></svg><b>Mesa 7</b></div>
+          <h3>Você monta o cardápio</h3>
+          <p>No painel, cadastre produtos, preços e fotos e imprima os QR Codes das mesas. Faz uma vez e muda quando quiser.</p>
+          <div class="viz viz-menu" aria-hidden="true">
+            <div class="vm"><span>Suco de abacaxi</span><b>R$ 17,00</b></div>
+            <div class="vm"><span>Coca-Cola Zero</span><b>R$ 12,00</b></div>
+            <div class="vm-btn vm-add">+ Produto</div>
+          </div>
         </li>
         <li>
           <div class="n">2</div>
+          <h3>O cliente abre o cardápio</h3>
+          <p>Ele aponta a câmera do celular para o QR Code da mesa e o cardápio abre, sem baixar app.</p>
+          <div class="viz viz-qr" aria-hidden="true"><svg viewBox="0 0 25 25" shape-rendering="crispEdges" aria-hidden="true"><path stroke="#0b2e4a" d="M0 0.5h7m1 0h5m1 0h1m3 0h7m-25 1h1m5 0h1m2 0h1m2 0h3m1 0h1m1 0h1m5 0h1m-25 1h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h1m2 0h1m1 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m6 0h2m3 0h1m1 0h3m1 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h1m2 0h1m3 0h1m1 0h3m1 0h1m-25 1h1m5 0h1m1 0h3m1 0h1m1 0h1m3 0h1m5 0h1m-25 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-15 1h1m1 0h1m1 0h3m-17 1h1m1 0h1m3 0h2m1 0h2m3 0h1m1 0h1m2 0h1m2 0h1m1 0h1m-25 1h1m1 0h1m1 0h1m2 0h1m4 0h2m1 0h1m2 0h2m1 0h1m1 0h2m-24 1h1m2 0h3m1 0h4m3 0h1m2 0h2m1 0h2m1 0h1m-25 1h1m1 0h1m2 0h1m1 0h4m1 0h1m4 0h1m3 0h1m-22 1h1m1 0h6m1 0h1m2 0h1m2 0h2m1 0h1m5 0h1m-23 1h1m2 0h1m2 0h1m1 0h1m1 0h1m2 0h2m1 0h2m3 0h2m-25 1h4m1 0h3m4 0h1m1 0h2m1 0h2m2 0h2m1 0h1m-21 1h2m1 0h1m1 0h1m1 0h2m4 0h5m-22 1h3m1 0h1m1 0h1m1 0h2m5 0h6m2 0h1m-16 1h1m5 0h1m1 0h1m3 0h1m3 0h1m-25 1h7m1 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m3 0h1m-25 1h1m5 0h1m2 0h2m4 0h2m3 0h1m3 0h1m-25 1h1m1 0h3m1 0h1m2 0h1m1 0h10m3 0h1m-25 1h1m1 0h3m1 0h1m2 0h2m1 0h1m3 0h2m2 0h1m1 0h2m-24 1h1m1 0h3m1 0h1m1 0h2m2 0h6m1 0h3m1 0h2m-25 1h1m5 0h1m4 0h2m3 0h2m1 0h2m-21 1h7m1 0h1m3 0h3m1 0h1m1 0h1m2 0h1m2 0h1"/></svg><b>Mesa 7</b></div>
+        </li>
+        <li>
+          <div class="n">3</div>
           <h3>O pedido é feito</h3>
           <p>O cliente escolhe sozinho no celular, ou chama o garçom, que lança o pedido pelo painel. Os dois jeitos funcionam juntos.</p>
           <div class="viz viz-menu" aria-hidden="true">
@@ -819,7 +832,7 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </li>
         <li>
-          <div class="n">3</div>
+          <div class="n">4</div>
           <h3>O painel avisa você</h3>
           <p>O pedido chega com o número da mesa e um alerta sonoro. Você aceita, prepara e marca como entregue.</p>
           <div class="viz viz-pop" aria-hidden="true">
@@ -830,7 +843,7 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </li>
         <li>
-          <div class="n">4</div>
+          <div class="n">5</div>
           <h3>A conta fica pronta</h3>
           <p>No fim, o cliente pede a conta pelo celular, ou o garçom fecha na mesa. O Recebaa soma tudo e divide entre o grupo, se quiserem.</p>
           <div class="viz viz-bill" aria-hidden="true">
