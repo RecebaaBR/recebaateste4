@@ -3422,6 +3422,20 @@ function closeSidebar(){
 // ══════════════════════════════════════════════════════
 // CLIENTE — SPLASH
 // ══════════════════════════════════════════════════════
+// Link direto para o cadastro de negócio (usado nos anúncios):
+// recebaa.com.br/?cadastro=1 (ou #cadastro) abre a área "Negócio" já no
+// formulário "Criar conta grátis".
+window.addEventListener('load', function(){
+  var params = new URLSearchParams(window.location.search);
+  var wantsSignup = params.has('cadastro') || window.location.hash === '#cadastro';
+  if(!wantsSignup || params.get('kiosk')) return;
+  setTimeout(function(){
+    showScreen('kiosk', $('nav-kiosk'));
+    var auth = $('kiosk-auth');
+    if(!auth || !auth.classList.contains('hidden')) showCard('register');
+  }, 0);
+});
+
 // Auto-detectar kiosk e umbrella da URL ao carregar
 window.addEventListener('load', async function(){
   var urlParams = new URLSearchParams(window.location.search);
