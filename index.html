@@ -554,7 +554,8 @@ tr:hover td{background:var(--sand-50)}
 .lpx .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
 .lpx .hero h1{font-size:clamp(44px,7vw,84px);line-height:1.02;font-weight:900;max-width:8em}
 .lpx .hero .lead{font-size:clamp(17px,2vw,20px);line-height:1.6;color:var(--tx2);max-width:34em;margin-top:22px}
-.lpx .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}
+.lpx .hero-cta{display:grid;grid-template-columns:auto auto;justify-content:start;gap:12px;margin-top:32px}
+.lpx .hero-cta .btn-tutorial{grid-column:1 / -1;justify-self:center}
 .lpx .hero-note{margin-top:18px;font-size:14px;color:var(--tx2)}
 .lpx .wave{position:absolute;left:0;right:0;bottom:-1px;height:44px;color:var(--mar);display:block}
 
@@ -733,7 +734,9 @@ tr:hover td{background:var(--sand-50)}
 @media (max-width:560px){
   .lpx .wrap{padding:0 18px}
   .lpx .rail{grid-template-columns:1fr}
+  .lpx .hero-cta{grid-template-columns:1fr}
   .lpx .hero-cta .btn{width:100%}
+  .lpx .hero-cta .btn-tutorial{justify-self:stretch}
   .lpx .stage::before{width:340px;height:340px}
   .lpx .order-pop{right:-4px;width:228px}
   .lpx .qr-tag{left:-6px;width:112px;padding:9px}
@@ -756,7 +759,7 @@ tr:hover td{background:var(--sand-50)}
         <div class="hero-cta">
           <button class="btn btn-sol" onclick="lpSignup()">Criar conta grátis</button>
           <a class="btn btn-line" href="#como-funciona" onclick="lpScroll('como-funciona');return false">Ver como funciona</a>
-          <a class="btn btn-line" href="https://youtu.be/gAAjF8UEY-E" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Assistir ao tutorial</a>
+          <a class="btn btn-line btn-tutorial" href="https://youtu.be/gAAjF8UEY-E" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg> Assistir ao tutorial</a>
         </div>
         <p class="hero-note">É grátis para começar. Seu cardápio no ar no mesmo dia.</p>
       </div>
