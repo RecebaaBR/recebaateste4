@@ -15,9 +15,11 @@
 }
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;font-family:var(--font);background:var(--sand-50);color:var(--sl-700);line-height:1.6}
-.topbar{background:#fff;border-bottom:1px solid var(--sand-200);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.topbar{background:#fff;border-bottom:1px solid var(--sand-200);padding:10px 24px;display:flex;align-items:center;justify-content:space-between}
 .topbar a{color:var(--ocean-600);text-decoration:none;font-size:14px;font-weight:500}
-.brand{font-family:var(--font-d);font-size:18px;color:var(--sl-800)}
+.brand{display:flex;align-items:center}
+.brand img{height:60px;width:auto;display:block}
+@media (max-width:560px){.brand img{height:50px}}
 .wrap{max-width:760px;margin:0 auto;padding:32px 24px 80px}
 .card{background:#fff;border:1px solid var(--sand-200);border-radius:16px;padding:32px 36px;box-shadow:0 4px 24px rgba(15,23,42,.06)}
 h1.title{font-family:var(--font-d);font-size:26px;color:var(--sl-800);margin:0 0 20px}
@@ -35,7 +37,7 @@ a{color:var(--ocean-600)}
 </head>
 <body>
 <nav class="topbar">
-  <span class="brand">Recebaa</span>
+  <a class="brand" href="/" aria-label="Recebaa, página inicial"><img src="/logo-recebaa.jpg" alt="Recebaa"/></a>
   <a href="/">← Voltar ao site</a>
 </nav>
 <div class="wrap">
