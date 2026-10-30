@@ -1,0 +1,15 @@
+{
+  "name": "recebaa-payments-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 --experimental-strip-types ./*.test.mjs",
+    "test:unit": "node --test --experimental-strip-types ./unit.test.mjs ./core.test.mjs",
+    "test:e2e": "node --test --experimental-strip-types ./e2e.test.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.13",
+    "jsqr": "1.4.0",
+    "playwright": "1.56.0"
+  }
+}

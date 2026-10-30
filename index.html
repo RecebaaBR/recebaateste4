@@ -501,6 +501,8 @@ tr:hover td{background:var(--sand-50)}
 </style>
 <!-- EmailJS SDK + inicialização -->
 <script src="/vendor/emailjs-4.4.1.min.js"></script>
+<!-- [pagamentos] ponto de entrada (sem rede ao carregar; ver docs/pagamentos.md) -->
+<script src="/payments-boot.js"></script>
 <script>
   (function(){
     try{
@@ -3884,7 +3886,7 @@ window.addEventListener('load', function(){
 window.addEventListener('load', async function(){
   var urlParams = new URLSearchParams(window.location.search);
   var kioskId = urlParams.get('kiosk');
-  var umbNum = urlParams.get('umbrella');
+  var umbNum = urlParams.get('umbrella') || urlParams.get('mesa'); // [pagamentos] QR por mesa: ?kiosk=<id>&umbrella=<n> (alias ?mesa=)
   if(umbNum) $('umbrella-input').value = umbNum;
   if(kioskId && isConfigured){
     // Buscar nome, tipo de negócio e logo do kiosk para mostrar na splash já com o
@@ -3907,6 +3909,8 @@ window.addEventListener('load', async function(){
   // clique em "Fazer pedido".
   if(kioskId){
     showScreen('client', document.getElementById('nav-client'));
+    // [pagamentos] QR por mesa: com ?kiosk e ?umbrella válidos, já abre o cardápio da mesa
+    if(umbNum && /^\d{1,6}$/.test(umbNum)) setTimeout(function(){ try{ goToMenu(); }catch(e){} }, 0);
   }
 
   // ─── Restaurar sessão do cliente após refresh (pull-to-refresh, F5, etc.) ───
@@ -4201,6 +4205,7 @@ async function goToMenu(){
   buildCatTabs();
   buildMenu();
   maybeShowPromoPopup();
+  if(window.RecebaaPay) RecebaaPay.clientReady(currentKiosk, window._umb); // [pagamentos] no-op se payments_enabled=false
   // Carregar pedidos existentes do guarda-sol do banco (sessão atual)
   refreshClientOrders();
   // Iniciar escuta realtime para atualizações de pedidos deste guarda-sol
@@ -5992,6 +5997,7 @@ function renderMyOrders(){
   });
 
   el.innerHTML=html;
+  if(window.RecebaaPay) RecebaaPay.afterMyOrders(el); // [pagamentos] no-op se payments_enabled=false
 }
 
 async function clientCancelOrder(orderId){
@@ -9953,6 +9959,7 @@ async function renderUmbrellas(){
   }
 
   grid.innerHTML = qrSection + filterBar + umbHtml;
+  if(window.RecebaaPay) RecebaaPay.afterUmbrellas(grid, umbs, currentKiosk); // [pagamentos] QR por mesa + painel de pagamentos
 
   setTimeout(function(){
     var copyBtn = document.getElementById('copy-qr-btn');

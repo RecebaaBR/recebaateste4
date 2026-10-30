@@ -1,0 +1,4 @@
+PLACEHOLDER - NAO E O ARQUIVO REAL.
+Este texto reserva o caminho /.well-known/apple-developer-merchantid-domain-association (verificacao de dominio do Apple Pay).
+Antes de ligar as carteiras em producao, o dono deve registrar recebaa.com.br em Stripe Dashboard > Settings > Payment methods > Apple Pay > Add new domain,
+baixar o arquivo oficial gerado pela Stripe e SUBSTITUIR todo o conteudo deste arquivo por ele (sem editar). Ver docs/pagamentos.md.
