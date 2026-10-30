@@ -11160,11 +11160,14 @@ function aPage(name,btn){
 .auth-wrap{min-height:calc(100vh - var(--nav-h))}
 .dash-layout,.admin-layout{min-height:calc(100vh - var(--nav-h))}
 .sidebar,.admin-sidebar{top:var(--nav-h);height:calc(100vh - var(--nav-h))}
+.menu-kiosk-logo{width:60px;height:60px;border-radius:12px}
+.menu-kiosk-logo img{max-width:100%!important;max-height:100%!important}
 @media (max-width:560px){
   :root{--nav-h:72px}
   .nav-logo img{height:50px!important}
   .nav{padding:0 8px;gap:4px}
   .nav-btn{padding:4px 7px}
+  .menu-kiosk-logo{width:52px;height:52px}
 }
 @media(max-width:700px),(max-height:500px) and (orientation:landscape){
   .sidebar,.admin-sidebar{top:0;height:auto;padding-top:var(--nav-h)}
