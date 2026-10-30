@@ -147,18 +147,52 @@ describe('Mercado Pago: consulta e status', () => {
 describe('higiene do repositório', () => {
   const files = [];
   (function walk(d) { for (const e of fs.readdirSync(d, { withFileTypes: true })) { const p = path.join(d, e.name); if (e.isDirectory()) { if (!['node_modules', '.git'].includes(e.name)) walk(p); } else files.push(p); } })(path.join(repo, 'supabase/functions'));
-  for (const f of ['payments-boot.js', 'payments.js', 'payments-staff.js', 'mesa-qr.js', 'docs/pagamentos.md', 'supabase/migrations/20261031_payments_v1.sql']) if (fs.existsSync(path.join(repo, f))) files.push(path.join(repo, f));
+  for (const f of ['payments-boot.js', 'payments.js', 'payments-staff.js', 'mesa-qr.js', 'wallet.js', 'docs/pagamentos.md', 'supabase/migrations/20261031_payments_v1.sql', 'supabase/migrations/20261101_payments_wallets_v1.sql']) if (fs.existsSync(path.join(repo, f))) files.push(path.join(repo, f));
   test('nenhum segredo/chave de provedor no código novo', () => {
     const bad = /(APP_USR-[0-9a-f-]{8,}|TEST-[0-9a-f]{12,}|sk_live_|sk_test_|whsec_[A-Za-z0-9]{10,}|-----BEGIN [A-Z ]*PRIVATE|service_role['"]?\s*[:=]\s*['"]eyJ)/;
     for (const f of files) assert.ok(!bad.test(fs.readFileSync(f, 'utf8')), f);
   });
+  test('Stripe: só a chave PUBLICÁVEL pode aparecer no front; segredos só no servidor via Deno.env', () => {
+    const st = fs.readFileSync(path.join(repo, 'supabase/functions/_shared/stripe.ts'), 'utf8');
+    assert.ok(!/sk_(live|test)_|whsec_[A-Za-z0-9]/.test(st));
+    const reg = fs.readFileSync(path.join(repo, 'supabase/functions/_shared/registry.ts'), 'utf8');
+    assert.ok(/env\('STRIPE_SECRET_KEY'\)/.test(reg) && /env\('STRIPE_WEBHOOK_SECRET'\)/.test(reg));
+    const idx = fs.readFileSync(path.join(repo, 'supabase/functions/wallet-config/index.ts'), 'utf8');
+    assert.ok(/Deno\.env\.get/.test(idx));
+    for (const f of ['index.html', 'wallet.js', 'payments.js']) assert.ok(!/pk_(live|test)_[A-Za-z0-9]/.test(fs.readFileSync(path.join(repo, f), 'utf8')), f + ': nem a publicável fica no código');
+  });
   test('Edge Functions leem segredos só de Deno.env (nada hardcoded) e o front não referencia segredos', () => {
     const idx = fs.readFileSync(path.join(repo, 'supabase/functions/create-payment/index.ts'), 'utf8');
     assert.ok(/Deno\.env\.get/.test(idx));
-    for (const f of ['payments-boot.js', 'payments.js', 'payments-staff.js', 'mesa-qr.js']) {
+    for (const f of ['payments-boot.js', 'payments.js', 'payments-staff.js', 'mesa-qr.js', 'wallet.js']) {
       const p = path.join(repo, f); if (!fs.existsSync(p)) continue;
       const s = fs.readFileSync(p, 'utf8');
-      assert.ok(!/(client_secret|access_token|MP_CLIENT|SERVICE_ROLE|webhook_secret|card_number|cardNumber|security_code|cvv)/i.test(s), f + ' menciona segredo/cartão');
+      assert.ok(!/(access_token|MP_CLIENT|SERVICE_ROLE|webhook_secret|STRIPE_SECRET|STRIPE_WEBHOOK|sk_(live|test)_|whsec_|card_number|cardNumber|security_code|cvv)/i.test(s), f + ' menciona segredo/cartão');
     }
+  });
+});
+
+describe('vercel.json (CSP / Permissions-Policy / Apple Pay)', () => {
+  const v = JSON.parse(fs.readFileSync(path.join(repo, 'vercel.json'), 'utf8'));
+  const all = Object.fromEntries(v.headers.find(h => h.source === '/(.*)').headers.map(h => [h.key, h.value]));
+  const dir = (name) => (all['Content-Security-Policy'].split(';').map(x => x.trim()).find(x => x.startsWith(name + ' ')) || '').split(/\s+/).slice(1);
+  test('CSP libera SÓ os domínios da Stripe necessários e mantém o restante restritivo', () => {
+    assert.ok(dir('script-src').includes('https://js.stripe.com'));
+    assert.ok(dir('connect-src').includes('https://api.stripe.com') && dir('connect-src').includes('https://m.stripe.network'));
+    for (const d of ['https://js.stripe.com', 'https://hooks.stripe.com', 'https://m.stripe.network']) assert.ok(dir('frame-src').includes(d), d);
+    assert.ok(dir('img-src').includes('https://*.stripe.com'));
+    assert.deepEqual(dir('default-src'), ["'self'"]); assert.deepEqual(dir('frame-ancestors'), ["'none'"]); assert.deepEqual(dir('object-src'), ["'none'"]);
+    assert.ok(!/\*(?!\.stripe)/.test(all['Content-Security-Policy'].replace(/https:\/\/\*\.stripe\.com/g, '')), 'sem curinga solto');
+  });
+  test('Permissions-Policy permite Payment Request só para o próprio site e js.stripe.com', () => {
+    assert.match(all['Permissions-Policy'], /payment=\(self "https:\/\/js\.stripe\.com"\)/);
+    assert.match(all['Permissions-Policy'], /geolocation=\(\)/);
+  });
+  test('arquivo de verificação do Apple Pay: regra de cabeçalho text/plain, sem redirect/rewrite, placeholder presente e NÃO falso', () => {
+    const rule = v.headers.find(h => h.source === '/.well-known/apple-developer-merchantid-domain-association');
+    assert.ok(rule && rule.headers.some(h => h.key === 'Content-Type' && /^text\/plain/.test(h.value)));
+    assert.ok(!v.redirects && !v.rewrites, 'nenhum redirect/rewrite que quebre a verificação');
+    const f = fs.readFileSync(path.join(repo, '.well-known/apple-developer-merchantid-domain-association'), 'utf8');
+    assert.match(f, /PLACEHOLDER/);
   });
 });

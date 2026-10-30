@@ -1,6 +1,8 @@
-# Pagamentos online no Recebaa (Pix + cartão) — projeto e guia de ativação
+# Pagamentos online no Recebaa (Pix + cartão; carteiras Apple Pay/Google Pay via Stripe) — projeto e guia de ativação
 
 Status: **código pronto, nada ativo**. Tudo nasce desligado (`kiosks.payments_enabled = false`), nenhuma migração foi aplicada, nenhuma Edge Function foi publicada, nenhuma credencial existe no repositório.
+
+**Atualização (carteiras):** o dono decidiu MANTER o Mercado Pago para Pix e cartão e ADICIONAR a Stripe **somente** para Apple Pay e Google Pay, atrás de uma segunda flag (`kiosks.wallets_enabled`, desligada). Tudo sobre isso está na **seção 12**, incluindo a **PENDÊNCIA ABERTA do Stripe Connect para contas brasileiras** (não confirmado).
 
 Hoje o Recebaa **não processa pagamentos**: o cliente pede a conta e paga direto ao estabelecimento (maquininha, Pix, dinheiro). A landing e os termos dizem isso. Este documento descreve como mudar isso **por negócio**, sem o Recebaa custodiar dinheiro.
 
@@ -184,7 +186,7 @@ Rollback rápido: `PAYMENTS_GLOBAL_ENABLED=0` (some o fluxo sem redeploy) e/ou `
 
 ### CSP (`vercel.json`)
 
-**Nenhuma alteração é necessária** com a arquitetura escolhida: o cartão usa checkout hospedado por **redirecionamento** (navegação não é restringida pela CSP), as chamadas vão para o próprio host do Supabase (`connect-src` já o permite) e os QR são `data:`/SVG inline gerados localmente. Se um dia o cartão passar a usar o *Bricks/SDK* na página, será preciso liberar `script-src`/`frame-src`/`connect-src` para `sdk.mercadopago.com`/`*.mercadopago.com` (e isso aumenta o escopo PCI). Por isso o `vercel.json` ficou intacto neste PR.
+**Nenhuma alteração é necessária** com a arquitetura escolhida: o cartão usa checkout hospedado por **redirecionamento** (navegação não é restringida pela CSP), as chamadas vão para o próprio host do Supabase (`connect-src` já o permite) e os QR são `data:`/SVG inline gerados localmente. Se um dia o cartão passar a usar o *Bricks/SDK* na página, será preciso liberar `script-src`/`frame-src`/`connect-src` para `sdk.mercadopago.com`/`*.mercadopago.com` (e isso aumenta o escopo PCI). Para Pix e cartão (Mercado Pago) isso continua valendo. **Para as carteiras (Stripe) o `vercel.json` MUDA neste PR — ver seção 12.5.**
 
 ---
 
@@ -227,6 +229,8 @@ Cobertura (resumo): valor adulterado ignorado (corpo da requisição e divergên
 
 O que **não** foi (nem pode ser) testado sem credenciais reais: a API real do Mercado Pago (formato exato das respostas, regras de `application_fee`, valores mínimos de Pix/cartão, fuso de `date_of_expiration`), o OAuth real, o webhook real (formato da assinatura conforme documentação — **validar no sandbox**), o checkout hospedado real e o retorno `back_urls`, Edge Functions rodando em Deno no Supabase (a lógica roda em Node nos testes com os mesmos módulos), Realtime (usamos polling), a migração aplicada no banco real (testada em PGlite com o esquema reconstruído a partir dos metadados de produção; aplicar antes em um branch).
 
+Carteiras (Stripe) — testes adicionais com a **Stripe falsa** (`fake-stripe.mjs`: `api.stripe.com` em memória que respeita `Stripe-Account`, `Idempotency-Key` e assinatura `t=,v1=`; e um `stripe.js` falso no navegador): fluxo carteira -> webhook assinado -> pago -> comprovante -> validação; assinatura inválida/ausente/expirada/do futuro/corpo adulterado (401); valor adulterado ignorado; webhook repetido (`already_paid`); PaymentIntent de outra conta com o mesmo `pid` não liquida; valor recebido diferente vai para revisão; Stripe fora do ar = 502 (reenvio); reembolso inverte; flag das carteiras desligada = **nenhum** `wallet.js`/`stripe.js`/`wallet-config` e nenhuma UI nova; navegador sem carteira provável (Firefox) = stripe.js nem é baixado; carteira indisponível = sem botão; recusa = cancela e não cobra; `vercel.json` (CSP, Permissions-Policy, regra do Apple Pay).
+
 ---
 
 ## 10. Pontos de ancoragem no `index.html` (para rebase/cherry-pick)
@@ -255,3 +259,61 @@ Se a limpeza em paralelo mudar esses trechos, basta reaplicar as 5 linhas acima.
 8. **Dependência do `login_attempts`** para rate limit (tabela já existente) — ela é limpa a cada 1 dia.
 9. Observação fora do escopo: a CSP atual (`script-src` sem `cdn.jsdelivr.net`) bloqueia o carregamento do `jsQR` usado pelo leitor de QR do cliente (`index.html` ~linha 3397). Vale conferir em produção.
 10. Compatibilidade do TypeScript das Edge Functions: escrito com extensões `.ts` explícitas (Deno) e sem recursos que o Node não remova; validar o `deploy` no Supabase.
+
+---
+
+## 12. Carteiras Apple Pay e Google Pay via Stripe (adicional ao Mercado Pago)
+
+### 12.1 Decisão e escopo
+- **Mercado Pago continua** sendo o único provedor de **Pix** e **cartão** (seções 1 a 11).
+- **Stripe entra somente para as carteiras** (Apple Pay e Google Pay). A Stripe **não** processa Pix nem o checkout de cartão aqui: o código recusa qualquer método diferente de `wallet` nesse provedor (e o Mercado Pago recusa `wallet`).
+- Flag separada por negócio: `kiosks.wallets_enabled` (padrão `false`). Só pode ser ligada se: (1) `payments_enabled` estiver ligada, (2) o negócio estiver **liberado pela plataforma** (`kiosk_payments.invited`, não bloqueado) e (3) o dono tiver **conectado a conta Stripe**. Uma restrição no banco (`kiosks_wallets_need_payments`) impede `wallets_enabled = true` com `payments_enabled = false`. Desligar os pagamentos, desconectar ou o bloqueio pela plataforma desligam as carteiras. `staff_write` não consegue alterar a flag.
+- Kill switch global: `PAYMENTS_GLOBAL_ENABLED` continua valendo para tudo; sem `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET`/`STRIPE_PUBLISHABLE_KEY` o provedor não existe e `create-payment` responde 503 para `wallet`.
+
+### 12.2 Desenho: Stripe Connect com *direct charges*
+- O dono conecta a **própria** conta Stripe (OAuth do Connect, ação `start_wallet` em `payments-oauth`; o `state` leva o prefixo `stripe.`). Guardamos **apenas o id da conta conectada** (`acct_...`) em `kiosk_payments.stripe_account_id`; nenhum token do estabelecimento é guardado.
+- O PaymentIntent é criado **na conta do estabelecimento** (cabeçalho `Stripe-Account`) com a chave secreta da plataforma. O dinheiro vai para o estabelecimento; o Recebaa não custodia nem repassa. Sem `application_fee_amount` por padrão (`PAYMENTS_APP_FEE_PERCENT`, mesma cautela tributária).
+- **Servidor**: valor calculado no banco (mesma `payment_prepare`), `Idempotency-Key` = id do pagamento, `payment_method_types[]=card` (Apple Pay/Google Pay trafegam como cartão tokenizado pela carteira), `metadata[pid]` = **id opaco** (nenhum nome, mesa, e-mail ou CPF).
+- **Webhook**: endpoint próprio `payment-webhook?provider=stripe`. Verifica `Stripe-Signature` (`t=` e `v1=`, HMAC-SHA256 de `t.corpo`, comparação em tempo constante, **tolerância de 300 s** configurável) **antes** de tocar no banco; depois **reconsulta o PaymentIntent na API** (com a conta gravada no pagamento, nunca a do evento) e só então liquida via `payment_settle` (idempotente, valor exato, referência externa = `pid`). Eventos de `charge.*` sem metadata são resolvidos por `payment_find_by_ref`. PaymentIntent de outra conta devolve 404 e não liquida.
+- **Front** (`wallet.js`): carregado só por `payments.js` e só quando o servidor diz `wallets_available`. Pré-checagem sem rede (Apple Pay no Safari/iOS, ou Chrome/Chromium/Android; Firefox não). Só então busca a configuração (`wallet-config`: chave **publicável** + conta conectada) e carrega `https://js.stripe.com/v3/` sob demanda. Usa o **Express Checkout Element** (intent adiado: `mode: 'payment'`, `currency: 'brl'`), apenas `applePay` e `googlePay`; o botão **só aparece** quando o evento `ready` informa que uma das carteiras está realmente disponível. No `confirm`: valida o elemento, cria o pagamento no servidor, `confirmPayment(... redirect: 'if_required')` e acompanha o status por polling até o comprovante em QR (mesmo comprovante e mesma validação pela equipe do Pix; o método aparece como `wallet`).
+- Segredos só em `Deno.env`. Só a chave publicável vai para o navegador.
+
+### 12.3 PENDÊNCIA ABERTA (bloqueante para ligar em produção): Stripe Connect com contas brasileiras
+**Não está confirmado** que a Stripe permita, para estabelecimentos **brasileiros**, o modelo Connect com *direct charges* e repasse direto para a conta do estabelecimento (nem em quais tipos de conta: Standard/Express/Custom). Esta implementação **assume** Connect Standard com OAuth e direct charges; se a Stripe disser que não, o desenho das carteiras precisa mudar (ou o escopo ser cancelado). **O dono deve perguntar à Stripe (suporte/vendas) e validar por escrito:**
+1. A plataforma (Recebaa, CNPJ no Brasil) pode ter conta **Connect** e conectar contas de **estabelecimentos brasileiros**? Em quais tipos (Standard / Express / Custom) e com quais requisitos de KYC/contrato?
+2. *Direct charges* em conta conectada brasileira em **BRL** são suportadas? O liquidante é o próprio estabelecimento (sem passar pela plataforma)?
+3. **Apple Pay e Google Pay** estão habilitados para contas conectadas brasileiras e para o Express Checkout Element em BRL?
+4. **Repasse (payout)**: prazo, conta bancária do estabelecimento no Brasil, antecipação, reservas/retenções.
+5. **Tarifas**: tarifa por transação de carteira/cartão no Brasil, tarifa adicional de Connect (se houver), tarifa por *payout*, cobrança de estorno/disputa.
+6. **Registro de domínio do Apple Pay para contas conectadas**: o domínio `recebaa.com.br` precisa ser registrado **por conta conectada** (API com `Stripe-Account` ou painel) ou basta o da plataforma? Isto **não está implementado** no código por não ter sido possível validar; se for por conta conectada, é preciso adicionar uma etapa ao fluxo de conexão.
+7. Responsabilidade por **chargeback/disputa** (em *direct charges* costuma ser da conta conectada) e o que isso exige nos contratos.
+8. Se o Connect OAuth (Standard) está disponível para novas plataformas ou se a Stripe exige o *Account Links* (onboarding hospedado) — ajustaria `payments-oauth`.
+9. Enquadramento regulatório: confirmar com assessoria que a plataforma, neste desenho, continua sem custodiar recursos (seção 8).
+
+### 12.4 Tarifas (apenas ordem de grandeza — **validar** com a Stripe e com o Mercado Pago)
+- Cartão/carteira no Brasil costuma custar algo na casa de **3% a 4% + uma tarifa fixa de centavos** por transação; Pix costuma ser **bem menor, na casa de ~1%**. Connect pode ter tarifas adicionais. Estes números **não foram confirmados** e mudam; usar apenas para a conversa com o estabelecimento-piloto. A tarifa é do estabelecimento (conta dele), não do Recebaa, salvo `application_fee`.
+
+### 12.5 CSP, Permissions-Policy e verificação do Apple Pay (`vercel.json`, somente neste PR)
+- `script-src` += `https://js.stripe.com`; `connect-src` += `https://api.stripe.com https://m.stripe.network`; `frame-src` (novo) = `https://js.stripe.com https://hooks.stripe.com https://m.stripe.network`; `img-src` += `https://*.stripe.com`. Demais diretivas inalteradas (`default-src 'self'`, `frame-ancestors 'none'`).
+- `Permissions-Policy`: `payment=()` virou `payment=(self "https://js.stripe.com")` (com `payment=()` a Payment Request API ficaria bloqueada e o botão nunca apareceria).
+- **Não testado em navegador real:** pode ser necessário liberar mais algum domínio do Google Pay (por exemplo `https://pay.google.com`) quando o Express Checkout carregar a folha do Google Pay. Testar no ambiente de teste com o console aberto procurando violações de CSP, **antes** de ligar a qualquer negócio.
+- **Apple Pay – arquivo de verificação:** `.well-known/apple-developer-merchantid-domain-association` é um **PLACEHOLDER** (texto avisando que não é o arquivo real). `vercel.json` serve esse caminho como `text/plain` e não há redirect/rewrite no projeto. O dono deve **substituir o conteúdo** pelo arquivo oficial baixado da Stripe (não editar). Nenhum arquivo falso foi inventado.
+
+### 12.6 O que o DONO faz por fora (carteiras)
+1. Criar/validar a **conta Stripe da plataforma** (CNPJ do Recebaa), ativar o **Connect** e fazer as perguntas da seção 12.3. **Não ligar nada antes das respostas.**
+2. No Connect, obter o `client_id` do OAuth (`ca_...`) e cadastrar a URL de redirecionamento = `https://ifhfacpeskslhumctgpr.supabase.co/functions/v1/payments-oauth`.
+3. Cadastrar o endpoint de webhook: `https://ifhfacpeskslhumctgpr.supabase.co/functions/v1/payment-webhook?provider=stripe`, eventos: `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.canceled`, `payment_intent.processing`, `payment_intent.requires_action`, `charge.refunded`, `charge.dispute.created`. Se o Connect exigir, criar o endpoint como **de contas conectadas**. Copiar o segredo de assinatura.
+4. Cadastrar os segredos no Supabase (**nunca** em chat/e-mail/repositório): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY` (a publicável pode ir ao front, mas é servida por `wallet-config`), `STRIPE_CONNECT_CLIENT_ID`, `STRIPE_REDIRECT_URI` (igual à URL do passo 2) e, opcional, `STRIPE_WEBHOOK_TOLERANCE_SEC` (padrão 300). Comece com as **chaves de teste**.
+5. **Apple Pay:** registrar `recebaa.com.br` (Stripe Dashboard -> Settings -> Payment methods -> Apple Pay -> Add new domain, e conforme a resposta da pergunta 6 da seção 12.3 também para cada conta conectada), baixar o arquivo de verificação, **substituir** o placeholder `.well-known/apple-developer-merchantid-domain-association`, publicar o site e só então clicar em *Verify*.
+6. Aplicar a migração `20261101_payments_wallets_v1.sql` (depois da `20261031`) primeiro em branch/projeto de teste.
+7. Publicar as funções: `supabase functions deploy wallet-config` (JWT padrão), e **republicar** `create-payment payment-status` e `payment-webhook payments-oauth --no-verify-jwt` (os arquivos compartilhados mudaram).
+8. Piloto: liberar o negócio, ligar Pix/cartão, conectar a conta Stripe de teste, ligar as carteiras, pagar com carteira em um celular real (iPhone/Safari e Android/Chrome) usando cartão de teste na carteira, conferir webhook, comprovante e a validação pela equipe.
+9. Rollback: `PAYMENTS_GLOBAL_ENABLED=0` ou `update kiosks set wallets_enabled=false`.
+
+### 12.7 O que os Termos e a Política de Privacidade vão exigir (NÃO alterado neste PR)
+- Além do Mercado Pago, a **Stripe** (Stripe Payments Brasil / entidade aplicável) passa a ser **operador/controlador independente** dos dados de pagamento feitos por carteira; citar na Política de Privacidade (finalidade, base legal, transferência internacional se aplicável, link da política da Stripe) e nos Termos (processamento por Stripe quando o cliente usa Apple Pay/Google Pay; Apple e Google como provedoras das carteiras; estorno/disputa conforme a Stripe).
+- Registro que o Recebaa guarda para carteiras: valor, mesa, método `wallet`, status, datas, id do PaymentIntent e id da conta conectada. **Nenhum dado de cartão ou da carteira.** Cookies/armazenamento: a Stripe pode gravar identificadores no navegador ao carregar `stripe.js` (antifraude); avaliar o aviso de cookies.
+- Mesmos textos da seção 7 (landing/termos embutidos no app) continuam precisando de revisão antes de ativar.
+
+### 12.8 O que NÃO foi testado (precisa de credenciais/ambiente reais)
+API real da Stripe (formatos, erros, `Idempotency-Key`, busca por metadata), Connect/OAuth reais para conta brasileira, Apple Pay e Google Pay reais (inclui a verificação de domínio), `stripe.js`/Express Checkout reais (os testes usam um `stripe.js` falso), CSP e Permissions-Policy em navegador real e na Vercel, entrega real de webhooks e janela de tolerância com relógio real, Edge Functions no runtime Deno.
