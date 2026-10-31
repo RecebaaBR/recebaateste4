@@ -2022,7 +2022,10 @@ var sbw = (function(){
         return finish(rd.rows);
       }
       if(st.op==='insert'){
-        var r = await sb.rpc('place_order', { p_order: st.payload, p_items: null });
+        var po = Object.assign({}, st.payload);
+        if(mode()==='staff'){ po.staff_token = token(); }
+        else if(window._umbCode){ po.access_code = window._umbCode; }
+        var r = await sb.rpc('place_order', { p_order: po, p_items: null });
         if(r.error) return failed(r.error);
         return { data: (st.single ? r.data : (st.retSel ? [r.data] : null)), error:null };
       }
@@ -2757,6 +2760,8 @@ window.addEventListener('load', async function(){
   var kioskId = urlParams.get('kiosk');
   var umbNum = urlParams.get('umbrella');
   if(umbNum) $('umbrella-input').value = umbNum;
+  var qrCode = urlParams.get('code');
+  if(qrCode){ window._umbCode = qrCode; try{ sessionStorage.setItem('recebaa-client-code', qrCode); }catch(e){} }
   if(kioskId && isConfigured){
     // Buscar nome, tipo de negócio e logo do kiosk para mostrar na splash já com o
     // termo certo ("guarda-sol" ou "mesa") antes mesmo do cliente digitar o número
@@ -3050,6 +3055,17 @@ async function goToMenu(){
       toast(t('umb_inactive'));
       return;
     }
+
+    // Código secreto da mesa (só exigido se o negócio ligou a opção)
+    if(!window._umbCode){ try{ window._umbCode = sessionStorage.getItem('recebaa-client-code') || ''; }catch(e){} }
+    try{
+      var acc = await sb.rpc('umbrella_access', { p_kiosk: currentKiosk.id, p_umbrella: String(window._umb), p_code: window._umbCode || null });
+      if(!acc.error && acc.data && acc.data.ok === false){
+        setLoading('splash-btn',false,'Ver Cardápio →');
+        toast('🔒 Escaneie o QR Code da sua mesa para pedir.');
+        return;
+      }
+    }catch(e){}
 
     // Persistir sessão do cliente para sobreviver a refresh (pull-to-refresh no mobile)
     try{
@@ -8378,6 +8394,9 @@ async function toggleDirectOrders(){
 async function renderUmbrellas(){
   renderDirectOrdersToggle();
   var grid=$('umb-grid'); if(!grid) return;
+  await loadUmbCodes();
+  var reqCode=null;
+  if(window._sessToken && window._umbCodesOk){ try{ var rq=await sb.rpc('staff_set_require_code',{p_token:window._sessToken,p_value:null}); if(!rq.error) reqCode=!!rq.data; }catch(e){} }
   var umbs=[];
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     var {data}=await sb.from('umbrellas').select('*').eq('kiosk_id',currentKiosk.id).order('number');
@@ -8454,6 +8473,7 @@ async function renderUmbrellas(){
     + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code geral do Negócio</div>'
     + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('Neste QR o cliente digita o número do guarda-sol, o que permite erro. Para evitar pedido na mesa errada, use um QR por guarda-sol (botão abaixo).') + '</div>'
     + '<button class="btn btn-ocean btn-sm" style="margin:0 0 14px;display:block;margin-left:auto;margin-right:auto" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todos os guarda-sóis') + '</button>'
+    + (reqCode===null ? '' : '<div style="margin-top:4px"><button class="btn btn-ghost btn-sm" onclick="toggleRequireCode()">' + (reqCode ? '🔒 Código do QR exigido (clique para desligar)' : '🔓 Exigir código do QR (mais seguro)') + '</button></div>')
     + '<img src="' + qrImgUrl + '" style="margin:0 auto 12px;display:block;border-radius:8px"/>'
     + '<div style="font-size:11px;color:var(--ocean-600);word-break:break-all;margin-bottom:12px">' + qrUrl + '</div>'
     + '<button class="btn btn-ocean btn-sm" style="margin:4px" id="copy-qr-btn">📋 Copiar URL</button>'
@@ -8493,6 +8513,7 @@ async function renderUmbrellas(){
       +'<button class="btn btn-ghost btn-sm" data-uid="'+u.id+'" data-num="'+esc(u.number)+'" data-area="'+esc(u.area||'')+'" data-label="'+esc(u.label||'')+'" data-active="'+isActive+'" onclick="editUmbFromBtn(this)">✏️ Editar</button>'
       +'<button class="btn btn-danger btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" onclick="delUmbFromBtn(this)">🗑️</button>'
       +'<button class="btn btn-ghost btn-sm" data-num="'+u.number+'" onclick="printUmbQr(this.dataset.num)">📱 QR</button>'
+      +(window._umbCodes && window._umbCodes[String(u.number)] ? '<button class="btn btn-ghost btn-sm" title="Gerar novo código" data-uid="'+u.id+'" onclick="rotateUmbCode(this.dataset.uid)">🔄</button>' : '')
       +'</div>'
       +(isOpen
         ? '<button class="btn btn-sm" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-size:11px" data-num="'+u.number+'" onclick="openUmbrellaConsumptionModal(this.dataset.num)">👁️ Ver consumo</button>'
@@ -8617,13 +8638,45 @@ function copyQrUrl(elOrUrl){
 // QR por mesa/guarda-sol: o link já leva o número, que fica travado no cliente.
 function umbQrUrl(num){
   var id = currentKiosk ? currentKiosk.id : '';
-  return getKioskUrl() + '?kiosk=' + encodeURIComponent(id) + '&umbrella=' + encodeURIComponent(num);
+  var url = getKioskUrl() + '?kiosk=' + encodeURIComponent(id) + '&umbrella=' + encodeURIComponent(num);
+  var c = window._umbCodes && window._umbCodes[String(num)];
+  return c ? url + '&code=' + encodeURIComponent(c) : url;
+}
+// Carrega os códigos secretos das mesas (só dono/garçom logado; se a migração ainda
+// não foi aplicada, falha em silêncio e o QR sai sem código, como antes).
+async function loadUmbCodes(){
+  window._umbCodes = {};
+  if(!isConfigured || !window._sessToken) return;
+  try{
+    var r = await sb.rpc('staff_umbrella_codes', { p_token: window._sessToken });
+    if(!r.error){ window._umbCodesOk = true; (r.data||[]).forEach(function(x){ window._umbCodes[String(x.number)] = x.code; }); }
+  }catch(e){}
+}
+async function toggleRequireCode(){
+  try{
+    var cur = await sb.rpc('staff_set_require_code', { p_token: window._sessToken, p_value: null });
+    if(cur.error){ toast('Erro: ' + cur.error.message); return; }
+    var next = !cur.data;
+    if(next && !confirm('Ao ligar, só QR Codes novos (com código) conseguem pedir. Os QRs antigos deixam de funcionar. Imprima os novos antes. Ligar agora?')) return;
+    var r = await sb.rpc('staff_set_require_code', { p_token: window._sessToken, p_value: next });
+    if(r.error){ toast('Erro: ' + r.error.message); return; }
+    toast(next ? '🔒 Código do QR exigido' : '🔓 Código do QR não é mais exigido');
+    renderUmbrellas();
+  }catch(e){ toast('Função indisponível'); }
+}
+async function rotateUmbCode(id){
+  if(!confirm('Gerar novo código? O QR antigo desta mesa deixa de funcionar e será preciso imprimir de novo.')) return;
+  var r = await sb.rpc('staff_rotate_umbrella_code', { p_token: window._sessToken, p_umbrella_id: id });
+  if(r.error){ toast('Erro: ' + r.error.message); return; }
+  toast('✅ Novo código gerado. Imprima o QR de novo.');
+  renderUmbrellas();
 }
 function printUmbQr(num){
   printQr(umbQrUrl(num), num);
 }
 async function printAllUmbQrs(){
   if(!currentKiosk){ toast('Negócio não carregado'); return; }
+  await loadUmbCodes();
   var res = await sb.from('umbrellas').select('number,area,is_active').eq('kiosk_id', currentKiosk.id).order('number');
   var list = (res.data||[]).filter(function(u){ return u.is_active !== false; });
   if(!list.length){ toast(swapUmbrellaWords('Cadastre guarda-sóis primeiro')); return; }
