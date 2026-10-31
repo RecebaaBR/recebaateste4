@@ -171,7 +171,7 @@ begin
     'created_by', p_order->>'created_by', 'last_updated_by', p_order->>'last_updated_by',
     'service_amount', (p_order->>'service_amount')::numeric));
   insert into public.orders(kiosk_id, umbrella_num, customer_name, notes, status, total, idempotency_key, created_by, last_updated_by, service_amount)
-  select r.kiosk_id, r.umbrella_num, r.customer_name, r.notes, r.status, r.total, r.idempotency_key, r.created_by, r.last_updated_by, r.service_amount
+  select r.kiosk_id, r.umbrella_num, r.customer_name, r.notes, r.status, r.total, r.idempotency_key, r.created_by, r.last_updated_by, coalesce(r.service_amount, 0)
     from jsonb_populate_record(null::public.orders, obj) r
   returning to_jsonb(orders.*), orders.id into res, new_id;
   if p_items is not null then perform private.insert_items(new_id, p_items); end if;
