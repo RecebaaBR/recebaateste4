@@ -8515,7 +8515,6 @@ async function renderUmbrellas(){
       +'<button class="btn btn-ghost btn-sm" data-uid="'+u.id+'" data-num="'+esc(u.number)+'" data-area="'+esc(u.area||'')+'" data-label="'+esc(u.label||'')+'" data-active="'+isActive+'" onclick="editUmbFromBtn(this)">✏️ Editar</button>'
       +'<button class="btn btn-danger btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" onclick="delUmbFromBtn(this)">🗑️</button>'
       +'<button class="btn btn-ghost btn-sm" data-num="'+u.number+'" onclick="printUmbQr(this.dataset.num)">'+((window._umbCodes && window._umbCodes[String(u.number)]) ? '🖨️ Imprimir' : '📱 QR')+'</button>'
-      +(window._umbCodes && window._umbCodes[String(u.number)] ? '<button class="btn btn-ghost btn-sm" title="Gerar novo código" data-uid="'+u.id+'" onclick="rotateUmbCode(this.dataset.uid)">🔄</button>' : '')
       +'</div>'
       +(isOpen
         ? '<button class="btn btn-sm" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-size:11px" data-num="'+u.number+'" onclick="openUmbrellaConsumptionModal(this.dataset.num)">👁️ Ver consumo</button>'
@@ -8533,8 +8532,7 @@ async function renderUmbrellas(){
   if(reqCode === true){
     // Negócio que usa só QR por mesa: não mostra o QR geral (ele não funcionaria mais)
     qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:16px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
-      + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">📱 Cada ' + swapUmbrellaWords('guarda-sol') + ' tem o seu QR</div>'
-      + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('O QR é criado junto com o guarda-sol e já aparece no cartão abaixo. Imprima e fixe em cada um: o cliente escaneia e pede direto, sem digitar número.') + '</div>'
+      + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:12px">📱 Cada ' + swapUmbrellaWords('guarda-sol') + ' tem o seu QR</div>'
       + '<button class="btn btn-ocean btn-sm" style="margin:0 4px" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todos os guarda-sóis') + '</button>'
       + '</div>';
   }
