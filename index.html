@@ -993,7 +993,7 @@ tr:hover td{background:var(--sand-50)}
 
     <!-- Instrução -->
     <div style="text-align:center;font-size:13px;color:rgba(255,255,255,.75);margin-bottom:14px;line-height:1.5;max-width:380px;margin-left:auto;margin-right:auto">
-      Aponte a câmera para o QR Code do seu guarda-sol
+      Aponte a câmera para o QR Code da sua mesa
     </div>
 
     <!-- Área do vídeo -->
@@ -1039,9 +1039,9 @@ tr:hover td{background:var(--sand-50)}
     <div class="splash">
       <div class="splash-logo" style="background:#fff;padding:8px;display:flex;align-items:center;justify-content:center"><img id="splash-logo-img" src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
       <h1 id="splash-kname">Recebaa</h1>
-      <p>Peça direto do seu guarda-sol</p>
+      <p>Peça direto da sua mesa</p>
       <div class="splash-field">
-        <label class="label">☂️ Número do seu guarda-sol</label>
+        <label class="label">🍽️ Número da sua mesa</label>
         <input class="input" id="umbrella-input" type="number" min="1" max="99" placeholder="Ex: 7"/>
       </div>
       <button class="btn btn-ocean" id="splash-btn" onclick="goToMenu()">Ver Cardápio →</button>
@@ -1053,7 +1053,7 @@ tr:hover td{background:var(--sand-50)}
       <div class="menu-kiosk-logo" id="menu-logo" style="background:#fff;padding:4px;display:flex;align-items:center;justify-content:center"><img id="menu-logo-img" src="" class="recebaa-logo-img" alt="Recebaa" style="max-width:90%;max-height:90%;object-fit:contain"/></div>
       <div>
         <div class="menu-kiosk-name" id="menu-kname">Negócio</div>
-        <div class="menu-kiosk-sub" id="umbrella-label">☂️ —</div>
+        <div class="menu-kiosk-sub" id="umbrella-label">🍽️ —</div>
       </div>
       <div class="menu-tab-row">
         <button class="menu-tab active" id="tab-menu" onclick="clientTab('menu')">🍔 Cardápio</button>
@@ -1228,7 +1228,7 @@ tr:hover td{background:var(--sand-50)}
         <button class="s-item" onclick="kPage('waiterorder',this)"><span class="s-icon">➕</span>Novo Pedido</button>
         <button class="s-item" onclick="kPage('history',this)"><span class="s-icon">🗂️</span>Histórico</button>
         <button class="s-item" onclick="kPage('menu',this)"><span class="s-icon">🍔</span>Cardápio</button>
-        <button class="s-item" onclick="kPage('umbrellas',this)"><span class="s-icon">☂️</span>Guarda-sóis</button>
+        <button class="s-item" onclick="kPage('umbrellas',this)"><span class="s-icon">🍽️</span>Mesas</button>
         <button class="s-item" onclick="kPage('contas',this)"><span class="s-icon">🧾</span>Contas<span class="s-badge" id="contas-badge">0</span></button>
         <button class="s-item" id="waiters-nav-btn" onclick="kPage('waiters',this)"><span class="s-icon">🧑‍🍳</span>Garçons</button>
         <button class="s-item" onclick="kPage('reports',this)"><span class="s-icon">📈</span>Relatórios</button>
@@ -1282,7 +1282,7 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </div>
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px">
-          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por guarda-sol</div>
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por mesa</div>
           <input class="input" id="live-umb-filter" type="number" min="1" placeholder="Ex: 7 (deixe vazio para ver todos)" oninput="renderLiveOrders()" style="width:100%"/>
         </div>
         <div class="orders-grid" id="live-orders-grid"></div>
@@ -1297,7 +1297,7 @@ tr:hover td{background:var(--sand-50)}
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:16px;margin-bottom:16px">
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
             <div style="flex:1;min-width:140px">
-              <label class="label">Número do guarda-sol *</label>
+              <label class="label">Número da mesa *</label>
               <input class="input" id="wo-umbrella" type="number" min="1" placeholder="Ex: 7"/>
             </div>
             <div style="flex:2;min-width:200px">
@@ -1353,7 +1353,7 @@ tr:hover td{background:var(--sand-50)}
           </div>
         </div>
         <div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:12px 14px;margin-bottom:12px">
-          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por guarda-sol/mesa (digite o número e toque em Adicionar)</div>
+          <div style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-weight:600">Filtrar por mesa (digite o número e toque em Adicionar)</div>
           <div style="display:flex;gap:8px">
             <input class="input" id="hist-umb-filter" type="number" min="1" inputmode="numeric" placeholder="Ex: 7 (deixe vazio para ver todos)" style="flex:1;max-width:300px" onkeydown="if(event.key==='Enter'){event.preventDefault();addHistUmbFilter();}"/>
             <button type="button" class="btn btn-ocean btn-sm" style="white-space:nowrap" onclick="addHistUmbFilter()">+ Adicionar</button>
@@ -1380,8 +1380,8 @@ tr:hover td{background:var(--sand-50)}
       </div>
       <div class="kpage" id="kpage-umbrellas">
         <div class="page-header">
-          <div class="page-title">Guarda-sóis</div>
-          <button class="btn btn-ocean btn-sm" onclick="toggleUmbForm()">+ Guarda-sol</button>
+          <div class="page-title">Mesas</div>
+          <button class="btn btn-ocean btn-sm" onclick="toggleUmbForm()">+ Mesa</button>
         </div>
 
         <!-- Controle: cliente pode pedir direto pelo celular, ou só pelo garçom? -->
@@ -1395,7 +1395,7 @@ tr:hover td{background:var(--sand-50)}
 
         <!-- Formulário inline (aparece/some) -->
         <div id="umb-form-inline" class="hidden" style="background:#fff;border-radius:var(--r);border:1px solid var(--ocean-500);padding:16px;margin-bottom:16px">
-          <div style="font-size:14px;font-weight:600;margin-bottom:12px" id="umb-form-title">Novo guarda-sol</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:12px" id="umb-form-title">Nova mesa</div>
           <input type="hidden" id="umb-edit-id"/>
           <div class="grid-2" style="margin-bottom:12px">
             <div class="field" style="margin-bottom:0">
@@ -1414,7 +1414,7 @@ tr:hover td{background:var(--sand-50)}
           </div>
           <div class="field">
             <label class="label">Rótulo (opcional)</label>
-            <input class="input" id="umb-label" placeholder="Ex: Guarda-sol 07"/>
+            <input class="input" id="umb-label" placeholder="Ex: Mesa 07"/>
           </div>
           <div class="field">
             <label class="label">Status</label>
@@ -1535,7 +1535,7 @@ tr:hover td{background:var(--sand-50)}
           <div class="page-title">Garçons</div>
           <button class="btn btn-ocean btn-sm" onclick="openAddWaiterModal()">+ Novo garçom</button>
         </div>
-        <div style="font-size:12.5px;color:var(--sl-400);margin-bottom:16px">Cadastre um login individual (e-mail e senha) para cada garçom. Eles terão acesso restrito (Ao vivo, Cardápio, Guarda-sóis e Contas), e toda alteração de pedido feita por eles fica registrada com o nome deles.</div>
+        <div style="font-size:12.5px;color:var(--sl-400);margin-bottom:16px">Cadastre um login individual (e-mail e senha) para cada garçom. Eles terão acesso restrito (Ao vivo, Cardápio, Mesas e Contas), e toda alteração de pedido feita por eles fica registrada com o nome deles.</div>
         <div id="waiters-list"><div class="page-loading" style="padding:20px"></div></div>
       </div>
     </main>
@@ -1760,7 +1760,7 @@ var I18N = {
     lp_badge: '🌊 Tecnologia para a beira-mar',
     lp_h1: 'Peça', lp_h1s: 'sem sair do lugar',
     lp_p: 'O Recebaa conecta clientes aos negócios via QR Code. Sem filas, sem espera.',
-    lp_cta1: '☂️ Fazer um pedido', lp_cta2: '🏪 Quero meu negócio',
+    lp_cta1: '🍽️ Fazer um pedido', lp_cta2: '🏪 Quero meu negócio',
     // Seções
     lp_how: 'Como funciona', lp_how_title: 'Simples como deve ser',
     lp_how_sub: 'Três passos e o pedido está a caminho da sua mesa.',
@@ -1775,8 +1775,8 @@ var I18N = {
     lp_access_tag: 'Acesse agora', lp_access_title: 'Por onde você quer entrar?',
     lp_footer: '© 2025 Recebaa · Tecnologia para negócios · Feito com ❤️ no Brasil',
     // Cliente splash
-    splash_title: 'Bem-vindo!', splash_sub: 'Digite o número do seu guarda-sol para ver o cardápio',
-    splash_ph: 'Número do guarda-sol', splash_btn: 'Ver Cardápio →',
+    splash_title: 'Bem-vindo!', splash_sub: 'Digite o número da sua mesa para ver o cardápio',
+    splash_ph: 'Número da mesa', splash_btn: 'Ver Cardápio →',
     // Tabs cliente
     tab_menu: '🍔 Cardápio', tab_orders: '📋 Pedidos', tab_waiter: '🙋 Garçom', tab_bill: '🧾 Conta',
     // Carrinho
@@ -1786,7 +1786,7 @@ var I18N = {
     s_pending: 'Pedido recebido', s_pending_sub: 'Aguardando confirmação',
     s_accepted: 'Confirmado', s_accepted_sub: 'O negócio aceitou!',
     s_preparing: 'Em preparo', s_preparing_sub: 'Preparando com carinho',
-    s_delivering: 'A caminho', s_delivering_sub: 'Indo ao seu guarda-sol',
+    s_delivering: 'A caminho', s_delivering_sub: 'Indo ao sua mesa',
     s_delivered: 'Entregue!', s_delivered_sub: 'Bom apetite! 🌊',
     s_billed: 'Faturado', s_billed_sub: 'Conta paga. Obrigado!',
     // Status btns
@@ -1802,21 +1802,21 @@ var I18N = {
     pill_delivering: 'A caminho', pill_delivered: 'Entregue ✅', pill_cancelled: 'Cancelado', pill_billed: 'Faturado 💰',
     // Waiter
     waiter_toast: '🙋 Garçom chamado! Ele virá em breve.',
-    // Erro guarda-sol
-    umb_not_found: '❌ Guarda-sol não encontrado. Verifique o número ou fale com o atendente.',
-    umb_inactive: '❌ Este guarda-sol está inativo. Fale com o atendente.',
+    // Erro mesa
+    umb_not_found: '❌ Mesa não encontrada. Verifique o número ou fale com o atendente.',
+    umb_inactive: '❌ Esta mesa está inativa. Fale com o atendente.',
   },
   en: {
     lp_client: '📱 I am a customer', lp_kiosk: '🏪 My kiosk', lp_admin: '⚙️ Admin',
     lp_badge: '🌊 Beach technology',
     lp_h1: 'Order at the beach,', lp_h1s: 'without leaving your spot',
     lp_p: 'Recebaa connects customers to beach kiosks via QR Code. No lines, no waiting. Just enjoy the sun.',
-    lp_cta1: '☂️ Place an order', lp_cta2: '🏪 I want my kiosk',
+    lp_cta1: '🍽️ Place an order', lp_cta2: '🏪 I want my kiosk',
     lp_how: 'How it works', lp_how_title: 'As simple as it should be',
-    lp_how_sub: 'Three steps and your order is on its way to your umbrella.',
-    lp_step1_t: 'Scan the QR Code', lp_step1_p: 'Each umbrella has a QR Code. Point your camera, select your umbrella and you are done.',
+    lp_how_sub: 'Three steps and your order is on its way to your table.',
+    lp_step1_t: 'Scan the QR Code', lp_step1_p: 'Each table has a QR Code. Point your camera, select your table and you are done.',
     lp_step2_t: 'Choose from the menu', lp_step2_p: 'See photos, prices and descriptions. Build your order at your own pace.',
-    lp_step3_t: 'Receive at your spot', lp_step3_p: 'The kiosk receives the order and delivers it directly to your umbrella.',
+    lp_step3_t: 'Receive at your spot', lp_step3_p: 'The kiosk receives the order and delivers it directly to your table.',
     lp_step4_t: 'Request the bill', lp_step4_p: 'Whenever you want, request the bill from your phone. No need to call anyone.',
     lp_client_tag: 'For customers', lp_client_title: 'More time enjoying,\nless time waiting',
     lp_kiosk_tag: 'For kiosks', lp_kiosk_title: 'Sell more with\nless effort',
@@ -1824,15 +1824,15 @@ var I18N = {
     lp_mission_sub: 'We believe technology should be simple, accessible and make life easier for everyone.',
     lp_access_tag: 'Access now', lp_access_title: 'Where would you like to go?',
     lp_footer: '© 2025 Recebaa · Technology for beach kiosks · Made with ❤️ in Brazil',
-    splash_title: 'Welcome!', splash_sub: 'Enter your umbrella number to see the menu',
-    splash_ph: 'Umbrella number', splash_btn: 'See Menu →',
+    splash_title: 'Welcome!', splash_sub: 'Enter your table number to see the menu',
+    splash_ph: 'Table number', splash_btn: 'See Menu →',
     tab_menu: '🍔 Menu', tab_orders: '📋 Orders', tab_waiter: '🙋 Waiter', tab_bill: '🧾 Bill',
     cart_title: 'Your Order', name_ph: 'Your name', notes_ph: 'Notes (optional)',
     order_btn: 'Place Order 🚀',
     s_pending: 'Order received', s_pending_sub: 'Waiting for confirmation',
     s_accepted: 'Confirmed', s_accepted_sub: 'The kiosk accepted!',
     s_preparing: 'Preparing', s_preparing_sub: 'Preparing with care',
-    s_delivering: 'On the way', s_delivering_sub: 'Heading to your umbrella',
+    s_delivering: 'On the way', s_delivering_sub: 'Heading to your table',
     s_delivered: 'Delivered!', s_delivered_sub: 'Enjoy your meal! 🌊',
     s_billed: 'Billed', s_billed_sub: 'Bill paid. Thank you!',
     btn_back: '🍽️ Back to Menu', btn_orders: '📋 Orders',
@@ -1844,8 +1844,8 @@ var I18N = {
     pill_pending: 'Waiting', pill_accepted: 'Confirmed', pill_preparing: 'Preparing',
     pill_delivering: 'On the way', pill_delivered: 'Delivered ✅', pill_cancelled: 'Cancelled', pill_billed: 'Billed 💰',
     waiter_toast: '🙋 Waiter called! He will be right with you.',
-    umb_not_found: '❌ Umbrella not found. Check the number or speak to the attendant.',
-    umb_inactive: '❌ This umbrella is inactive. Please speak to the attendant.',
+    umb_not_found: '❌ Table not found. Check the number or speak to the attendant.',
+    umb_inactive: '❌ This table is inactive. Please speak to the attendant.',
   }
 };
 
@@ -1966,7 +1966,7 @@ var sbw = (function(){
 // ── Pedidos: leitura/escrita só por funções do banco ───────────────────
 // A chave pública não acessa mais as tabelas orders/order_items diretamente.
 // Este adaptador mantém a mesma sintaxe de consulta usada no app, mas envia
-// tudo pelas funções read_orders/place_order/etc. (equipe com token, cliente por guarda-sol).
+// tudo pelas funções read_orders/place_order/etc. (equipe com token, cliente por mesa).
 (function(){
   var origFrom = sb.from.bind(sb);
   var origChannel = sb.channel.bind(sb);
@@ -2205,7 +2205,7 @@ function applyBizTerminology(root){
 var _bizTermObserver = null;
 // Observa TUDO que fica direto dentro do <body> (painel do dono, tela do
 // cliente e também os modais avulsos como "Pedir a conta" e "Consumo", que
-// são criados fora dessas telas) e reaplica a troca "guarda-sol" → "mesa"
+// são criados fora dessas telas) e reaplica a troca "mesa" → "mesa"
 // sempre que algo é re-renderizado. Não mexe na landing page (texto de
 // marketing fixo, que já tem uma seção própria para cada tipo de negócio).
 function startBizTerminologyWatcher(){
@@ -2363,7 +2363,7 @@ function goToClient(btn){
   }
   // O quiosque já foi identificado pelo QR Code escaneado (URL com ?kiosk=ID)?
   // Se sim, não faz sentido pedir pra escanear de novo — vai direto pra tela
-  // de "informe o número do guarda-sol", que já resolve o quiosque pela URL.
+  // de "informe o número da mesa", que já resolve o quiosque pela URL.
   var kioskFromUrl = null;
   try{
     kioskFromUrl = new URLSearchParams(window.location.search).get('kiosk');
@@ -2772,7 +2772,7 @@ window.addEventListener('load', async function(){
   if(qrCode){ window._umbCode = qrCode; try{ sessionStorage.setItem('recebaa-client-code', qrCode); }catch(e){} }
   if(kioskId && isConfigured){
     // Buscar nome, tipo de negócio e logo do kiosk para mostrar na splash já com o
-    // termo certo ("guarda-sol" ou "mesa") antes mesmo do cliente digitar o número
+    // termo certo ("mesa" ou "mesa") antes mesmo do cliente digitar o número
     // (mesmo quando o QR Code só tem o kiosk, sem o número já preenchido).
     var {data} = await sb.from('kiosks').select('name,business_type,logo_url').eq('id',kioskId).single();
     if(data){
@@ -2787,13 +2787,13 @@ window.addEventListener('load', async function(){
   }
 
   // QR Code escaneado (URL já vem com ?kiosk=ID): pula a landing page e vai
-  // direto pra tela de "informe o número do guarda-sol/mesa", sem exigir
+  // direto pra tela de "informe o número da mesa", sem exigir
   // clique em "Fazer pedido".
   if(kioskId){
     showScreen('client', document.getElementById('nav-client'));
   }
 
-  // QR Code POR MESA/GUARDA-SOL (URL com ?kiosk=ID&umbrella=N): o número já vem
+  // QR Code POR MESA (URL com ?kiosk=ID&umbrella=N): o número já vem
   // no QR e fica travado — o cliente não digita nada, o que evita pedido lançado
   // na mesa errada (ou de propósito na mesa de outra pessoa). Vai direto ao cardápio.
   if(kioskId && isConfigured && /^\d{1,2}$/.test(umbNum||'') && +umbNum >= 1){
@@ -2826,7 +2826,7 @@ window.addEventListener('load', async function(){
       // Preencher input, trocar para a tela do cliente e chamar goToMenu
       $('umbrella-input').value = savedUmb;
       showScreen('client', document.getElementById('nav-client'));
-      // goToMenu valida o quiosque e o guarda-sol; se falhar, mostra toast e fica no splash
+      // goToMenu valida o quiosque e a mesa; se falhar, mostra toast e fica no splash
       try{ await goToMenu(); }catch(e){
         // Em caso de erro inesperado, limpa sessão obsoleta
         try{
@@ -2842,7 +2842,7 @@ window.addEventListener('load', async function(){
 // ══════════════════════════════════════════════════════
 // SINCRONIZAR PEDIDOS DO CLIENTE
 // Função reutilizável que busca o estado atual dos pedidos
-// do guarda-sol no banco. Usada no carregamento inicial e
+// da mesa no banco. Usada no carregamento inicial e
 // quando a aba volta a ficar visível (após tela bloqueada).
 // ══════════════════════════════════════════════════════
 function refreshClientOrders(){
@@ -2855,7 +2855,7 @@ function refreshClientOrders(){
     return;
   }
   try { console.log('[recebaa] refreshClientOrders INÍCIO — umb:', window._umb); } catch(e){}
-  // Primeiro: descobrir quando começou a sessão atual desse guarda-sol
+  // Primeiro: descobrir quando começou a sessão atual dessa mesa
   // (created_at do último ENCERRAMENTO). Tudo antes pertence a sessões anteriores.
   sb.from('orders')
     .select('created_at')
@@ -3025,7 +3025,7 @@ setInterval(function(){
 
 async function goToMenu(){
   const v=$('umbrella-input').value.trim();
-  if(!v||isNaN(v)||+v<1){ toast('Informe o número do seu guarda-sol ☂️'); return; }
+  if(!v||isNaN(v)||+v<1){ toast('Informe o número da sua mesa 🍽️'); return; }
   window._umb=+v;
   setLoading('splash-btn',true,'Carregando...');
   if(isConfigured){
@@ -3046,7 +3046,7 @@ async function goToMenu(){
     }
     applyClientKioskLogo();
 
-    // Validar que o guarda-sol existe e está ativo neste quiosque
+    // Validar que a mesa existe e está ativo neste quiosque
     const {data:umbCheck} = await sb.from('umbrellas')
       .select('id,is_active')
       .eq('kiosk_id', currentKiosk.id)
@@ -3097,12 +3097,12 @@ async function goToMenu(){
     currentKiosk={id:'demo',name:'Negócio Pôr do Sol'};
   }
   setLoading('splash-btn',false,'Ver Cardápio →');
-  $('umbrella-label').textContent=swapUmbrellaWords('☂️ Guarda-sol '+window._umb);
+  $('umbrella-label').textContent=swapUmbrellaWords('🍽️ Mesa '+window._umb);
   $('menu-kname').textContent=currentKiosk?currentKiosk.name:'Negócio';
   $('splash-kname').textContent=currentKiosk?currentKiosk.name:'Recebaa';
   $('client-splash').classList.add('hidden');
   $('client-menu').classList.remove('hidden');
-  // Garante que "guarda-sol" vire "mesa" em todo o cardápio/pedidos deste cliente,
+  // Garante que "mesa" vire "mesa" em todo o cardápio/pedidos deste cliente,
   // caso o tipo de negócio só tenha sido confirmado agora (ex: sessão restaurada).
   startClientBizTerminologyWatcher();
   // Reflete se o negócio permite pedido direto pelo cliente (senão, o
@@ -3111,9 +3111,9 @@ async function goToMenu(){
   buildCatTabs();
   buildMenu();
   maybeShowPromoPopup();
-  // Carregar pedidos existentes do guarda-sol do banco (sessão atual)
+  // Carregar pedidos existentes da mesa do banco (sessão atual)
   refreshClientOrders();
-  // Iniciar escuta realtime para atualizações de pedidos deste guarda-sol
+  // Iniciar escuta realtime para atualizações de pedidos desta mesa
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     var chName = 'client-'+currentKiosk.id+'-'+String(window._umb||'0');
 
@@ -3148,7 +3148,7 @@ async function goToMenu(){
             }
             return;
           }
-          // Detectar encerramento do guarda-sol
+          // Detectar encerramento da mesa
           if(updated.customer_name === 'PEDIDO DE CONTA' &&
              updated.umbrella_num === String(window._umb||'?') &&
              (updated.status === 'delivered' || updated.status === 'cancelled')){
@@ -3185,7 +3185,7 @@ async function goToMenu(){
             toast('💰 Mesa encerrada! Obrigado pela visita. 🌊');
             setTimeout(function(){ encerrarSessaoCliente(); }, 2000);
           }
-          // PEDIDO DE CONTA solicitada por alguém no mesmo guarda-sol → bloquear todos
+          // PEDIDO DE CONTA solicitada por alguém na mesma mesa → bloquear todos
           if(payload.new.customer_name === 'PEDIDO DE CONTA' &&
              payload.new.umbrella_num === String(window._umb||'?') &&
              payload.new.status !== 'cancelled' &&
@@ -3193,7 +3193,7 @@ async function goToMenu(){
             if(!window._billRequested){
               window._billRequested = true;
               applyBillBlock();
-              toast('🧾 Conta solicitada para este guarda-sol.');
+              toast('🧾 Conta solicitada para esta mesa.');
             }
           }
         })
@@ -3204,7 +3204,7 @@ async function goToMenu(){
           // Ignorar pedidos especiais
           var special = ['CHAMADA DE ATENDENTE','PEDIDO DE CONTA','ENCERRAMENTO'];
           if(special.indexOf(inserted.customer_name) > -1) return;
-          // Só processar pedidos deste guarda-sol
+          // Só processar pedidos desta mesa
           if(inserted.umbrella_num !== String(window._umb||'?')) return;
 
           // Adicionar em _allUmbOrders se ainda não estiver
@@ -3358,7 +3358,7 @@ function scrollCat(id,btn){
 
 // ══════════════════════════════════════════════════════
 // CLIENTE — POP-UP DE PROMOÇÕES
-// Mostra uma vez por sessão (por guarda-sol/aba), assim que o
+// Mostra uma vez por sessão (por mesa/aba), assim que o
 // cardápio abre, se houver algum produto em promoção ativa.
 // ══════════════════════════════════════════════════════
 function maybeShowPromoPopup(){
@@ -4045,7 +4045,7 @@ function confirmWoProductOptions(pid){
 // ── Envio do pedido de balcão ──
 async function submitWaiterOrder(){
   var umb = ($('wo-umbrella').value||'').trim();
-  if(!umb || isNaN(umb) || +umb < 1){ toast('⚠️ Informe o número do guarda-sol'); return; }
+  if(!umb || isNaN(umb) || +umb < 1){ toast('⚠️ Informe o número da mesa'); return; }
   var items = Object.values(waiterCart);
   if(!items.length){ toast('⚠️ Adicione itens ao pedido'); return; }
 
@@ -4329,7 +4329,7 @@ async function placeOrder(){
   renderStatusSteps('pending');
   updateOrdersBadge();
 
-  // Escutar mudanças de status em tempo real para todos os pedidos do guarda-sol
+  // Escutar mudanças de status em tempo real para todos os pedidos da mesa
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     var channelName = 'client-umb-'+currentKiosk.id+'-'+String(window._umb||'0');
     // Remover canal anterior se existir
@@ -4370,7 +4370,7 @@ var STATUS_STEPS_DEF=[
   {key:'pending',   label:'Pedido recebido',  sub:'Aguardando confirmação',     icon:'📋'},
   {key:'accepted',  label:'Confirmado',        sub:'O negócio aceitou!',        icon:'✅'},
   {key:'preparing', label:'Em preparo',        sub:'Preparando com carinho',     icon:'👨‍🍳'},
-  {key:'delivering',label:'A caminho',         sub:'Indo ao seu guarda-sol',     icon:'🏃'},
+  {key:'delivering',label:'A caminho',         sub:'Indo ao sua mesa',     icon:'🏃'},
   {key:'delivered', label:'Entregue!',         sub:'Bom apetite! 🌊',            icon:'🎉'},
 ];
 var STATUS_SEQ=['pending','accepted','preparing','delivering','delivered'];
@@ -4507,7 +4507,7 @@ async function callWaiter(){
       umbrella_num: String(window._umb),
       order_number: 0,
       customer_name: 'CHAMADA DE ATENDENTE',
-      notes: '🙋 Cliente do guarda-sol '+window._umb+' está chamando o atendente!',
+      notes: '🙋 Cliente da mesa '+window._umb+' está chamando o atendente!',
       status: 'pending',
       total: 0
     });
@@ -4540,7 +4540,7 @@ function openBillModal(){
     .filter(function(o){ return o.status!=='cancelled' && o.status!=='billed'; })
     .reduce(function(s,o){ return s + Number(o.total||0); }, 0);
   if(totalCheck <= 0){
-    toast('⚠️ Não há consumo neste guarda-sol. Faça um pedido antes de pedir a conta.');
+    toast('⚠️ Não há consumo nesta mesa. Faça um pedido antes de pedir a conta.');
     return;
   }
   // Bloqueio: só permite pedir conta se houver pelo menos 1 pedido ACEITO (não pending nem cancelado)
@@ -4654,7 +4654,7 @@ async function requestBill(type, personName, personTotal){
     .filter(function(o){ return o.status!=='cancelled' && o.status!=='billed'; })
     .reduce(function(s,o){ return s + Number(o.total||0); }, 0);
   if(totalGuard <= 0){
-    toast('⚠️ Não há consumo neste guarda-sol.');
+    toast('⚠️ Não há consumo nesta mesa.');
     closeBillModal();
     return;
   }
@@ -4712,7 +4712,7 @@ async function requestBill(type, personName, personTotal){
     detalhes = 'Valor: '+fmt(personTotal)+' | Total mesa: '+fmt(totalGeral);
   }
 
-  var notasCompletas = msg+' · '+detalhes+' · ☂️ '+(window._umb||'?');
+  var notasCompletas = msg+' · '+detalhes+' · 🍽️ '+(window._umb||'?');
 
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
     var insertRes = await sb.from('orders').insert({
@@ -4852,7 +4852,7 @@ function renderMyOrders(){
   var propList = activeNames.slice().sort(function(a,b){ return byNameTotal[b]-byNameTotal[a]; });
 
   var html='<div style="background:var(--sl-800);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;color:#fff;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">'
-    +'<div style="flex:1;min-width:0"><div style="font-size:12px;opacity:.7;margin-bottom:2px">Total do guarda-sol</div>'
+    +'<div style="flex:1;min-width:0"><div style="font-size:12px;opacity:.7;margin-bottom:2px">Total da mesa</div>'
     +'<div style="font-size:20px;font-weight:700">'+fmt(totalGeral)+'</div>'
     +(activeNames.length>1?'<div style="font-size:11px;opacity:.6;margin-top:2px">'+activeNames.length+' pessoas · '+fmt(totalGeral/activeNames.length)+' cada (divisão igual)</div>':'')
     +(activeNames.length>1?'<div style="font-size:11px;opacity:.75;margin-top:6px;line-height:1.5;border-top:1px solid rgba(255,255,255,.1);padding-top:6px"><span style="opacity:.7">Proporcional ao consumo:</span><br/>'+propList.map(function(n){return esc(n)+' '+fmt(byNameTotal[n]);}).join(' · ')+'</div>':'')
@@ -5635,7 +5635,7 @@ async function enterDash(){
   var isBar = currentKiosk.business_type === 'bar_restaurante';
   document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
   document.querySelectorAll(isBar ? '#nav-bar' : '#nav-kiosk').forEach(function(b){ b.classList.add('active'); });
-  // Se for bar/restaurante, troca "guarda-sol" por "mesa" em todo o painel
+  // Se for bar/restaurante, troca "mesa" por "mesa" em todo o painel
   // (inclusive no que for renderizado dinamicamente daqui pra frente).
   startBizTerminologyWatcher();
   document.querySelectorAll('.kpage').forEach(p=>p.classList.remove('active'));
@@ -5707,7 +5707,7 @@ async function atenderChamada(orderId){
 
 async function closeUmbrellaSession(umbNum, applyService){
   applyService = !!applyService;
-  var confirmMsg = 'Faturar e encerrar guarda-sol '+umbNum+'?\nIsso vai marcar todos os pedidos como faturados e limpar a sessão do cliente.';
+  var confirmMsg = 'Faturar e encerrar mesa '+umbNum+'?\nIsso vai marcar todos os pedidos como faturados e limpar a sessão do cliente.';
   if(applyService) confirmMsg += '\n\nSerá adicionada a taxa de serviço de 10% sobre o total.';
   if(!confirm(swapUmbrellaWords(confirmMsg))) return;
 
@@ -5716,7 +5716,7 @@ async function closeUmbrellaSession(umbNum, applyService){
     var umbStr = String(umbNum);
 
     // 1) Determinar o início da sessão atual: created_at do último ENCERRAMENTO
-    //    deste guarda-sol. Tudo anterior pertence a sessões antigas e não deve
+    //    desta mesa. Tudo anterior pertence a sessões antigas e não deve
     //    entrar na conta.
     var {data: lastEnc} = await sb.from('orders')
       .select('created_at')
@@ -5727,7 +5727,7 @@ async function closeUmbrellaSession(umbNum, applyService){
       .limit(1);
     var sessionStart = (lastEnc && lastEnc[0]) ? lastEnc[0].created_at : null;
 
-    // 2) Buscar pedidos da SESSÃO ATUAL do guarda-sol
+    // 2) Buscar pedidos da SESSÃO ATUAL da mesa
     //    (não cancelados, não especiais, criados após o último encerramento)
     var query = sb.from('orders')
       .select('*, order_items(*)')
@@ -5761,7 +5761,7 @@ async function closeUmbrellaSession(umbNum, applyService){
       if(eUpd) console.log('Erro ao atualizar pedidos:', eUpd.message);
     }
 
-    // 4) Calcular resumo dos pedidos do guarda-sol (usado nos dois ramos)
+    // 4) Calcular resumo dos pedidos da mesa (usado nos dois ramos)
     var resumo = pedidos.length
       ? pedidos.map(function(o){
           var qtdItens = (o.order_items||[]).reduce(function(s,i){ return s + (i.quantity||0); }, 0);
@@ -5819,13 +5819,13 @@ async function closeUmbrellaSession(umbNum, applyService){
       umbrella_num: umbStr,
       order_number: 0,
       customer_name: 'ENCERRAMENTO',
-      notes: 'Guarda-sol '+umbNum+' faturado e encerrado.',
+      notes: 'Mesa '+umbNum+' faturada e encerrada.',
       status: 'cancelled',
       total: 0
     });
   }
 
-  // 6) Atualizar em memória — todos os pedidos ativos do guarda-sol viram delivered
+  // 6) Atualizar em memória — todos os pedidos ativos da mesa viram delivered
   orders.forEach(function(o){
     if(o.umb===String(umbNum)||o.umbrella_num===String(umbNum)){
       if(['pending','accepted','preparing','delivering'].includes(o.status)){
@@ -5842,7 +5842,7 @@ async function closeUmbrellaSession(umbNum, applyService){
   renderHist();
   renderContas();
   updateDashMetrics();
-  toast('💰 Guarda-sol '+umbNum+' faturado! Mesa liberada para novos clientes.');
+  toast('💰 Mesa '+umbNum+' faturada! Mesa liberada para novos clientes.');
 }
 
 
@@ -6148,7 +6148,7 @@ function subscribeRealtime(){
           if(full.customer_name === 'PEDIDO DE CONTA'){
             // Pedido de conta: não aparece no ao vivo, só na aba Contas
             playAlert();
-            toast('🧾 Pedido de conta — Guarda-sol '+full.umbrella_num);
+            toast('🧾 Pedido de conta — Mesa '+full.umbrella_num);
             var contasBadge = $('contas-badge');
             var contasPend = orders.filter(function(x){ return x.customer_name==='PEDIDO DE CONTA' && !['delivered','cancelled','billed'].includes(x.status); });
             if(contasBadge) contasBadge.textContent = contasPend.length;
@@ -6157,14 +6157,14 @@ function subscribeRealtime(){
             renderLiveOrders(); // Só para atualizar o alerta roxo
           } else if(full.customer_name === 'CHAMADA DE ATENDENTE'){
             playAlert();
-            toast('🙋 Chamada de atendente — Guarda-sol '+full.umbrella_num);
+            toast('🙋 Chamada de atendente — Mesa '+full.umbrella_num);
             renderLiveOrders();
           } else if(full.customer_name === 'ENCERRAMENTO'){
             renderLiveOrders();
           } else {
             // Pedido normal
             playAlert();
-            toast('🆕 Novo pedido #'+full.order_number+' — Guarda-sol '+full.umbrella_num);
+            toast('🆕 Novo pedido #'+full.order_number+' — Mesa '+full.umbrella_num);
             renderLiveOrders();
           }
         }
@@ -6676,7 +6676,7 @@ function renderLiveOrders(){
       if(liveTypeFilterVal === 'foods'  && t !== 'foods') return false;
       if(liveTypeFilterVal === 'others' && t !== 'others') return false;
     }
-    // Aplicar filtro por guarda-sol
+    // Aplicar filtro por mesa
     var umbFilterEl = $('live-umb-filter');
     var umbFilterVal = umbFilterEl ? String(umbFilterEl.value||'').trim() : '';
     if(umbFilterVal && String(o.umbrella_num||o.umb||'') !== umbFilterVal) return false;
@@ -6716,7 +6716,7 @@ function renderLiveOrders(){
       +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
       +callOrders.map(function(o){
         return '<div style="display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #fde68a;border-radius:8px;padding:6px 10px">'
-          +'<span style="font-size:13px;color:#92400e">☂️ Guarda-sol '+esc(o.umbrella_num||o.umb||'?')+'</span>'
+          +'<span style="font-size:13px;color:#92400e">🍽️ Mesa '+esc(o.umbrella_num||o.umb||'?')+'</span>'
           +'<button class="btn btn-sm" style="background:#f59e0b;color:#fff;font-size:11px;padding:4px 10px" data-oid="'+o.id+'" onclick="atenderChamada(this.dataset.oid)">✅ Atendido</button>'
           +'</div>';
       }).join('')
@@ -6922,7 +6922,7 @@ function histFilter(f,btn){
   btn.classList.add('active'); renderHist();
 }
 
-// Guarda-sóis/mesas selecionadas no filtro (multi-seleção, digitadas pelo garçom). Vazio = mostra todas.
+// Mesas selecionadas no filtro (multi-seleção, digitadas pelo garçom). Vazio = mostra todas.
 window._histUmbSelected = window._histUmbSelected || new Set();
 
 function addHistUmbFilter(){
@@ -6946,7 +6946,7 @@ function renderHistUmbChips(){
   var nums = Array.from(window._histUmbSelected);
   if(!nums.length){ box.innerHTML=''; return; }
   box.innerHTML = nums.map(function(n){
-    return '<span class="hf-btn active" style="display:inline-flex;align-items:center;gap:6px">☂️ '+n+' <button type="button" onclick="removeHistUmbFilter(\''+n+'\')" style="background:none;border:none;color:inherit;font-size:14px;line-height:1;cursor:pointer;padding:0">×</button></span>';
+    return '<span class="hf-btn active" style="display:inline-flex;align-items:center;gap:6px">🍽️ '+n+' <button type="button" onclick="removeHistUmbFilter(\''+n+'\')" style="background:none;border:none;color:inherit;font-size:14px;line-height:1;cursor:pointer;padding:0">×</button></span>';
   }).join('');
 }
 
@@ -6987,7 +6987,7 @@ async function renderHist(){
       query = query.gte('created_at', dates.from).lte('created_at', dates.to);
     }
 
-    // Filtro por guarda-sol/mesa (uma ou várias selecionadas)
+    // Filtro por mesa (uma ou várias selecionadas)
     if(histUmbArr.length){
       query = query.in('umbrella_num', histUmbArr);
     }
@@ -7105,7 +7105,7 @@ function renderHistTable(list, skipFilterSetup){
     +'<tr>'
       +'<th style="width:32px"><input type="checkbox" id="hist-select-all" onchange="toggleAllHistSelection(this)"/></th>'
       +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'num\')"># '+histSortIcon('num')+'</th>'
-      +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'umb\')">Guarda-sol '+histSortIcon('umb')+'</th>'
+      +'<th style="cursor:pointer;user-select:none" onclick="setHistSort(\'umb\')">Mesa '+histSortIcon('umb')+'</th>'
       +'<th style="cursor:pointer;user-select:none;width:90px;max-width:90px" onclick="setHistSort(\'cliente\')">Cliente '+histSortIcon('cliente')+'</th>'
       +'<th style="width:260px">Itens</th>'
       +'<th>Origem</th>'
@@ -7142,7 +7142,7 @@ function renderHistTable(list, skipFilterSetup){
       return '<tr>'
         +'<td>'+(!isSpecial && o.status==='pending'?'<input type="checkbox" class="hist-row-check" data-oid="'+o.id+'" '+(isChecked?'checked':'')+' onchange="toggleHistSelection(\''+o.id+'\',this.checked)"/>':'')+'</td>'
         +'<td'+(groupChip?' style="line-height:1"':'')+'><b>#'+(o.order_number||'—')+'</b>'+groupChip+'</td>'
-        +'<td>☂️ '+esc(o.umb||o.umbrella_num||'?')+'</td>'
+        +'<td>🍽️ '+esc(o.umb||o.umbrella_num||'?')+'</td>'
         +'<td style="width:90px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(o.customer_name||'?')+'</td>'
         +'<td style="color:var(--sl-500);font-size:11px;width:260px;text-align:left">'+(isSpecial?esc(notesClean.split(' · ')[0]):(o.items||[]).map(i=>'<div style="text-align:left;white-space:nowrap">'+i.qty+'× '+esc(i.name)+'</div>').join(''))+'</td>'
         +'<td style="font-size:11px">'+(o.created_by?'🧑‍🍳 '+esc(o.created_by):'<span style="color:var(--sl-400)">📱 Cliente</span>')+'</td>'
@@ -8057,7 +8057,7 @@ function applyContasFilters(){
   // Barra só com ordenação (filtros editáveis removidos)
   var filterBar = '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
     +'<span style="font-size:10px;color:var(--sl-400);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Ordenar por:</span>'
-    +'<button type="button" onclick="setContasSort(\'umb\')" style="background:none;border:none;cursor:pointer;color:var(--sl-600);font-size:12px;font-weight:500">Guarda-sol '+contasSortIcon('umb')+'</button>'
+    +'<button type="button" onclick="setContasSort(\'umb\')" style="background:none;border:none;cursor:pointer;color:var(--sl-600);font-size:12px;font-weight:500">Mesa '+contasSortIcon('umb')+'</button>'
     +'<button type="button" onclick="setContasSort(\'hora\')" style="background:none;border:none;cursor:pointer;color:var(--sl-600);font-size:12px;font-weight:500">Hora '+contasSortIcon('hora')+'</button>'
     +'<button type="button" onclick="setContasSort(\'valor\')" style="background:none;border:none;cursor:pointer;color:var(--sl-600);font-size:12px;font-weight:500">Valor '+contasSortIcon('valor')+'</button>'
     +'</div>';
@@ -8110,7 +8110,7 @@ function applyContasFilters(){
       var umbId = String(o.umbrella_num||o.umb||'').replace(/[^A-Za-z0-9_-]/g,'_');
       return '<div style="background:#fff;border-radius:var(--r);border:2px solid #8b5cf6;padding:16px;position:relative;margin-bottom:10px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px">'
-        +'<div style="font-size:14px;font-weight:700;color:#6d28d9">🧾 ☂️ Guarda-sol '+esc(o.umbrella_num||o.umb||'?')+'</div>'
+        +'<div style="font-size:14px;font-weight:700;color:#6d28d9">🧾 🍽️ Mesa '+esc(o.umbrella_num||o.umb||'?')+'</div>'
         +'<div style="font-size:12px;color:var(--sl-400)">🕐 '+(o.time||'')+'</div>'
         +'</div>'
         +(billTypeTag ? '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
@@ -8144,7 +8144,7 @@ function applyContasFilters(){
     html += contasFechadas.map(function(o){
       return '<div style="background:#fff;border-radius:var(--r);border:1px solid var(--sand-100);padding:14px;opacity:.7;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">'
         +'<div>'
-        +'<div style="font-size:13px;font-weight:600">☂️ Guarda-sol '+esc(o.umbrella_num||o.umb||'?')+'</div>'
+        +'<div style="font-size:13px;font-weight:600">🍽️ Mesa '+esc(o.umbrella_num||o.umb||'?')+'</div>'
         +'<div style="font-size:11px;color:var(--sl-400);margin-top:2px">'+esc((o.notes||'').split(' · ')[0])+'</div>'
         +'</div>'
         +'<div style="text-align:right">'
@@ -8179,7 +8179,7 @@ function getKioskUrl(){
   return window.location.origin + window.location.pathname;
 }
 
-// Filtro da aba Guarda-sóis: 'all' | 'open' | 'free'
+// Filtro da aba Mesas: 'all' | 'open' | 'free'
 window._umbStatusFilter = window._umbStatusFilter || 'all';
 function setUmbStatusFilter(val){
   window._umbStatusFilter = val;
@@ -8236,7 +8236,7 @@ async function openUmbrellaConsumptionModal(umbNum){
   div.onclick = function(e){ if(e.target===div) closeUmbrellaConsumptionModal(); };
   div.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:440px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #f1f5f9">'
-    +'<div style="font-size:15px;font-weight:600">👁️ Consumo · ☂️ Guarda-sol '+esc(umbNum)+'</div>'
+    +'<div style="font-size:15px;font-weight:600">👁️ Consumo · 🍽️ Mesa '+esc(umbNum)+'</div>'
     +'<button onclick="closeUmbrellaConsumptionModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8">✕</button>'
     +'</div>'
     +'<div id="umb-consumption-body" style="padding:20px"><div class="page-loading" style="padding:20px"></div></div>'
@@ -8278,7 +8278,7 @@ async function openUmbrellaConsumptionModal(umbNum){
   if(!body) return;
 
   if(!pedidos.length){
-    body.innerHTML = '<div style="color:var(--sl-400);font-size:13px;text-align:center">Nenhum pedido ativo nesse guarda-sol.</div>';
+    body.innerHTML = '<div style="color:var(--sl-400);font-size:13px;text-align:center">Nenhum pedido ativo nessa mesa.</div>';
     return;
   }
 
@@ -8311,7 +8311,7 @@ async function openUmbrellaConsumptionModal(umbNum){
       +'</div>';
   }).join('');
 
-  body.innerHTML = '<div style="font-size:12.5px;color:#64748b;margin-bottom:12px">Detalhamento de tudo que foi pedido nesse guarda-sol desde a última abertura — útil se o cliente não conseguir pedir a conta pelo celular.</div>'
+  body.innerHTML = '<div style="font-size:12.5px;color:#64748b;margin-bottom:12px">Detalhamento de tudo que foi pedido nessa mesa desde a última abertura — útil se o cliente não conseguir pedir a conta pelo celular.</div>'
     +'<div style="background:#f5f3ff;border-radius:8px;padding:10px 12px;margin-bottom:14px;max-height:300px;overflow-y:auto">'
     +itemsHtml
     +'</div>'
@@ -8353,7 +8353,7 @@ function updateUmbServicePreview(){
   }
 }
 
-// Mesma prévia, para os cards de conta pendente na aba Contas (um por guarda-sol)
+// Mesma prévia, para os cards de conta pendente na aba Contas (um por mesa)
 function updateContaServicePreview(umbId){
   var check = document.getElementById('conta-service-check-'+umbId);
   if(!check) return;
@@ -8413,13 +8413,13 @@ async function renderUmbrellas(){
   }
   if(!umbs.length && (!isConfigured || currentKiosk.id==='demo')){
     var areas=['Frente mar','Frente mar','VIP','Frente mar','VIP','Standard'];
-    umbs=Array.from({length:20},function(_,i){return {id:'u'+(i+1),number:i+1,label:'Guarda-sol '+String(i+1).padStart(2,'0'),area:areas[i%areas.length],is_active:true};});
+    umbs=Array.from({length:20},function(_,i){return {id:'u'+(i+1),number:i+1,label:'Mesa '+String(i+1).padStart(2,'0'),area:areas[i%areas.length],is_active:true};});
   }
 
-  // Buscar pedidos ativos por guarda-sol (após o último ENCERRAMENTO de cada um)
+  // Buscar pedidos ativos por mesa (após o último ENCERRAMENTO de cada um)
   var openByUmb = {}; // { '7': { total: 220.50, count: 3, hasBill: true } }
   if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
-    // Último ENCERRAMENTO de cada guarda-sol
+    // Último ENCERRAMENTO de cada mesa
     var {data:encs} = await sb.from('orders')
       .select('umbrella_num,created_at')
       .eq('kiosk_id', currentKiosk.id)
@@ -8481,8 +8481,8 @@ async function renderUmbrellas(){
   var showGeneral = (reqCode !== true);
   var qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:20px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
     + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code geral do Negócio</div>'
-    + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('Neste QR o cliente digita o número do guarda-sol, o que permite erro. Para evitar pedido na mesa errada, use um QR por guarda-sol (botão abaixo).') + '</div>'
-    + '<button class="btn btn-ocean btn-sm" style="margin:0 0 14px;display:block;margin-left:auto;margin-right:auto" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todos os guarda-sóis') + '</button>'
+    + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('Neste QR o cliente digita o número da mesa, o que permite erro. Para evitar pedido na mesa errada, use um QR por mesa (botão abaixo).') + '</div>'
+    + '<button class="btn btn-ocean btn-sm" style="margin:0 0 14px;display:block;margin-left:auto;margin-right:auto" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todos os mesas') + '</button>'
     + (reqCode===null ? '' : '<div style="margin-top:4px"><button class="btn btn-ghost btn-sm" onclick="toggleRequireCode()">' + (reqCode ? '🔒 Código do QR exigido (clique para desligar)' : '🔓 Exigir código do QR (mais seguro)') + '</button></div>')
     + '<img src="' + qrImgUrl + '" style="margin:0 auto 12px;display:block;border-radius:8px"/>'
     + '<div style="font-size:11px;color:var(--ocean-600);word-break:break-all;margin-bottom:12px">' + qrUrl + '</div>'
@@ -8501,7 +8501,7 @@ async function renderUmbrellas(){
     var isActive = u.is_active !== false;
     var info = openByUmb[String(u.number)];
     var isOpen = info && (info.count > 0 || info.hasBill);
-    // Visual diferente para guarda-sol com conta aberta
+    // Visual diferente para mesa com conta aberta
     var cardBorder = isOpen ? '2px solid #ef4444' : '1px solid var(--sand-100)';
     var cardBg = isOpen ? 'linear-gradient(180deg,#fff 0%,#fef2f2 100%)' : '#fff';
     var statusDot = isActive ? (isOpen ? '#ef4444' : '#10b981') : 'var(--sl-300)';
@@ -8515,7 +8515,7 @@ async function renderUmbrellas(){
     }
     return '<div style="background:'+cardBg+';border-radius:var(--r);border:'+cardBorder+';padding:14px;text-align:center;position:relative;opacity:'+(isActive?'1':'0.5')+'">'
       +'<div style="position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:'+statusDot+'"></div>'
-      +'<div style="font-size:28px;margin-bottom:6px">☂️</div>'
+      +'<div style="font-size:28px;margin-bottom:6px">🍽️</div>'
       +'<div style="font-family:var(--font-d);font-size:18px;color:var(--sl-800)">Nº '+String(u.number).padStart(2,'0')+'</div>'
       +'<div style="font-size:11px;color:var(--sl-400);margin-bottom:4px">'+esc(u.area||'')+'</div>'
       +statusBadge
@@ -8535,15 +8535,15 @@ async function renderUmbrellas(){
   }).join('');
 
   if(!filtered.length){
-    umbHtml = '<div style="padding:32px;text-align:center;color:var(--sl-400);grid-column:1/-1">Nenhum guarda-sol com esse filtro.</div>';
+    umbHtml = '<div style="padding:32px;text-align:center;color:var(--sl-400);grid-column:1/-1">Nenhuma mesa com esse filtro.</div>';
   }
 
   if(reqCode === true){
     // Negócio que usa só QR por mesa: não mostra o QR geral (ele não funcionaria mais)
     qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:16px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
-      + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">📱 Cada ' + swapUmbrellaWords('guarda-sol') + ' tem o seu QR</div>'
-      + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('Imprima e fixe em cada guarda-sol: o cliente escaneia e pede direto') + '</div>'
-      + '<button class="btn btn-ocean btn-sm" style="margin:0 4px" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todos os guarda-sóis') + '</button>'
+      + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">📱 Cada ' + swapUmbrellaWords('mesa') + ' tem o seu QR</div>'
+      + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('Imprima e fixe em cada mesa: o cliente escaneia e pede direto') + '</div>'
+      + '<button class="btn btn-ocean btn-sm" style="margin:0 4px" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todos os mesas') + '</button>'
       + '</div>';
   }
   grid.innerHTML = qrSection + filterBar + umbHtml;
@@ -8557,7 +8557,7 @@ async function renderUmbrellas(){
 }
 
 
-// ── CRUD Guarda-sóis ──────────────────────────────
+// ── CRUD Mesas ──────────────────────────────
 function editUmbFromBtn(btn){
   var form = $('umb-form-inline');
   if(!form) return;
@@ -8567,7 +8567,7 @@ function editUmbFromBtn(btn){
   if(e3) e3.value=btn.dataset.label||'';
   if(e4) e4.value=btn.dataset.area||'Frente mar';
   if(e5) e5.value=btn.dataset.active==='true'?'true':'false';
-  if(e6) e6.textContent='Editar guarda-sol';
+  if(e6) e6.textContent='Editar mesa';
   form.classList.remove('hidden');
   if(e2) e2.focus();
 }
@@ -8595,7 +8595,7 @@ function toggleUmbForm(forceClose){
   if(e3) e3.value='';
   if(e4) e4.value='Frente mar';
   if(e5) e5.value='true';
-  if(e6) e6.textContent='Novo guarda-sol';
+  if(e6) e6.textContent='Nova mesa';
   form.classList.remove('hidden');
   if(e2) e2.focus();
 }
@@ -8603,7 +8603,7 @@ function toggleUmbForm(forceClose){
 async function saveUmbrella(){
   var number = parseInt($('umb-number').value);
   var area = $('umb-area').value;
-  var label = $('umb-label').value.trim() || 'Guarda-sol ' + String(number).padStart(2,'0');
+  var label = $('umb-label').value.trim() || 'Mesa ' + String(number).padStart(2,'0');
   var active = $('umb-active').value === 'true';
   var editId = $('umb-edit-id').value;
 
@@ -8617,32 +8617,32 @@ async function saveUmbrella(){
       var {error} = await sbw.from('umbrellas').update({
         number, area, label, is_active: active
       }).eq('id', editId);
-      if(error){ toast('Erro: ' + error.message); setLoading('save-umb-btn', false, 'Salvar guarda-sol'); return; }
-      toast('✅ Guarda-sol atualizado!');
+      if(error){ toast('Erro: ' + error.message); setLoading('save-umb-btn', false, 'Salvar mesa'); return; }
+      toast('✅ Mesa atualizada!');
     } else {
       // Criar novo
       var {error} = await sbw.from('umbrellas').insert({
         kiosk_id: currentKiosk.id, number, area, label, is_active: active
       });
-      if(error){ toast('Erro: ' + error.message); setLoading('save-umb-btn', false, 'Salvar guarda-sol'); return; }
-      toast('✅ Guarda-sol ' + number + ' criado!');
+      if(error){ toast('Erro: ' + error.message); setLoading('save-umb-btn', false, 'Salvar mesa'); return; }
+      toast('✅ Mesa ' + number + ' criada!');
     }
   } else {
-    toast('✅ Guarda-sol salvo (demo)!');
+    toast('✅ Mesa salva (demo)!');
   }
 
-  setLoading('save-umb-btn', false, 'Salvar guarda-sol');
+  setLoading('save-umb-btn', false, 'Salvar mesa');
   closeUmbModal();
   renderUmbrellas();
 }
 
 async function deleteUmbrella(id, number){
-  if(!confirm(swapUmbrellaWords('Remover guarda-sol Nº ' + number + '?'))) return;
+  if(!confirm(swapUmbrellaWords('Remover mesa Nº ' + number + '?'))) return;
   if(isConfigured && !String(id).startsWith('u')){
     var {error} = await sbw.from('umbrellas').delete().eq('id', id);
     if(error){ toast('Erro: ' + error.message); return; }
   }
-  toast('🗑️ Guarda-sol removido!');
+  toast('🗑️ Mesa removida!');
   renderUmbrellas();
 }
 
@@ -8653,7 +8653,7 @@ function copyQrUrl(elOrUrl){
   });
 }
 
-// QR por mesa/guarda-sol: o link já leva o número, que fica travado no cliente.
+// QR por mesa: o link já leva o número, que fica travado no cliente.
 function umbQrUrl(num){
   var id = currentKiosk ? currentKiosk.id : '';
   var url = getKioskUrl() + '?kiosk=' + encodeURIComponent(id) + '&umbrella=' + encodeURIComponent(num);
@@ -8689,7 +8689,7 @@ async function rotateUmbCode(id){
   toast('✅ Novo código gerado. Imprima o QR de novo.');
   renderUmbrellas();
 }
-// QR já visível no cartão da mesa/guarda-sol (só quando há código gerado pelo banco)
+// QR já visível no cartão da mesa (só quando há código gerado pelo banco)
 function cardQr(u){
   var c = window._umbCodes && window._umbCodes[String(u.number)];
   if(!c) return '';
@@ -8705,13 +8705,13 @@ async function printAllUmbQrs(){
   await loadUmbCodes();
   var res = await sb.from('umbrellas').select('number,area,is_active').eq('kiosk_id', currentKiosk.id).order('number');
   var list = (res.data||[]).filter(function(u){ return u.is_active !== false; });
-  if(!list.length){ toast(swapUmbrellaWords('Cadastre guarda-sóis primeiro')); return; }
+  if(!list.length){ toast(swapUmbrellaWords('Cadastre mesas primeiro')); return; }
   var win = window.open('','_blank');
   if(!win){ toast('Libere pop-ups para imprimir'); return; }
   var cards = list.map(function(u){
     var url = umbQrUrl(u.number);
     return '<div class="c"><div class="k">'+esc(currentKiosk.name||'')+'</div>'
-      +'<div class="n">'+esc(swapUmbrellaWords('Guarda-sol')+' '+String(u.number).padStart(2,'0'))+'</div>'
+      +'<div class="n">'+esc(swapUmbrellaWords('Mesa')+' '+String(u.number).padStart(2,'0'))+'</div>'
       +'<img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data='+encodeURIComponent(url)+'"/>'
       +'<div class="s">Escaneie para pedir</div></div>';
   }).join('');
@@ -8730,7 +8730,7 @@ async function printAllUmbQrs(){
 function printQr(url,num){
   var win=window.open('','_blank');
   win.document.write('<html><body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">'
-    +'<h2>'+swapUmbrellaWords('Guarda-sol Nº '+num)+'</h2>'
+    +'<h2>'+swapUmbrellaWords('Mesa Nº '+num)+'</h2>'
     +'<img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='+encodeURIComponent(url)+'" style="margin:20px"/>'
     +'<p style="font-size:12px;color:#666;max-width:300px;text-align:center">'+url+'</p>'
     +'<button onclick="window.print()" style="margin-top:20px;padding:10px 24px;background:#1e293b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">🖨️ Imprimir</button>'
