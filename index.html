@@ -2780,6 +2780,20 @@ window.addEventListener('load', async function(){
     showScreen('client', document.getElementById('nav-client'));
   }
 
+  // QR Code POR MESA/GUARDA-SOL (URL com ?kiosk=ID&umbrella=N): o número já vem
+  // no QR e fica travado — o cliente não digita nada, o que evita pedido lançado
+  // na mesa errada (ou de propósito na mesa de outra pessoa). Vai direto ao cardápio.
+  if(kioskId && isConfigured && /^\d{1,2}$/.test(umbNum||'') && +umbNum >= 1){
+    var umbIn = $('umbrella-input');
+    if(umbIn){
+      umbIn.value = umbNum;
+      umbIn.readOnly = true;
+      var umbField = umbIn.closest('.splash-field');
+      if(umbField) umbField.style.display = 'none';
+    }
+    try{ await goToMenu(); }catch(e){}
+  }
+
   // ─── Restaurar sessão do cliente após refresh (pull-to-refresh, F5, etc.) ───
   // Só restaura se NÃO houver URL params (que indicam acesso novo via QR Code)
   if(isConfigured && !kioskId && !umbNum){
@@ -8437,8 +8451,9 @@ async function renderUmbrellas(){
   var qrImgUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(qrUrl);
 
   var qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:20px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
-    + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code do Negócio</div>'
-    + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">Fixe este QR Code em cada guarda-sol.</div>'
+    + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code geral do Negócio</div>'
+    + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('Neste QR o cliente digita o número do guarda-sol, o que permite erro. Para evitar pedido na mesa errada, use um QR por guarda-sol (botão abaixo).') + '</div>'
+    + '<button class="btn btn-ocean btn-sm" style="margin:0 0 14px;display:block;margin-left:auto;margin-right:auto" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todos os guarda-sóis') + '</button>'
     + '<img src="' + qrImgUrl + '" style="margin:0 auto 12px;display:block;border-radius:8px"/>'
     + '<div style="font-size:11px;color:var(--ocean-600);word-break:break-all;margin-bottom:12px">' + qrUrl + '</div>'
     + '<button class="btn btn-ocean btn-sm" style="margin:4px" id="copy-qr-btn">📋 Copiar URL</button>'
@@ -8477,6 +8492,7 @@ async function renderUmbrellas(){
       +'<div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:6px">'
       +'<button class="btn btn-ghost btn-sm" data-uid="'+u.id+'" data-num="'+esc(u.number)+'" data-area="'+esc(u.area||'')+'" data-label="'+esc(u.label||'')+'" data-active="'+isActive+'" onclick="editUmbFromBtn(this)">✏️ Editar</button>'
       +'<button class="btn btn-danger btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" onclick="delUmbFromBtn(this)">🗑️</button>'
+      +'<button class="btn btn-ghost btn-sm" data-num="'+u.number+'" onclick="printUmbQr(this.dataset.num)">📱 QR</button>'
       +'</div>'
       +(isOpen
         ? '<button class="btn btn-sm" style="width:100%;margin-top:8px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-size:11px" data-num="'+u.number+'" onclick="openUmbrellaConsumptionModal(this.dataset.num)">👁️ Ver consumo</button>'
@@ -8596,6 +8612,40 @@ function copyQrUrl(elOrUrl){
   navigator.clipboard.writeText(url).then(function(){
     toast('✅ URL copiada!');
   });
+}
+
+// QR por mesa/guarda-sol: o link já leva o número, que fica travado no cliente.
+function umbQrUrl(num){
+  var id = currentKiosk ? currentKiosk.id : '';
+  return getKioskUrl() + '?kiosk=' + encodeURIComponent(id) + '&umbrella=' + encodeURIComponent(num);
+}
+function printUmbQr(num){
+  printQr(umbQrUrl(num), num);
+}
+async function printAllUmbQrs(){
+  if(!currentKiosk){ toast('Negócio não carregado'); return; }
+  var res = await sb.from('umbrellas').select('number,area,is_active').eq('kiosk_id', currentKiosk.id).order('number');
+  var list = (res.data||[]).filter(function(u){ return u.is_active !== false; });
+  if(!list.length){ toast(swapUmbrellaWords('Cadastre guarda-sóis primeiro')); return; }
+  var win = window.open('','_blank');
+  if(!win){ toast('Libere pop-ups para imprimir'); return; }
+  var cards = list.map(function(u){
+    var url = umbQrUrl(u.number);
+    return '<div class="c"><div class="k">'+esc(currentKiosk.name||'')+'</div>'
+      +'<div class="n">'+esc(swapUmbrellaWords('Guarda-sol')+' '+String(u.number).padStart(2,'0'))+'</div>'
+      +'<img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data='+encodeURIComponent(url)+'"/>'
+      +'<div class="s">Escaneie para pedir</div></div>';
+  }).join('');
+  win.document.write('<html><head><meta charset="utf-8"><title>QR Codes</title><style>'
+    +'body{font-family:sans-serif;margin:16px}'
+    +'.g{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}'
+    +'.c{border:2px solid #1e293b;border-radius:12px;padding:12px;text-align:center;page-break-inside:avoid}'
+    +'.k{font-size:12px;color:#475569}.n{font-size:22px;font-weight:700;margin:4px 0}'
+    +'.c img{width:100%;max-width:200px}.s{font-size:12px;color:#475569}'
+    +'.b{margin-bottom:14px;padding:10px 24px;background:#1e293b;color:#fff;border:none;border-radius:8px;cursor:pointer}'
+    +'@media print{.b{display:none}}'
+    +'</style></head><body><button class="b" onclick="window.print()">🖨️ Imprimir</button><div class="g">'+cards+'</div></body></html>');
+  win.document.close();
 }
 
 function printQr(url,num){
