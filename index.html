@@ -8469,6 +8469,7 @@ async function renderUmbrellas(){
   var kioskName = currentKiosk ? currentKiosk.name : 'Negócio';
   var qrImgUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(qrUrl);
 
+  var showGeneral = (reqCode !== true);
   var qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:20px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
     + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code geral do Negócio</div>'
     + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('Neste QR o cliente digita o número do guarda-sol, o que permite erro. Para evitar pedido na mesa errada, use um QR por guarda-sol (botão abaixo).') + '</div>'
@@ -8509,10 +8510,11 @@ async function renderUmbrellas(){
       +'<div style="font-family:var(--font-d);font-size:18px;color:var(--sl-800)">Nº '+String(u.number).padStart(2,'0')+'</div>'
       +'<div style="font-size:11px;color:var(--sl-400);margin-bottom:4px">'+esc(u.area||'')+'</div>'
       +statusBadge
+      +cardQr(u)
       +'<div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin-top:6px">'
       +'<button class="btn btn-ghost btn-sm" data-uid="'+u.id+'" data-num="'+esc(u.number)+'" data-area="'+esc(u.area||'')+'" data-label="'+esc(u.label||'')+'" data-active="'+isActive+'" onclick="editUmbFromBtn(this)">✏️ Editar</button>'
       +'<button class="btn btn-danger btn-sm" data-uid="'+u.id+'" data-num="'+u.number+'" onclick="delUmbFromBtn(this)">🗑️</button>'
-      +'<button class="btn btn-ghost btn-sm" data-num="'+u.number+'" onclick="printUmbQr(this.dataset.num)">📱 QR</button>'
+      +'<button class="btn btn-ghost btn-sm" data-num="'+u.number+'" onclick="printUmbQr(this.dataset.num)">'+((window._umbCodes && window._umbCodes[String(u.number)]) ? '🖨️ Imprimir' : '📱 QR')+'</button>'
       +(window._umbCodes && window._umbCodes[String(u.number)] ? '<button class="btn btn-ghost btn-sm" title="Gerar novo código" data-uid="'+u.id+'" onclick="rotateUmbCode(this.dataset.uid)">🔄</button>' : '')
       +'</div>'
       +(isOpen
@@ -8528,6 +8530,14 @@ async function renderUmbrellas(){
     umbHtml = '<div style="padding:32px;text-align:center;color:var(--sl-400);grid-column:1/-1">Nenhum guarda-sol com esse filtro.</div>';
   }
 
+  if(reqCode === true){
+    // Negócio que usa só QR por mesa: não mostra o QR geral (ele não funcionaria mais)
+    qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:16px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
+      + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">📱 Cada ' + swapUmbrellaWords('guarda-sol') + ' tem o seu QR</div>'
+      + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('O QR é criado junto com o guarda-sol e já aparece no cartão abaixo. Imprima e fixe em cada um: o cliente escaneia e pede direto, sem digitar número.') + '</div>'
+      + '<button class="btn btn-ocean btn-sm" style="margin:0 4px" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todos os guarda-sóis') + '</button>'
+      + '</div>';
+  }
   grid.innerHTML = qrSection + filterBar + umbHtml;
 
   setTimeout(function(){
@@ -8670,6 +8680,14 @@ async function rotateUmbCode(id){
   if(r.error){ toast('Erro: ' + r.error.message); return; }
   toast('✅ Novo código gerado. Imprima o QR de novo.');
   renderUmbrellas();
+}
+// QR já visível no cartão da mesa/guarda-sol (só quando há código gerado pelo banco)
+function cardQr(u){
+  var c = window._umbCodes && window._umbCodes[String(u.number)];
+  if(!c) return '';
+  var img = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=4&data=' + encodeURIComponent(umbQrUrl(u.number));
+  return '<img src="'+img+'" alt="QR '+esc(u.number)+'" width="110" height="110" loading="lazy" style="display:block;margin:6px auto 2px;border-radius:8px;border:1px solid var(--sand-100);background:#fff">'
+    + '<div style="font-size:10px;color:var(--sl-400);margin-bottom:2px">QR desta mesa</div>';
 }
 function printUmbQr(num){
   printQr(umbQrUrl(num), num);
