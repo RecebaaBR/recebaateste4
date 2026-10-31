@@ -4,6 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Recebaa — Pedidos por QR Code para bares, restaurantes e quiosques</title>
+<!-- QR por mesa: esconde a tela de digitar o número enquanto o cardápio carrega (evita o "flash") -->
+<style>
+html.qr-direct #client-splash .splash{visibility:hidden}
+html.qr-direct #client-splash::after{content:"Carregando seu cardápio…";position:fixed;left:0;right:0;top:45%;text-align:center;font:600 16px/1.4 system-ui,sans-serif;color:#64748b}
+</style>
+<script>
+try{var _q=new URLSearchParams(location.search);if(_q.get('kiosk')&&/^\d{1,2}$/.test(_q.get('umbrella')||'')){document.documentElement.classList.add('qr-direct');setTimeout(function(){document.documentElement.classList.remove('qr-direct')},8000);}}catch(e){}
+</script>
 <!-- Meta Pixel: só é carregado depois que o visitante aceita (LGPD) -->
 <script>
 function trackPx(type,name){ try{ if(window.fbq) fbq(type,name); }catch(e){} }
@@ -2797,6 +2805,7 @@ window.addEventListener('load', async function(){
       if(umbField) umbField.style.display = 'none';
     }
     try{ await goToMenu(); }catch(e){}
+    document.documentElement.classList.remove('qr-direct');
   }
 
   // ─── Restaurar sessão do cliente após refresh (pull-to-refresh, F5, etc.) ───
