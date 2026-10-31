@@ -269,6 +269,7 @@ body[data-bill-blocked="1"] .menu-grid{opacity:.4;pointer-events:none}
 .oc-num{font-size:14px;font-weight:700}
 .oc-body{padding:10px 14px}
 .oc-customer{font-size:12px;font-weight:500;color:var(--sl-700);margin-bottom:5px}
+.oc-item-done{opacity:.75}
 .oc-item-row{font-size:11px;color:var(--sl-500);display:flex;justify-content:space-between;padding:1px 0}
 .oc-note{font-size:11px;color:var(--sl-400);font-style:italic;margin-top:5px;padding:5px 8px;background:var(--sand-50);border-radius:6px}
 .oc-total{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-top:8px}
@@ -1370,6 +1371,7 @@ tr:hover td{background:var(--sand-50)}
             <option value="cancelled">Cancelado</option>
           </select>
           <button class="btn btn-sm btn-ocean" onclick="applyBulkHistStatus()">Aplicar</button>
+          <button class="btn btn-sm" id="hist-bulk-deliver" style="background:#10b981;color:#fff" onclick="bulkDeliverOrders()">✓ Marcar como entregues</button>
           <button class="btn btn-sm btn-ghost" style="color:#fff" onclick="clearHistSelection()">Limpar seleção</button>
         </div>
         <div class="hist-table" id="hist-table"></div>
@@ -2886,7 +2888,7 @@ function refreshClientOrders(){
       q.then(function(r){
         var allOrders = (r.data || []).map(function(o){
           return Object.assign({}, o, {
-            items: (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; }),
+            items: (o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price,delivered:!!i.delivered_at}; }),
             umb: o.umbrella_num,
             time: new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
           });
@@ -3162,6 +3164,9 @@ async function goToMenu(){
           if(ao) ao.status = updated.status;
           if(mo){
             mo.status = updated.status;
+            // itens entregues mudam sem mudar o status: rebusca os itens (leve, com debounce)
+            clearTimeout(window._itemRefreshT);
+            window._itemRefreshT = setTimeout(function(){ try{ refreshClientOrders(); }catch(e){} }, 400);
             updateOrdersBadge();
             var vo = $('view-orders');
             if(vo && !vo.classList.contains('hidden')) renderMyOrders();
@@ -4885,13 +4890,14 @@ function renderMyOrders(){
       html+='<div class="my-order-card" data-s="'+o.status+'" style="border-radius:0;border:none;border-bottom:1px solid var(--sand-50);margin-bottom:0">'
         +'<div class="my-order-head"><div class="my-order-num">Pedido #'+o.order_number+groupBadge+'</div><span class="pill '+p.c+'">'+p.l+'</span></div>'
         +'<div class="my-order-items-txt">'+(o.items||[]).map(function(i){
-          var line = '• '+i.qty+'x '+esc(i.name);
+          var line = (i.delivered && o.status!=='delivered' ? '✅ ' : '• ')+i.qty+'x '+esc(i.name)+(i.delivered && o.status!=='delivered' ? ' <span style="color:#15803d;font-size:11px">entregue</span>' : '');
           if(i.price != null){
             var total = Number(i.price) * Number(i.qty || 1);
             line += ' — '+fmt(total);
           }
           return line;
         }).join('<br/>')+'</div>'
+        +(function(){ var its=o.items||[], d=its.filter(function(i){return i.delivered;}).length; return (d>0 && d<its.length && !['delivered','cancelled'].includes(o.status)) ? '<div style="font-size:12px;color:#15803d;font-weight:600;margin:4px 0">'+d+' de '+its.length+' itens entregues</div>' : ''; })()
         +(notesClean?'<div style="font-size:11px;color:var(--sl-400);font-style:italic;margin-bottom:4px">📝 '+esc(notesClean)+'</div>':'')
         +'<div class="my-order-foot"><div class="my-order-total">'+fmt(o.total)+'</div><div class="my-order-time">🕐 '+(o.time||'')+'</div></div>'
         +(o.status==='pending'?'<button class="btn btn-sm" style="width:100%;margin-top:8px;background:#fef2f2;color:var(--red);border:1px solid #fecaca" data-oid="'+o.id+'" onclick="clientCancelOrder(this.dataset.oid)">❌ Cancelar pedido</button>':'')
@@ -5680,7 +5686,7 @@ async function loadKioskData(){
     const {data:cats}=await sb.from('categories').select('*').eq('kiosk_id',currentKiosk.id).order('sort_order');
     dbCategories=cats||[];
     const {data:ords}=await sb.from('orders').select('*,order_items(*)').eq('kiosk_id',currentKiosk.id).order('created_at',{ascending:false}).limit(1000);
-    orders=(ords||[]).map(o=>({...o,items:(o.order_items||[]).map(i=>({id:i.id,name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price})),umb:o.umbrella_num,time:new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}));
+    orders=(ords||[]).map(o=>({...o,items:(o.order_items||[]).map(i=>({id:i.id,name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price,delivered:!!i.delivered_at})),umb:o.umbrella_num,time:new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}));
   } else {
     catalog=MOCK_PRODUCTS;
     dbCategories=MOCK_CATS;
@@ -6141,7 +6147,7 @@ function subscribeRealtime(){
       async payload=>{
         const {data:full}=await sb.from('orders').select('*,order_items(*)').eq('id',payload.new.id).single();
         if(full){
-          const o={...full,items:(full.order_items||[]).map(i=>({id:i.id,name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price})),umb:full.umbrella_num,time:new Date(full.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
+          const o={...full,items:(full.order_items||[]).map(i=>({id:i.id,name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price,delivered:!!i.delivered_at})),umb:full.umbrella_num,time:new Date(full.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})};
           orders.unshift(o);
           updateDashMetrics();
 
@@ -6863,7 +6869,8 @@ function orderCard(o){
     +'<span class="pill '+p.c+'">'+p.l+'</span></div></div>'
     +'<div class="oc-body"><div class="oc-customer">&#x1F464; '+esc(o.customer_name||o.customer||'?')+' &middot; <span style="font-size:10px;color:var(--sl-400)">&#x1F550; '+(o.time||'')+'</span></div>'
     +(o.created_by?'<div style="font-size:11px;color:#7c3aed;background:#f5f3ff;display:block;width:fit-content;padding:2px 8px;border-radius:99px;margin-bottom:6px">🧑‍🍳 Lançado por '+esc(o.created_by)+'</div>':'<div style="font-size:11px;color:#0891b2;background:#ecfeff;display:block;width:fit-content;padding:2px 8px;border-radius:99px;margin-bottom:6px">📱 Pedido do cliente</div>')
-    +(o.items||[]).map(i=>'<div class="oc-item-row"><span>'+i.qty+'\xd7 '+esc(i.name)+'</span><span>'+fmt(i.qty*i.price)+'</span></div>').join('')
+    +(o.items||[]).map(function(i){ return itemRowHtml(o,i,isSpecial); }).join('')
+    +itemProgressHtml(o,isSpecial)
     +(rawNotes?'<div class="oc-note">&#x1F4DD; '+esc(rawNotes)+'</div>':'')
     +(isBill?'<div style="background:#8b5cf6;color:#fff;border-radius:8px;padding:8px 12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:500">💰 Valor a cobrar</span><span style="font-size:18px;font-weight:700">'+fmt(o.total)+'</span></div>':'<div class="oc-total"><span>Total</span><span>'+fmt(o.total)+'</span></div>')
     +'</div>'
@@ -6871,14 +6878,95 @@ function orderCard(o){
     +'</div>';
 }
 
+
+// ── Entrega item a item ──
+function itemsTrackable(o,isSpecial){
+  return !isSpecial && ['accepted','preparing','delivering'].includes(o.status) && (o.items||[]).length>0 && (o.items||[]).every(function(i){return i.id;});
+}
+function itemRowHtml(o,i,isSpecial){
+  var base='<span>'+(i.delivered?'<span style="color:#15803d">✓ </span>':'')+i.qty+'\xd7 '+esc(i.name)+'</span>';
+  var price='<span>'+fmt(i.qty*i.price)+'</span>';
+  if(!itemsTrackable(o,isSpecial)) return '<div class="oc-item-row'+(i.delivered?' oc-item-done':'')+'">'+base+price+'</div>';
+  var btn = i.delivered
+    ? '<button class="btn btn-sm" style="background:#dcfce7;color:#15803d;padding:3px 9px;font-size:11px" title="Desfazer" onclick="deliverItem(\''+o.id+'\',\''+i.id+'\',false)">✓ Entregue</button>'
+    : '<button class="btn btn-sm btn-dark" style="padding:3px 9px;font-size:11px" onclick="deliverItem(\''+o.id+'\',\''+i.id+'\',true)">Entregar</button>'
+      +'<button class="btn btn-sm btn-ghost" style="padding:3px 7px;font-size:11px" title="Cancelar item" onclick="cancelItem(\''+o.id+'\',\''+i.id+'\')">✕</button>';
+  return '<div class="oc-item-row'+(i.delivered?' oc-item-done':'')+'" style="align-items:center;gap:8px"><span style="flex:1">'+(i.delivered?'<span style="color:#15803d">✓ </span>':'')+i.qty+'\xd7 '+esc(i.name)+'</span><span>'+fmt(i.qty*i.price)+'</span><span style="display:flex;gap:4px">'+btn+'</span></div>';
+}
+function itemProgressHtml(o,isSpecial){
+  var its=o.items||[]; if(isSpecial||its.length<2) return '';
+  var d=its.filter(function(i){return i.delivered;}).length; if(!d||d===its.length) return '';
+  return '<div style="font-size:11px;color:var(--sl-500);margin-top:6px">'+d+' de '+its.length+' itens entregues</div><div style="height:6px;background:var(--sand-100);border-radius:9px;overflow:hidden;margin:4px 0 2px"><i style="display:block;height:100%;width:'+Math.round(d/its.length*100)+'%;background:#10b981"></i></div>';
+}
+async function staffRpc(fn,args){
+  return sb.rpc(fn, Object.assign({p_token: window._sessToken||window._adminToken||null}, args));
+}
+function refreshAfterItemChange(){
+  renderLiveOrders(); renderHist(); updateDashMetrics();
+  var cp=$('kpage-contas'); if(cp && cp.classList.contains('active')) renderContas();
+}
+async function deliverItem(orderId,itemId,delivered){
+  var o=orders.find(function(x){return x.id===orderId;}); if(!o) return;
+  var who=getCurrentActorName();
+  if(isConfigured && !String(orderId).startsWith('local')){
+    var r=await staffRpc('staff_deliver_items',{p_item_ids:[itemId],p_delivered:delivered,p_actor:who});
+    if(r.error){ toast('❌ '+r.error.message); return; }
+  }
+  (o.items||[]).forEach(function(i){ if(i.id===itemId) i.delivered=delivered; });
+  var pend=(o.items||[]).filter(function(i){return !i.delivered;}).length;
+  if(delivered && pend===0) o.status='delivered';
+  else if(!delivered && o.status==='delivered') o.status='delivering';
+  o.last_updated_by=who;
+  refreshAfterItemChange();
+}
+async function cancelItem(orderId,itemId){
+  var o=orders.find(function(x){return x.id===orderId;}); if(!o) return;
+  var it=(o.items||[]).find(function(i){return i.id===itemId;}); if(!it) return;
+  if(!confirm('Cancelar "'+it.qty+'× '+it.name+'"? O valor sai da conta.')) return;
+  var who=getCurrentActorName();
+  if(isConfigured && !String(orderId).startsWith('local')){
+    var r=await staffRpc('staff_cancel_item',{p_item_id:itemId,p_actor:who});
+    if(r.error){ toast('❌ '+r.error.message); return; }
+  }
+  var base=Number(o.total)-Number(o.service_amount||0), nb=Math.max(0,base-it.qty*it.price);
+  var svc=base>0?Math.round(Number(o.service_amount||0)*nb/base*100)/100:0;
+  o.items=o.items.filter(function(i){return i.id!==itemId;});
+  o.total=Math.round((nb+svc)*100)/100; if(o.service_amount!=null) o.service_amount=svc;
+  if(!o.items.length) o.status='cancelled';
+  else if(o.items.every(function(i){return i.delivered;})) o.status='delivered';
+  o.last_updated_by=who;
+  toast('Item cancelado');
+  refreshAfterItemChange();
+}
+async function bulkDeliverOrders(){
+  var ids=Object.keys(window._histSelected).filter(function(id){return window._histSelected[id];});
+  if(!ids.length){ toast('⚠️ Nenhum pedido selecionado'); return; }
+  if(!confirm('Marcar '+ids.length+' pedido(s) como entregues (todos os itens)?')) return;
+  var who=getCurrentActorName();
+  if(isConfigured && currentKiosk && currentKiosk.id!=='demo'){
+    var r=await staffRpc('staff_deliver_orders',{p_order_ids:ids,p_actor:who});
+    if(r.error){ toast('❌ '+r.error.message); return; }
+  }
+  ids.forEach(function(id){ var o=orders.find(function(x){return x.id===id;}); if(o && ['pending','accepted','preparing','delivering'].includes(o.status)){ o.status='delivered'; (o.items||[]).forEach(function(i){i.delivered=true;}); o.last_updated_by=who; } });
+  window._histSelected={};
+  toast('✅ '+ids.length+' pedido(s) entregue(s)');
+  refreshAfterItemChange();
+}
+
 async function advOrder(id,st){
   const o=orders.find(x=>x.id===id); if(!o) return;
   var who = getCurrentActorName();
   if(isConfigured && !String(id).startsWith('local')){
-    await sbw.from('orders').update({status:st, last_updated_by: who}).eq('id',id);
+    if(st==='delivered' && o.customer_name!=='PEDIDO DE CONTA' && o.customer_name!=='CHAMADA DE ATENDENTE'){
+      var rr=await staffRpc('staff_deliver_orders',{p_order_ids:[id],p_actor:who});
+      if(rr.error){ toast('❌ '+rr.error.message); return; }
+    } else {
+      await sbw.from('orders').update({status:st, last_updated_by: who}).eq('id',id);
+    }
   }
   o.status=st;
   o.last_updated_by=who;
+  if(st==='delivered') (o.items||[]).forEach(function(i){ i.delivered=true; });
   if(st==='cancelled') await decrementPromoSold(id);
   renderLiveOrders();
   renderHist();
@@ -6998,7 +7086,7 @@ async function renderHist(){
       data.forEach(function(o){
         o.umb = o.umbrella_num;
         o.time = new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-        o.items = (o.order_items||[]).map(function(i){ return {id:i.id,name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; });
+        o.items = (o.order_items||[]).map(function(i){ return {id:i.id,name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price,delivered:!!i.delivered_at}; });
         // Atualizar no array orders
         var existing = orders.find(function(x){ return x.id===o.id; });
         if(existing) Object.assign(existing, o);
@@ -7140,11 +7228,11 @@ function renderHistTable(list, skipFilterSetup){
       var notesClean = notesRaw.replace(/\s*\[(BEBIDAS|COMIDA|OUTROS)\]\s*/g, '').trim();
       var isChecked = window._histSelected && window._histSelected[o.id];
       return '<tr>'
-        +'<td>'+(!isSpecial && o.status==='pending'?'<input type="checkbox" class="hist-row-check" data-oid="'+o.id+'" '+(isChecked?'checked':'')+' onchange="toggleHistSelection(\''+o.id+'\',this.checked)"/>':'')+'</td>'
+        +'<td>'+(!isSpecial && ['pending','accepted','preparing','delivering'].includes(o.status)?'<input type="checkbox" class="hist-row-check" data-oid="'+o.id+'" '+(isChecked?'checked':'')+' onchange="toggleHistSelection(\''+o.id+'\',this.checked)"/>':'')+'</td>'
         +'<td'+(groupChip?' style="line-height:1"':'')+'><b>#'+(o.order_number||'—')+'</b>'+groupChip+'</td>'
         +'<td>🍽️ '+esc(o.umb||o.umbrella_num||'?')+'</td>'
         +'<td style="width:90px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(o.customer_name||'?')+'</td>'
-        +'<td style="color:var(--sl-500);font-size:11px;width:260px;text-align:left">'+(isSpecial?esc(notesClean.split(' · ')[0]):(o.items||[]).map(i=>'<div style="text-align:left;white-space:nowrap">'+i.qty+'× '+esc(i.name)+'</div>').join(''))+'</td>'
+        +'<td style="color:var(--sl-500);font-size:11px;width:260px;text-align:left">'+(isSpecial?esc(notesClean.split(' · ')[0]):(o.items||[]).map(i=>'<div style="text-align:left;white-space:nowrap">'+(i.delivered?'<span style="color:#15803d">✓ </span>':'')+i.qty+'× '+esc(i.name)+'</div>').join(''))+'</td>'
         +'<td style="font-size:11px">'+(o.created_by?'🧑‍🍳 '+esc(o.created_by):'<span style="color:var(--sl-400)">📱 Cliente</span>')+'</td>'
         +'<td><b>'+fmt(o.total)+'</b></td>'
         +'<td>'+(o.time||'—')+'</td>'
@@ -9166,7 +9254,7 @@ async function loadReports(){
       .order('created_at', {ascending: false});
     filteredOrders = (data||[]).map(function(o){
       return {...o,
-        items:(o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price}; }),
+        items:(o.order_items||[]).map(function(i){ return {name:i.product_name,qty:i.quantity,price:i.unit_price,cost:i.cost_price,delivered:!!i.delivered_at}; }),
         time:new Date(o.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
         date:new Date(o.created_at).toLocaleDateString('pt-BR')
       };
