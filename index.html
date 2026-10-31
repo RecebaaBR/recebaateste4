@@ -8482,7 +8482,7 @@ async function renderUmbrellas(){
   var qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:20px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
     + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">🌊 QR Code geral do Negócio</div>'
     + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('Neste QR o cliente digita o número da mesa, o que permite erro. Para evitar pedido na mesa errada, use um QR por mesa (botão abaixo).') + '</div>'
-    + '<button class="btn btn-ocean btn-sm" style="margin:0 0 14px;display:block;margin-left:auto;margin-right:auto" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todos os mesas') + '</button>'
+    + '<button class="btn btn-ocean btn-sm" style="margin:0 0 14px;display:block;margin-left:auto;margin-right:auto" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todas as mesas') + '</button>'
     + (reqCode===null ? '' : '<div style="margin-top:4px"><button class="btn btn-ghost btn-sm" onclick="toggleRequireCode()">' + (reqCode ? '🔒 Código do QR exigido (clique para desligar)' : '🔓 Exigir código do QR (mais seguro)') + '</button></div>')
     + '<img src="' + qrImgUrl + '" style="margin:0 auto 12px;display:block;border-radius:8px"/>'
     + '<div style="font-size:11px;color:var(--ocean-600);word-break:break-all;margin-bottom:12px">' + qrUrl + '</div>'
@@ -8543,7 +8543,7 @@ async function renderUmbrellas(){
     qrSection = '<div style="background:#fff;border-radius:var(--r);border:2px solid var(--ocean-500);padding:16px;text-align:center;margin-bottom:20px;grid-column:1/-1">'
       + '<div style="font-size:14px;font-weight:600;color:var(--sl-800);margin-bottom:4px">📱 Cada ' + swapUmbrellaWords('mesa') + ' tem o seu QR</div>'
       + '<div style="font-size:12px;color:var(--sl-400);margin-bottom:12px">' + swapUmbrellaWords('Imprima e fixe em cada mesa: o cliente escaneia e pede direto') + '</div>'
-      + '<button class="btn btn-ocean btn-sm" style="margin:0 4px" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todos os mesas') + '</button>'
+      + '<button class="btn btn-ocean btn-sm" style="margin:0 4px" onclick="printAllUmbQrs()">' + swapUmbrellaWords('🖨️ Imprimir QR de todas as mesas') + '</button>'
       + '</div>';
   }
   grid.innerHTML = qrSection + filterBar + umbHtml;
